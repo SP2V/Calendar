@@ -26,13 +26,13 @@ function Admin() {
 
   // รายชื่อวันในสัปดาห์
   const daysOfWeek = [
-    { value: 'monday', label: 'จันทร์', order: 1 },
-    { value: 'tuesday', label: 'อังคาร', order: 2 },
-    { value: 'wednesday', label: 'พุธ', order: 3 },
-    { value: 'thursday', label: 'พฤหัสบดี', order: 4 },
-    { value: 'friday', label: 'ศุกร์', order: 5 },
-    { value: 'saturday', label: 'เสาร์', order: 6 },
-    { value: 'sunday', label: 'อาทิตย์', order: 7 }
+    { value: 'monday', label: 'จันทร์', abbr: 'จ.', order: 1 },
+    { value: 'tuesday', label: 'อังคาร', abbr: 'อ.', order: 2 },
+    { value: 'wednesday', label: 'พุธ', abbr: 'พ.', order: 3 },
+    { value: 'thursday', label: 'พฤหัสบดี', abbr: 'พฤ.', order: 4 },
+    { value: 'friday', label: 'ศุกร์', abbr: 'ศ.', order: 5 },
+    { value: 'saturday', label: 'เสาร์', abbr: 'ส.', order: 6 },
+    { value: 'sunday', label: 'อาทิตย์', abbr: 'อา.', order: 7 }
   ]
 
   /**
@@ -114,7 +114,7 @@ function Admin() {
             className="btn-add-event"
           >
             <span className="btn-icon">+</span>
-            เพิ่มกิจกรรม
+            กำหนดเวลาการนัดหมาย
           </button>
 
           {/* ตารางแสดง Time Slots */}
@@ -216,122 +216,114 @@ function Admin() {
 
             <form onSubmit={handleAddTimeSlot} className="modal-form">
               {/* ฟิลด์กรอก Activity ID */}
-              <div className="form-row">
-                <div className="form-field">
-                  <label>Activity ID</label>
-                  <input
-                    type="text"
-                    value={newTimeSlot.activityId}
-                    onChange={(e) => setNewTimeSlot({ ...newTimeSlot, activityId: e.target.value })}
-                    placeholder="กรอก Activity ID"
-                    autoFocus
-                  />
-                </div>
+              <div className="form-field-group">
+                <label className="form-label">ชื่อกิจกรรม</label>
+                <input
+                  type="text"
+                  value={newTimeSlot.activityId}
+                  onChange={(e) => setNewTimeSlot({ ...newTimeSlot, activityId: e.target.value })}
+                  placeholder="กรอก Activity ID"
+                  className="form-input"
+                  autoFocus
+                />
               </div>
 
               {/* ฟิลด์เลือกวันแบบ Checkbox พร้อมเวลา */}
-              <div className="form-row">
-                <div className="form-field">
-                  <label>เลือกวันและกำหนดเวลา</label>
-                  <div className="day-time-group">
-                    {daysOfWeek.map(day => {
-                      const isSelected = !!newTimeSlot.dayTimes[day.value]
-                      
-                      return (
-                        <div key={day.value} className="day-time-row">
-                          <label className="checkbox-label">
+              <div className="form-field-group">
+                <label className="form-label">เลือกวันและกำหนดเวลา</label>
+                <div className="day-times-container">
+                  {daysOfWeek.map(day => {
+                    const isSelected = !!newTimeSlot.dayTimes[day.value]
+                    
+                    return (
+                      <div key={day.value} className="day-time-item">
+                        <label className="day-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNewTimeSlot({
+                                  ...newTimeSlot,
+                                  dayTimes: {
+                                    ...newTimeSlot.dayTimes,
+                                    [day.value]: { startTime: '09:00', endTime: '17:00' }
+                                  }
+                                })
+                              } else {
+                                const updatedDayTimes = { ...newTimeSlot.dayTimes }
+                                delete updatedDayTimes[day.value]
+                                setNewTimeSlot({
+                                  ...newTimeSlot,
+                                  dayTimes: updatedDayTimes
+                                })
+                              }
+                            }}
+                          />
+                          <span className="day-label">{day.abbr || day.label}</span>
+                        </label>
+                        
+                        {isSelected && (
+                          <div className="time-inputs-inline">
                             <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setNewTimeSlot({
-                                    ...newTimeSlot,
-                                    dayTimes: {
-                                      ...newTimeSlot.dayTimes,
-                                      [day.value]: { startTime: '', endTime: '' }
-                                    }
-                                  })
-                                } else {
-                                  const updatedDayTimes = { ...newTimeSlot.dayTimes }
-                                  delete updatedDayTimes[day.value]
-                                  setNewTimeSlot({
-                                    ...newTimeSlot,
-                                    dayTimes: updatedDayTimes
-                                  })
+                              type="time"
+                              value={newTimeSlot.dayTimes[day.value].startTime}
+                              onChange={(e) => setNewTimeSlot({
+                                ...newTimeSlot,
+                                dayTimes: {
+                                  ...newTimeSlot.dayTimes,
+                                  [day.value]: {
+                                    ...newTimeSlot.dayTimes[day.value],
+                                    startTime: e.target.value
+                                  }
                                 }
-                              }}
+                              })}
+                              className="time-input"
                             />
-                            <span>{day.label}</span>
-                          </label>
-                          
-                          {isSelected && (
-                            <div className="time-inputs">
-                              <input
-                                type="time"
-                                value={newTimeSlot.dayTimes[day.value].startTime}
-                                onChange={(e) => setNewTimeSlot({
-                                  ...newTimeSlot,
-                                  dayTimes: {
-                                    ...newTimeSlot.dayTimes,
-                                    [day.value]: {
-                                      ...newTimeSlot.dayTimes[day.value],
-                                      startTime: e.target.value
-                                    }
+                            <span className="time-dash">−</span>
+                            <input
+                              type="time"
+                              value={newTimeSlot.dayTimes[day.value].endTime}
+                              onChange={(e) => setNewTimeSlot({
+                                ...newTimeSlot,
+                                dayTimes: {
+                                  ...newTimeSlot.dayTimes,
+                                  [day.value]: {
+                                    ...newTimeSlot.dayTimes[day.value],
+                                    endTime: e.target.value
                                   }
-                                })}
-                                placeholder="Start"
-                                title="เวลาเริ่มต้น"
-                              />
-                              <span className="time-separator">-</span>
-                              <input
-                                type="time"
-                                value={newTimeSlot.dayTimes[day.value].endTime}
-                                onChange={(e) => setNewTimeSlot({
-                                  ...newTimeSlot,
-                                  dayTimes: {
-                                    ...newTimeSlot.dayTimes,
-                                    [day.value]: {
-                                      ...newTimeSlot.dayTimes[day.value],
-                                      endTime: e.target.value
-                                    }
-                                  }
-                                })}
-                                placeholder="End"
-                                title="เวลาสิ้นสุด"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
+                                }
+                              })}
+                              className="time-input"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
 
-              {/* ฟิลด์เลือกสีของกิจกรรม */}
-              <div className="form-row">
-                <div className="form-field">
-                  <label>สีของกิจกรรม</label>
+              {/* ฟิลด์สีและซ้ำทุก week ในแถวเดียว */}
+              <div className="form-field-group form-options-row">
+                <div className="form-option">
+                  <label className="form-label">สี</label>
                   <input
                     type="color"
                     value={newTimeSlot.color}
                     onChange={(e) => setNewTimeSlot({ ...newTimeSlot, color: e.target.value })}
-                    title="เลือกสีสำหรับกิจกรรมนี้"
+                    className="color-input"
                   />
                 </div>
-              </div>
-
-              {/* ฟิลด์เลือกซ้ำทุก week */}
-              <div className="form-row">
-                <div className="form-field">
-                  <label>ซ้ำทุก Week</label>
+                <div className="form-option">
+                  <label className="form-label">ซ้ำทุก Week</label>
                   <select
                     value={newTimeSlot.isRecurring ? 'yes' : 'no'}
                     onChange={(e) => setNewTimeSlot({ ...newTimeSlot, isRecurring: e.target.value === 'yes' })}
+                    className="form-select"
                   >
-                    <option value="yes">ซ้ำทุก Week</option>
-                    <option value="no">ไม่ซ้ำทุก Week</option>
+                    <option value="yes">ใช่</option>
+                    <option value="no">ไม่ใช่</option>
                   </select>
                 </div>
               </div>
@@ -349,7 +341,7 @@ function Admin() {
                   type="submit"
                   className="btn-submit"
                 >
-                  เพิ่มกิจกรรม
+                  บันทึก
                 </button>
               </div>
             </form>

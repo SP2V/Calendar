@@ -126,7 +126,6 @@ function Admin() {
                   <th>สี</th>
                   <th>วัน</th>
                   <th>เวลา</th>
-                  <th>ซ้ำ</th>
                   <th>จัดการ</th>
                 </tr>
               </thead>
@@ -169,7 +168,6 @@ function Admin() {
                             )}
                           </div>
                         </td>
-                        <td>{slot.isRecurring ? '✓' : '✗'}</td>
                         <td>
                           <button
                             onClick={() => handleDeleteTimeSlot(slot.id)}

@@ -9,7 +9,8 @@
 .admin-layout {
   display: grid;
   grid-template-columns: 380px 1fr;
-  gap: 0;
+  gap: 1rem;
+  padding: 1rem;
   max-width: 100%;
   margin: 0 auto;
   height: auto;

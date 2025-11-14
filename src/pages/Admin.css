@@ -1,0 +1,471 @@
+.admin-container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 1rem;
+}
+
+/* Layout แบบ 2 คอลัมน์: Time Slots (ซ้าย 25%) และ Calendar (ขวา 75%) */
+.admin-layout {
+  display: grid;
+  grid-template-columns: 25% 75%;
+  gap: 1rem;
+  max-width: 100%;
+  margin: 0 auto;
+  /* ให้ความสูงขึ้นกับเนื้อหาโดยอัตโนมัติ และเริ่มวางชิ้นส่วนจากด้านบน */
+  height: auto;
+  align-items: start;
+}
+
+/* ส่วน Time Slots (ซ้าย) */
+.time-slots-section {
+  background: white;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ส่วน Calendar (ขวา) */
+.calendar-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  /* ให้ความสูงขึ้นกับปฏิทิน และไม่บังคับการซ่อน overflow */
+  overflow: visible;
+  min-height: 0;
+  align-self: start;
+}
+
+/* หัวข้อของแต่ละส่วน */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.section-icon {
+  font-size: 1.2rem;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ฟอร์มสำหรับเพิ่ม Time Slot */
+.add-time-slot-form {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.form-field label {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.time-icon {
+  font-size: 1rem;
+}
+
+.form-field input,
+.form-field select {
+  padding: 0.5rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  transition: border-color 0.2s;
+  background: white;
+  width: 100%;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.form-field input::placeholder {
+  color: #999;
+}
+
+/* ปุ่มเพิ่ม */
+.btn-add {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  transition: background 0.2s;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.btn-add:hover {
+  background: #357abd;
+}
+
+.btn-icon {
+  font-size: 1rem;
+  font-weight: 300;
+}
+
+/* ตาราง Time Slots */
+.time-slots-table {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.time-slots-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.time-slots-table thead {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 10;
+}
+
+.time-slots-table th {
+  background: #f8f9fa;
+  padding: 0.5rem 0.25rem;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.7rem;
+  border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+.time-slots-table td {
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 0.7rem;
+  color: #555;
+  word-break: break-word;
+}
+
+/* สีตัวอย่างในตาราง */
+.color-swatch {
+  display: inline-block;
+  width: 22px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.12);
+  vertical-align: middle;
+}
+
+/* Checkbox Group Styling */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #555;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+  accent-color: #4a90e2;
+}
+
+.checkbox-label:hover {
+  color: #333;
+}
+
+.checkbox-label input[type="checkbox"]:focus {
+  outline: none;
+}
+
+/* Day-Time Group Styling */
+.day-time-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.day-time-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  margin-left: auto;
+}
+
+.time-inputs input {
+  flex: 0 0 65px;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-family: 'Courier New', monospace;
+}
+
+.time-inputs input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.time-separator {
+  font-size: 0.75rem;
+  color: #999;
+  margin: 0 0.25rem;
+}
+
+.time-slots-table tr:hover {
+  background: #f8f9fa;
+}
+
+.empty-message {
+  text-align: center;
+  color: #999;
+  padding: 1rem !important;
+  font-style: italic;
+  font-size: 0.7rem;
+}
+
+/* ปุ่มลบ */
+.btn-delete {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.btn-delete:hover {
+  background: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .time-slots-section,
+  .calendar-section {
+    /* ให้ปรับความสูงตามเนื้อหา บนอุปกรณ์เล็ก */
+    min-height: 0;
+  }
+}
+
+/* Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 0;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+
+.modal-form {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.btn-cancel {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #d0d0d0;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #e0e0e0;
+}
+
+.btn-submit {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-submit:hover {
+  background: #357abd;
+}
+
+.btn-add-event {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background 0.2s;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.btn-add-event:hover {
+  background: #357abd;
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-days {
+    gap: 0.25rem;
+  }
+
+  .calendar-day {
+    font-size: 0.8rem;
+  }
+}

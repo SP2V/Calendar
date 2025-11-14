@@ -1,0 +1,183 @@
+.calendar-container {
+  background: white;
+  border-radius: 8px;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  /* ให้ความสูงขึ้นกับเนื้อหาของปฏิทิน (ไม่ล็อกความสูงแบบ viewport) */
+  min-height: 0;
+}
+
+
+/* ส่วนหัวปฏิทิน */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.month-year {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.month-year h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.today-button {
+  background: #f0f0f0;
+  border: 1px solid #d0d0d0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #555;
+  transition: background 0.2s;
+}
+
+.today-button:hover {
+  background: #e0e0e0;
+}
+
+.nav-button {
+  background: #f0f0f0;
+  border: 1px solid #d0d0d0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 4px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.nav-button:hover {
+  background: #e0e0e0;
+}
+
+/* ส่วนแสดงชื่อวัน */
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.weekday {
+  text-align: center;
+  font-weight: 600;
+  color: #666;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+
+/* ส่วนแสดงวันในเดือน */
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  /* แต่ละแถวมีความสูงขั้นต่ำ แต่ขยายตามเนื้อหาโดยอัตโนมัติ */
+  grid-auto-rows: minmax(80px, auto);
+  gap: 0.5rem;
+}
+
+.calendar-day {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  cursor: pointer;
+  background: white;
+  transition: 0.2s;
+}
+
+
+.calendar-day:hover:not(.empty) {
+  background: #f8f9fa;
+  border-color: #4a90e2;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-day.empty {
+  border: none;
+  cursor: default;
+  background: transparent;
+}
+
+.calendar-day.empty:hover {
+  background: transparent;
+  transform: none;
+  box-shadow: none;
+}
+
+.day-number {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+/* วันปัจจุบัน */
+.calendar-day.today {
+  background: #fff4e6;
+  border-color: #ff9800;
+  border-width: 2px;
+}
+
+.calendar-day.today .day-number {
+  color: #ff9800;
+  font-weight: 700;
+}
+
+/* วันที่มี Event */
+.calendar-day.has-event {
+  background: #f0f7ff;
+  border-color: #4a90e2;
+}
+
+.calendar-day.has-event .day-number {
+  color: #4a90e2;
+}
+
+/* Event indicators */
+.event-indicators {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: auto;
+  width: 100%;
+  justify-content: center;
+}
+
+.event-dot {
+  width: 8px;
+  height: 8px;
+  background: #4a90e2;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.event-count {
+  font-size: 0.75rem;
+  color: #4a90e2;
+  font-weight: 600;
+  background: #e3f2fd;
+  padding: 0.15rem 0.4rem;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+

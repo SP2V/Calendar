@@ -299,15 +299,21 @@ function Admin() {
                   <div className="specific-dates-container">
                     {newTimeSlot.specificDates && newTimeSlot.specificDates.map((d, i) => (
                       <div className="specific-date-row" key={i}>
-                        <input
-                          type="date"
-                          value={d.date}
-                          onChange={(e) => {
-                            const updated = (newTimeSlot.specificDates || []).slice()
-                            updated[i] = { ...updated[i], date: e.target.value }
-                            setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
-                          }}
-                        />
+                        <div className="date-input-wrapper">
+                          <input
+                            type="date"
+                            value={d.date}
+                            onChange={(e) => {
+                              const updated = (newTimeSlot.specificDates || []).slice()
+                              updated[i] = { ...updated[i], date: e.target.value }
+                              setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
+                            }}
+                            className="date-picker-input"
+                          />
+                          <span className="date-display">
+                            {d.date ? d.date.split('-').reverse().join('/') : 'dd/mm/yyyy'}
+                          </span>
+                        </div>
 
                         <div className="time-row">
                           <div className='time-row-start'>

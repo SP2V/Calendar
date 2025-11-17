@@ -566,6 +566,53 @@
   color: #202124;
   min-width: 180px;
   text-align: center;
+  cursor: pointer;
+}
+
+.specific-date-row input[type="date"]:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+/* Date input wrapper to overlay display text */
+.date-input-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.date-picker-input {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.date-display {
+  display: block;
+  padding: 0.6rem 0.5rem;
+  border: 1px solid #e6eef8;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 1rem;
+  color: #202124;
+  text-align: center;
+  min-width: 180px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.date-input-wrapper:focus-within .date-display {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
 }
 
 .specific-date-row .time-row .time-l {

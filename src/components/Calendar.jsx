@@ -4,8 +4,19 @@ import { useState } from 'react'
 import './Calendar.css'
 
 /**
- * Calendar Component - Component สำหรับแสดงปฏิทิน
- * @param {Array} timeSlots - รายการ Time Slots ที่จะแสดงในปฏิทิน
+ * Calendar Component - แสดงปฏิทินแบบเดือน
+ *
+ * คำอธิบายโดยรวม:
+ * - สร้างกริด 6 แถว x 7 คอลัมน์ (42 เซลล์) เพื่อให้ครอบคลุมทุกเดือน
+ * - แต่ละวันจะถูกคำนวณจาก `currentDate` (เดือน/ปีปัจจุบัน)
+ * - รับค่า `timeSlots` จาก props ซึ่งเป็น list ของ slot ที่สร้างโดย Admin
+ *
+ * การกรองเหตุการณ์สำหรับวันหนึ่ง ๆ:
+ * - recurring slots: มี `dayTimes` สำหรับวันในสัปดาห์นั้น ๆ และ (ถ้ามี) `startDate` จะกำหนดไม่ให้แสดงย้อนหลัง
+ * - non-recurring slots: เก็บอยู่ใน `specificDates` ที่ระบุเป็น 'YYYY-MM-DD' และต้องมีเวลาเริ่ม/เลิก
+ *
+ * การแสดงผล:
+ * - ในแต่ละเซลล์วัน จะแสดงจุดสีตาม `slot.color` และนับจำนวนกิจกรรม
  */
 function Calendar({ timeSlots = [] }) {
   // State สำหรับเก็บเดือนและปีปัจจุบัน
@@ -113,7 +124,14 @@ function Calendar({ timeSlots = [] }) {
 
   /**
    * ฟังก์ชันสำหรับดึง Time Slots ของวันนั้นๆ
-   * @param {number} day - วันที่
+   *
+   * หลักการคัดกรอง:
+   * - คืนค่า array ของ slot ที่มีเวลาที่ใช้งานในวันนั้น
+   * - สำหรับ recurring: ตรวจสอบว่า `dayTimes` มีข้อมูลสำหรับ weekday นั้นและมีค่า start/end
+   *   จากนั้นถ้ามี `startDate` ให้เปรียบเทียบวันที่ (midnight) เพื่อไม่ให้แสดงก่อนวันเริ่ม
+   * - สำหรับ non-recurring: เปรียบเทียบรูปแบบวันที่ 'YYYY-MM-DD' กับรายการใน `specificDates`
+   *
+   * @param {number} day - วันที่ของเดือน (1..31 หรือ null ถ้าเซลล์ว่าง)
    * @returns {Array} array ของ Time Slots ในวันนั้น
    */
   const getTimeSlotsForDay = (day) => {

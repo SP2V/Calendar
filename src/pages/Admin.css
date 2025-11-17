@@ -126,7 +126,7 @@
 
 /* ปุ่มเพิ่ม */
 .btn-add {
-  background: #4285f4;
+  background: #3367d6;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -492,7 +492,7 @@
 .time-inputs-inline {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 5rem;
   flex: 1;
 }
 
@@ -508,6 +508,8 @@
   transition: all 0.2s;
   text-align: center;
 }
+
+
 
 .time-input:focus {
   outline: none;
@@ -529,6 +531,109 @@
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
+
+/* Specific Dates rows (ปรับสไตล์ให้เป็นกล่องที่สวยงาม) */
+.specific-dates-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.specific-date-row {
+  display: flex;
+  width: 100%;
+  flex-direction: column; /* วาง date และ time คนละบรรทัด */
+  gap: 0.5rem;
+  align-items: stretch;
+  background: #ffffff;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #eceff1;
+  box-shadow: 0 4px 10px rgba(16, 24, 40, 0.03);
+}
+
+.specific-date-row input[type="date"] {
+  padding: 0.6rem 0.5rem;
+  border: 1px solid #e6eef8;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 1rem;
+  color: #202124;
+  min-width: 180px;
+  text-align: center;
+}
+
+.specific-date-row .time-row .time-l {
+  margin: 0;
+}
+
+.specific-date-row .time-input {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #e6eef8;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.95rem;
+  text-align: center;
+  min-width: 90px;
+}
+
+.specific-date-row .time-dash {
+  color: #cfd8e3;
+  font-size: 1.1rem;
+}
+
+/* ปุ่มลบสำหรับ specific-date ให้เป็นสีแดงเด่นและมีขนาดเล็ก */
+.time-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+  
+
+.time-row-start .time-label{
+  font-size: small;
+  color: #828282;
+  margin: 0;
+  font-weight: 500;
+  text-align: start;
+  min-width: 30px;
+}
+
+.time-row-end .time-label{
+  font-size: small;
+  color: #828282;
+  margin: 0;
+  font-weight: 500;
+  text-align: start;
+  min-width: 30px;
+}
+
+.time-row .time-input {
+  flex: 0 0 120px;
+}
+
+.time-row .btn-delete {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-left: auto; /* ดันปุ่มไปขวา */
+}
+
+.specific-date-row .btn-delete:hover {
+  background: #dc2626;
+}
+
+.specific-date-row .btn-delete:active {
+  transform: translateY(1px);
+}
+
 
 .form-option {
   display: flex;
@@ -572,8 +677,8 @@
   gap: 0.75rem;
   justify-content: flex-end;
   padding: 1.5rem;
-  border-top: 1px solid #e8eaed;
-  background: #f8f9fa;
+  /* border-top: 1px solid #e8eaed; */
+  /* background: #f8f9fa; */
 }
 
 .btn-cancel {
@@ -596,7 +701,7 @@
   background: #4a90e2;
   color: white;
   border: none;
-  padding: 0.6rem 1.5rem;
+  padding: 0.6rem 2.5rem;
   border-radius: 4px;
   font-size: 0.9rem;
   font-weight: 600;
@@ -613,7 +718,7 @@
   background: #4a90e2;
   color: white;
   border: none;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0.5rem;
   border-radius: 4px;
   font-size: 0.9rem;
   font-weight: 600;

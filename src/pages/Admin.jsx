@@ -196,6 +196,18 @@ function Admin() {
 
               {/* ฟิลด์เลือกวันแบบ Checkbox พร้อมเวลา */}
               <div className="form-field-group">
+                
+                <div className="form-field-group form-options-row">
+                  <div className="form-option">
+                    <label className="form-label">สี</label>
+                    <input
+                      type="color"
+                      value={newTimeSlot.color}
+                      onChange={(e) => setNewTimeSlot({ ...newTimeSlot, color: e.target.value })}
+                      className="color-input"
+                    />
+                  </div>
+                </div>
                 {/* ฟิลด์สีและซ้ำทุก week ในแถวเดียว */}
                 <div className="form-option">
                   <label className="form-label">เวลาว่างทั่วไป</label>
@@ -207,17 +219,6 @@ function Admin() {
                     <option value="yes">ซ้ำทุกสัปดาห์</option>
                     <option value="no">ไม่เกิดซ้ำ</option>
                   </select>
-                </div>
-                <div className="form-field-group form-options-row">
-                  <div className="form-option">
-                    <label className="form-label">สี</label>
-                    <input
-                      type="color"
-                      value={newTimeSlot.color}
-                      onChange={(e) => setNewTimeSlot({ ...newTimeSlot, color: e.target.value })}
-                      className="color-input"
-                    />
-                  </div>
                 </div>
                 <label className="form-label">เลือกวันและกำหนดเวลา</label>
 

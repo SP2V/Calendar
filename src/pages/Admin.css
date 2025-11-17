@@ -459,9 +459,11 @@
 
 .day-time-item {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.3rem;
   padding: 0.5rem 0;
+  padding-left: 0.25rem;
 }
 
 .day-checkbox-label {
@@ -492,8 +494,9 @@
 .time-inputs-inline {
   display: flex;
   align-items: center;
-  gap: 5rem;
+  gap: 0.4rem;
   flex: 1;
+  margin-left: 1.8rem;
 }
 
 .time-input {

@@ -1,5 +1,5 @@
 // นำเข้า useState hook จาก React สำหรับจัดการ state
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 // นำเข้า CSS สำหรับ Admin component
 import './Admin.css'
 // นำเข้า Calendar component
@@ -10,18 +10,27 @@ import Calendar from '../components/Calendar'
  * แบ่งเป็น 2 ส่วน: ตาราง Time Slots (ซ้าย) และ ปฏิทิน (ขวา)
  */
 function Admin() {
-  // State สำหรับเก็บรายการ Time Slots
-  const [timeSlots, setTimeSlots] = useState([])
-
-  // State สำหรับแสดง/ซ่อน modal สำหรับเพิ่ม Time Slot
-  const [showAddModal, setShowAddModal] = useState(false)
+  // State สำหรับเก็บรายการ Time Slots (โหลดจาก localStorage ตอนเริ่ม)
+  const [timeSlots, setTimeSlots] = useState(() => {
+    try {
+      const raw = localStorage.getItem('timeSlots')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) return parsed
+      }
+    } catch {
+      // ignore
+    }
+    return []
+  })
 
   // State สำหรับเก็บข้อมูล Time Slot ใหม่ที่กำลังจะเพิ่ม
   const [newTimeSlot, setNewTimeSlot] = useState({
     activityId: '',
     dayTimes: {}, // object เก็บเวลาของแต่ละวัน เช่น { monday: { startTime: '09:00', endTime: '10:00' }, ... }
     color: '#4a90e2',
-    isRecurring: true // true = ซ้ำทุก week, false = ไม่ซ้ำ
+    isRecurring: true, // true = ซ้ำทุก week, false = ไม่ซ้ำ
+    specificDates: [] // สำหรับกรณีไม่ซ้ำ: [{ date: 'YYYY-MM-DD', startTime: '09:00', endTime: '10:00' }, ...]
   })
 
   // รายชื่อวันในสัปดาห์
@@ -34,6 +43,29 @@ function Admin() {
     { value: 'saturday', label: 'เสาร์', abbr: 'ส.', order: 6 },
     { value: 'sunday', label: 'อาทิตย์', abbr: 'อา.', order: 7 }
   ]
+
+  // ล้างฟอร์ม (ใช้ทั้งปุ่มยกเลิกและหลังบันทึก)
+  const resetNewTimeSlot = () => {
+    setNewTimeSlot({
+      activityId: '',
+      dayTimes: {},
+      color: '#4a90e2',
+      isRecurring: true,
+      specificDates: []
+    })
+  }
+
+  // ควบคุมการแสดงฟอร์มเพิ่มกิจกรรมหรือรายการกิจกรรม
+  const [showAddForm, setShowAddForm] = useState(true)
+
+  // เก็บรายการ timeSlots ลง localStorage ทุกครั้งที่มีการเปลี่ยนแปลง
+  useEffect(() => {
+    try {
+      localStorage.setItem('timeSlots', JSON.stringify(timeSlots))
+    } catch (err) {
+      console.warn('Failed to save timeSlots', err)
+    }
+  }, [timeSlots])
 
   /**
    * ฟังก์ชันสำหรับเพิ่ม Time Slot ใหม่
@@ -48,26 +80,31 @@ function Admin() {
     )
     
     // ตรวจสอบว่ามีข้อมูลครบถ้วนแล้ว
-    if (newTimeSlot.activityId && selectedDays.length > 0) {
-      // เพิ่ม Time Slot ใหม่เข้าไปใน array (รวมสี)
-      setTimeSlots([...timeSlots, {
-        id: timeSlots.length + 1,
+    const hasSpecific = newTimeSlot.specificDates && newTimeSlot.specificDates.some(d => d.date && d.startTime && d.endTime)
+    const ok = newTimeSlot.activityId && (newTimeSlot.isRecurring ? selectedDays.length > 0 : hasSpecific)
+
+    if (ok) {
+      const slotObj = {
+        id: Date.now(),
         activityId: newTimeSlot.activityId,
         dayTimes: { ...newTimeSlot.dayTimes },
         color: newTimeSlot.color || '#4a90e2',
         isRecurring: newTimeSlot.isRecurring
-      }])
-      
-      // รีเซ็ตฟอร์มให้เป็นค่าว่าง
-      setNewTimeSlot({
-        activityId: '',
-        dayTimes: {},
-        color: '#4a90e2',
-        isRecurring: true
-      })
+      }
 
-      // ปิด modal
-      setShowAddModal(false)
+      if (newTimeSlot.isRecurring) {
+        // startDate controls from when a recurring slot is active (midnight of today)
+        const now = new Date()
+        slotObj.startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+      } else {
+        // for non-recurring store specificDates
+        slotObj.specificDates = (newTimeSlot.specificDates || []).filter(d => d.date && d.startTime && d.endTime)
+      }
+
+      setTimeSlots([...timeSlots, slotObj])
+
+      // รีเซ็ตฟอร์มให้เป็นค่าว่าง
+      resetNewTimeSlot()
     }
   }
 
@@ -94,7 +131,7 @@ function Admin() {
       .map(dayValue => daysOfWeek.find(d => d.value === dayValue))
       .sort((a, b) => (a?.order || 0) - (b?.order || 0))
     
-    return sortedDays.map(d => d?.label).join(', ')
+    return sortedDays.map(d => d?.abbr).join(', ')
   }
 
   return (
@@ -102,137 +139,52 @@ function Admin() {
       <div className="admin-layout">
         {/* ส่วนซ้าย: ตาราง Time Slots */}
         <div className="time-slots-section">
-          {/* หัวข้อส่วน Time Slots */}
-          <div className="section-header">
-            <span className="section-icon">📅</span>
-            <h2>ตาราง Time Slots</h2>
+
+          <div className="left-controls" style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <button 
+              type="button" 
+              className={`btn-add-event ${showAddForm ? 'btn-active' : 'btn-inactive'}`}
+              onClick={() => setShowAddForm(true)} 
+              style={{ flex: 1 }}
+            >
+              ✚ เพิ่มกิจกรรม
+            </button>
+            <button 
+              type="button" 
+              className={`btn-add-event ${!showAddForm ? 'btn-active' : 'btn-inactive'}`}
+              onClick={() => setShowAddForm(false)} 
+              style={{ flex: 1 }}
+            >
+              📋 รายการกิจกรรม
+            </button>
           </div>
 
-          {/* ปุ่มเพิ่ม Event */}
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className="btn-add-event"
-          >
-            <span className="btn-icon">+</span>
-            กำหนดเวลาการนัดหมาย
-          </button>
-
-          {/* ตารางแสดง Time Slots */}
-          <div className="time-slots-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Activity ID</th>
-                  <th>สี</th>
-                  <th>วัน</th>
-                  <th>เวลา</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {timeSlots.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="empty-message">
-                      ยังไม่มี Time Slots
-                    </td>
-                  </tr>
-                ) : (
-                  timeSlots.map(slot => {
-                    // สร้างรายการเวลาของแต่ละวัน
-                    const dayTimesList = Object.keys(slot.dayTimes)
-                      .filter(day => slot.dayTimes[day].startTime && slot.dayTimes[day].endTime)
-                      .map(day => {
-                        const dayLabel = daysOfWeek.find(d => d.value === day)?.label || day
-                        return `${dayLabel} ${slot.dayTimes[day].startTime}-${slot.dayTimes[day].endTime}`
-                      })
-                    
-                    return (
-                      <tr key={slot.id}>
-                        <td>{slot.activityId}</td>
-                        <td>
-                          <span
-                            className="color-swatch"
-                            style={{ background: slot.color || '#4a90e2' }}
-                            title={slot.color || '#4a90e2'}
-                          />
-                        </td>
-                        <td>{getDayRangeLabel(slot.dayTimes)}</td>
-                        <td>
-                          <div style={{ fontSize: '0.65rem', lineHeight: '1.2' }}>
-                            {dayTimesList.length > 0 ? (
-                              dayTimesList.map((time, idx) => (
-                                <div key={idx}>{time}</div>
-                              ))
-                            ) : (
-                              <span>-</span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <button
-                            onClick={() => handleDeleteTimeSlot(slot.id)}
-                            className="btn-delete"
-                          >
-                            ลบ
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* ส่วนขวา: ปฏิทิน */}
-        <div className="calendar-section">
-          {/* หัวข้อส่วนปฏิทิน */}
-          <div className="section-header">
-            <span className="section-icon">📅</span>
-            <h2>ปฏิทิน</h2>
-          </div>
-
-          {/* แสดง Calendar component */}
-          <Calendar timeSlots={timeSlots} />
-        </div>
-      </div>
-
-      {/* Modal สำหรับเพิ่ม Event */}
-      {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>เพิ่มกิจกรรมใหม่</h2>
-              <button 
-                className="modal-close"
-                onClick={() => setShowAddModal(false)}
-              >
-                ✕
-              </button>
+          {/* ฟอร์มเพิ่มกิจกรรม แสดงที่ด้านซ้ายโดยตรง (ไม่เป็น modal) */}
+          {showAddForm ? (
+            <form onSubmit={handleAddTimeSlot} className="add-time-slot-form modal-form">
+            {/* ฟิลด์กรอก Activity ID */}
+            <div className="form-field-group">
+              <label className="form-label">ชื่อกิจกรรม</label>
+              <input
+                type="text"
+                value={newTimeSlot.activityId}
+                onChange={(e) => setNewTimeSlot({ ...newTimeSlot, activityId: e.target.value })}
+                placeholder="กรอก Activity ID"
+                className="form-input"
+                autoFocus
+              />
             </div>
 
-            <form onSubmit={handleAddTimeSlot} className="modal-form">
-              {/* ฟิลด์กรอก Activity ID */}
-              <div className="form-field-group">
-                <label className="form-label">ชื่อกิจกรรม</label>
-                <input
-                  type="text"
-                  value={newTimeSlot.activityId}
-                  onChange={(e) => setNewTimeSlot({ ...newTimeSlot, activityId: e.target.value })}
-                  placeholder="กรอก Activity ID"
-                  className="form-input"
-                  autoFocus
-                />
-              </div>
+            {/* ฟิลด์เลือกวันแบบ Checkbox พร้อมเวลา */}
+            <div className="form-field-group">
+              <label className="form-label">เลือกวันและกำหนดเวลา</label>
 
-              {/* ฟิลด์เลือกวันแบบ Checkbox พร้อมเวลา */}
-              <div className="form-field-group">
-                <label className="form-label">เลือกวันและกำหนดเวลา</label>
+              {/* ถ้าเป็น recurring ให้เลือกวันในสัปดาห์เป็น checkbox */}
+              {newTimeSlot.isRecurring ? (
                 <div className="day-times-container">
                   {daysOfWeek.map(day => {
                     const isSelected = !!newTimeSlot.dayTimes[day.value]
-                    
+
                     return (
                       <div key={day.value} className="day-time-item">
                         <label className="day-checkbox-label">
@@ -260,7 +212,7 @@ function Admin() {
                           />
                           <span className="day-label">{day.abbr || day.label}</span>
                         </label>
-                        
+
                         {isSelected && (
                           <div className="time-inputs-inline">
                             <input
@@ -300,52 +252,180 @@ function Admin() {
                     )
                   })}
                 </div>
-              </div>
+              ) : (
+                <div className="specific-dates-container">
+                  {newTimeSlot.specificDates && newTimeSlot.specificDates.map((d, i) => (
+                    <div className="specific-date-row" key={i}>
+                      <input
+                        type="date"
+                        value={d.date}
+                        onChange={(e) => {
+                          const updated = (newTimeSlot.specificDates || []).slice()
+                          updated[i] = { ...updated[i], date: e.target.value }
+                          setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
+                        }}
+                      />
+                      <input
+                        type="time"
+                        value={d.startTime}
+                        onChange={(e) => {
+                          const updated = (newTimeSlot.specificDates || []).slice()
+                          updated[i] = { ...updated[i], startTime: e.target.value }
+                          setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
+                        }}
+                        className="time-input"
+                      />
+                      <span className="time-dash">−</span>
+                      <input
+                        type="time"
+                        value={d.endTime}
+                        onChange={(e) => {
+                          const updated = (newTimeSlot.specificDates || []).slice()
+                          updated[i] = { ...updated[i], endTime: e.target.value }
+                          setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
+                        }}
+                        className="time-input"
+                      />
+                      <button type="button" className="btn-delete" onClick={() => {
+                        const updated = (newTimeSlot.specificDates || []).slice()
+                        updated.splice(i, 1)
+                        setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
+                      }}>ลบ</button>
+                    </div>
+                  ))}
 
-              {/* ฟิลด์สีและซ้ำทุก week ในแถวเดียว */}
-              <div className="form-field-group form-options-row">
-                <div className="form-option">
-                  <label className="form-label">สี</label>
-                  <input
-                    type="color"
-                    value={newTimeSlot.color}
-                    onChange={(e) => setNewTimeSlot({ ...newTimeSlot, color: e.target.value })}
-                    className="color-input"
-                  />
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <button type="button" className="btn-add" onClick={() => {
+                      const updated = (newTimeSlot.specificDates || []).slice()
+                      updated.push({ date: '', startTime: '09:00', endTime: '10:00' })
+                      setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
+                    }}>+ เพิ่มวันที่</button>
+                  </div>
                 </div>
-                <div className="form-option">
-                  <label className="form-label">ซ้ำทุก Week</label>
-                  <select
-                    value={newTimeSlot.isRecurring ? 'yes' : 'no'}
-                    onChange={(e) => setNewTimeSlot({ ...newTimeSlot, isRecurring: e.target.value === 'yes' })}
-                    className="form-select"
-                  >
-                    <option value="yes">ใช่</option>
-                    <option value="no">ไม่ใช่</option>
-                  </select>
-                </div>
-              </div>
+              )}
 
-              {/* ปุ่ม */}
-              <div className="modal-footer">
-                <button 
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="btn-cancel"
-                >
-                  ยกเลิก
-                </button>
-                <button 
-                  type="submit"
-                  className="btn-submit"
-                >
-                  บันทึก
-                </button>
+            </div>
+
+            {/* ฟิลด์สีและซ้ำทุก week ในแถวเดียว */}
+            <div className="form-field-group form-options-row">
+              <div className="form-option">
+                <label className="form-label">สี</label>
+                <input
+                  type="color"
+                  value={newTimeSlot.color}
+                  onChange={(e) => setNewTimeSlot({ ...newTimeSlot, color: e.target.value })}
+                  className="color-input"
+                />
               </div>
-            </form>
+              <div className="form-option">
+                <label className="form-label">ซ้ำทุก Week</label>
+                <select
+                  value={newTimeSlot.isRecurring ? 'yes' : 'no'}
+                  onChange={(e) => setNewTimeSlot({ ...newTimeSlot, isRecurring: e.target.value === 'yes' })}
+                  className="form-select"
+                >
+                  <option value="yes">ใช่</option>
+                  <option value="no">ไม่ใช่</option>
+                </select>
+              </div>
+            </div>
+
+            {/* ปุ่ม */}
+            <div className="modal-footer" style={{ padding: 0, marginTop: 0 }}>
+              <button 
+                type="button"
+                onClick={() => resetNewTimeSlot()}
+                className="btn-cancel"
+              >
+                ยกเลิก
+              </button>
+              <button 
+                type="submit"
+                className="btn-submit"
+              >
+                บันทึก
+              </button>
+            </div>
+          </form>
+
+          ) : (
+            <div className="time-slots-table">
+              <table>
+              <thead>
+                <tr>
+                  <th>Activity ID</th>
+                  <th>สี</th>
+                  <th>วัน</th>
+                  <th>เวลา</th>
+                  <th>จัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {timeSlots.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="empty-message">
+                      ยังไม่มี Time Slots
+                    </td>
+                  </tr>
+                ) : (
+                  timeSlots.map(slot => {
+                    // สร้างรายการเวลาของแต่ละวัน
+                    const dayTimesList = Object.keys(slot.dayTimes)
+                      .filter(day => slot.dayTimes[day].startTime && slot.dayTimes[day].endTime)
+                      .map(day => {
+                        const dayLabel = daysOfWeek.find(d => d.value === day)?.label || day
+                        return `${dayLabel} ${slot.dayTimes[day].startTime}-${slot.dayTimes[day].endTime}`
+                      })
+                    
+                    return (
+                      <tr key={slot.id}>
+                        <td>{slot.activityId}</td>
+                        <td>
+                          <span
+                            className="color-swatch"
+                            style={{ background: slot.color || '#4a90e2' }}
+                            title={slot.color || '#4a90e2'}
+                          />
+                        </td>
+                        <td>{slot.isRecurring ? getDayRangeLabel(slot.dayTimes) : (slot.specificDates ? slot.specificDates.map(d => d.date).join(', ') : '')}</td>
+                        <td>
+                          <div style={{ fontSize: '0.65rem', lineHeight: '1.2' }}>
+                            {dayTimesList.length > 0 ? (
+                              dayTimesList.map((time, idx) => (
+                                <div key={idx}>{time}</div>
+                              ))
+                            ) : (
+                              <span>-</span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <button
+                            onClick={() => handleDeleteTimeSlot(slot.id)}
+                            className="btn-delete"
+                          >
+                            ลบ
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
+          )}
         </div>
-      )}
+
+        {/* ส่วนขวา: ปฏิทิน */}
+        <div className="calendar-section">
+
+          {/* แสดง Calendar component */}
+          <Calendar timeSlots={timeSlots} />
+        </div>
+      </div>
+
+      
     </div>
   )
 }

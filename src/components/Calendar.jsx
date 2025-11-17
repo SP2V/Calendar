@@ -59,8 +59,7 @@ function Calendar({ timeSlots = [] }) {
     const daysInMonth = lastDay.getDate()
     // วันแรกของเดือนเป็นวันอะไร (0 = อาทิตย์, 1 = จันทร์, ...)
     const startingDayOfWeek = firstDay.getDay()
-    // วันสุดท้ายของเดือนเป็นวันอะไร
-    const endingDayOfWeek = lastDay.getDay()
+    // วันสุดท้ายของเดือนเป็นวันอะไร (ค่าถูกคำนวณแต่ไม่จำเป็นต้องเก็บ)
 
     const days = []
 
@@ -104,49 +103,13 @@ function Calendar({ timeSlots = [] }) {
     return dayMap[dayIndex] || ''
   }
 
-  /**
-   * ฟังก์ชันสำหรับแปลงชื่อวันเป็น order (1-7)
-   * @param {string} dayOfWeek - ชื่อวัน (monday, tuesday, ...)
-   * @returns {number} order ของวัน (1-7)
-   */
-  const getDayOrder = (dayOfWeek) => {
-    const dayMap = {
-      'monday': 1,
-      'tuesday': 2,
-      'wednesday': 3,
-      'thursday': 4,
-      'friday': 5,
-      'saturday': 6,
-      'sunday': 7
-    }
-    return dayMap[dayOfWeek] || 0
-  }
 
   /**
    * ฟังก์ชันสำหรับตรวจสอบว่าวันนี้มี Time Slot หรือไม่
    * @param {number} day - วันที่
    * @returns {boolean} true ถ้ามี Time Slot ในวันนั้น
    */
-  const hasTimeSlot = (day) => {
-    if (!day) return false
-    
-    // สร้าง Date object สำหรับวันนั้น
-    const date = new Date(currentYear, currentMonth, day)
-    const dayOfWeek = getDayOfWeekFromDate(date.getDay())
-    
-    // ตรวจสอบว่ามี Time Slot ที่วันนี้อยู่ใน dayTimes หรือไม่
-    return timeSlots.some(slot => {
-      if (!slot.dayTimes || !slot.dayTimes[dayOfWeek]) return false
-      if (!slot.dayTimes[dayOfWeek].startTime || !slot.dayTimes[dayOfWeek].endTime) return false
-      
-      // ถ้า isRecurring = true ให้แสดงทุก week
-      if (slot.isRecurring) return true
-      
-      // ถ้า isRecurring = false ให้แสดงเฉพาะจากวันที่เพิ่มเข้ามาเท่านั้น (วันปัจจุบันและต่อไป)
-      const today = new Date()
-      return date >= today
-    })
-  }
+  // NOTE: calendar filtering logic now lives in getTimeSlotsForDay; helper removed
 
   /**
    * ฟังก์ชันสำหรับดึง Time Slots ของวันนั้นๆ
@@ -160,17 +123,33 @@ function Calendar({ timeSlots = [] }) {
     const date = new Date(currentYear, currentMonth, day)
     const dayOfWeek = getDayOfWeekFromDate(date.getDay())
     
-    // กรอง Time Slots ที่วันนี้อยู่ใน dayTimes
+    // กรอง Time Slots ที่วันนี้ตรงกับเงื่อนไข
     return timeSlots.filter(slot => {
-      if (!slot.dayTimes || !slot.dayTimes[dayOfWeek]) return false
-      if (!slot.dayTimes[dayOfWeek].startTime || !slot.dayTimes[dayOfWeek].endTime) return false
-      
-      // ถ้า isRecurring = true ให้แสดงทุก week
-      if (slot.isRecurring) return true
-      
-      // ถ้า isRecurring = false ให้แสดงเฉพาะจากวันที่เพิ่มเข้ามาเท่านั้น (วันปัจจุบันและต่อไป)
-      const today = new Date()
-      return date >= today
+      // recurring slot: must have dayTimes for that weekday, and respect startDate if provided
+      if (slot.isRecurring) {
+        if (!slot.dayTimes || !slot.dayTimes[dayOfWeek]) return false
+        if (!slot.dayTimes[dayOfWeek].startTime || !slot.dayTimes[dayOfWeek].endTime) return false
+
+        if (slot.startDate) {
+          const start = new Date(slot.startDate)
+          const startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+          const targetMid = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+          return targetMid >= startMid
+        }
+
+        return true
+      }
+
+      // non-recurring: check specificDates array
+      if (slot.specificDates && Array.isArray(slot.specificDates)) {
+        const y = date.getFullYear()
+        const m = String(date.getMonth() + 1).padStart(2, '0')
+        const d = String(date.getDate()).padStart(2, '0')
+        const iso = `${y}-${m}-${d}`
+        return slot.specificDates.some(sd => sd.date === iso && sd.startTime && sd.endTime)
+      }
+
+      return false
     })
   }
 
@@ -190,7 +169,6 @@ function Calendar({ timeSlots = [] }) {
   }
 
   const days = getDaysInMonth()
-  const today = new Date()
 
   return (
     <div className="calendar-container">

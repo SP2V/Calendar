@@ -1,35 +1,35 @@
 // Admin.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Admin.css';
+import {
+  subscribeSchedules,
+  addScheduleDoc,
+  deleteScheduleById,
+  updateScheduleById,
+} from '../firebase';
 
-// Inline SVG icons to avoid external dependency on lucide-react
+// Inline SVG icons
 const CalendarIcon = ({ className = '' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" />
     <path d="M16 2v4M8 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
-)
-
+);
 const Plus = ({ className = '' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
-)
-
+);
 const ChevronDown = ({ className = '' }) => (
-  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
-)
+);
 
 const Admin = () => {
-  const [schedules, setSchedules] = useState([
-    { id: 1, day: 'จ.', type: 'ประชุม', time: '08:30 - 12:00', createdDate: '2025-11-18' },
-    { id: 2, day: 'อ.', type: 'ประชุม', time: '09:30 - 12:00', createdDate: '2025-11-18' },
-    { id: 3, day: 'พ.', type: 'อบรม', time: '08:30 - 12:00', createdDate: '2025-11-17' },
-  ]);
-
+  const [schedules, setSchedules] = useState([]);
   const [filterType, setFilterType] = useState('ทั้งหมด');
+  const [editItem, setEditItem] = useState(null); // สำหรับโหมดแก้ไข
 
   const [formData, setFormData] = useState({
     type: '',
@@ -40,8 +40,8 @@ const Admin = () => {
 
   const days = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
   const types = ['เลือกประเภทกิจกรรม', 'ประชุม', 'อบรม', 'สัมมนา', 'กินข้าว', 'เที่ยว'];
-  // const types = ['เลือกประเภทกิจกรรม', 'Presentation', 'Workshop'];
-  // Generate time options from 00:00 to 23:55 every 5 minutes
+
+  // สร้างตัวเลือกเวลา (ทุก 5 นาที)
   const timeOptions = (() => {
     const opts = [];
     for (let h = 0; h <= 23; h++) {
@@ -54,58 +54,109 @@ const Admin = () => {
     return opts;
   })();
 
-  const handleCreate = () => {
+  // 📥 Create หรือ Update
+  const handleSave = async () => {
     if (formData.type && formData.days.length > 0 && formData.startTime && formData.endTime) {
       const currentDate = new Date().toISOString().split('T')[0];
-      const newSchedules = formData.days.map((day, index) => ({
-        id: schedules.length + index + 1,
+      const newSchedules = formData.days.map((day) => ({
         day: day.slice(0, 2) + '.',
         type: formData.type,
         time: `${formData.startTime} - ${formData.endTime}`,
         createdDate: currentDate,
       }));
-      setSchedules([...schedules, ...newSchedules]);
-      setFormData({ type: '', days: [], startTime: '', endTime: '' });
+
+      try {
+        if (editItem) {
+          // 🔁 Update mode
+          await updateScheduleById(editItem.id, newSchedules[0]);
+          setEditItem(null);
+        } else {
+          // ➕ Create mode
+          await Promise.all(newSchedules.map((s) => addScheduleDoc(s)));
+        }
+        setFormData({ type: '', days: [], startTime: '', endTime: '' });
+      } catch (err) {
+        console.error('Error saving schedules:', err);
+      }
     }
   };
 
+  // ✅ Toggle วันที่
   const toggleDay = (day) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       days: prev.days.includes(day)
-        ? prev.days.filter(d => d !== day)
-        : [...prev.days, day]
+        ? prev.days.filter((d) => d !== day)
+        : [...prev.days, day],
     }));
   };
 
-  const handleDelete = (id) => {
-    setSchedules(schedules.filter(s => s.id !== id));
+  // ❌ ลบรายการ
+  const handleDelete = async (id) => {
+    if (window.confirm('แน่ใจว่าต้องการลบรายการนี้?')) {
+      try {
+        await deleteScheduleById(id);
+      } catch (err) {
+        console.error('Error deleting schedule:', err);
+      }
+    }
   };
 
-  const filteredSchedules = filterType === 'ทั้งหมด' 
-    ? schedules 
-    : schedules.filter(schedule => schedule.type === filterType);
+  // ✏️ แก้ไขรายการ
+  const handleEdit = (item) => {
+    setEditItem(item);
+    setFormData({
+      type: item.type,
+      days: [item.day.replace('.', '')],
+      startTime: item.time.split(' - ')[0],
+      endTime: item.time.split(' - ')[1],
+    });
+  };
 
-  const uniqueTypes = ['ทั้งหมด', ...new Set(schedules.map(s => s.type))];
+  // 📡 ดึงข้อมูลแบบเรียลไทม์
+  useEffect(() => {
+    const unsub = subscribeSchedules((items) => {
+      setSchedules(items);
+    });
+    return () => unsub();
+  }, []);
 
-  // Group schedules by created date
-  const groupedSchedules = filteredSchedules.reduce((groups, schedule) => {
-    const date = schedule.createdDate;
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(schedule);
+  const filteredSchedules =
+    filterType === 'ทั้งหมด'
+      ? schedules
+      : schedules.filter((s) => s.type === filterType);
+
+  const uniqueTypes = ['ทั้งหมด', ...new Set(schedules.map((s) => s.type))];
+
+  // Group by createdDate
+  const groupedSchedules = filteredSchedules.reduce((groups, s) => {
+    const date = s.createdDate;
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(s);
     return groups;
   }, {});
 
-  // Sort dates (newest first)
-  const sortedDates = Object.keys(groupedSchedules).sort((a, b) => new Date(b) - new Date(a));
+  const sortedDates = Object.keys(groupedSchedules).sort(
+    (a, b) => new Date(b) - new Date(a)
+  );
 
-  // Format date to Thai
+  // แปลงวันที่เป็นไทย
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
-                        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    const thaiMonths = [
+      'มกราคม',
+      'กุมภาพันธ์',
+      'มีนาคม',
+      'เมษายน',
+      'พฤษภาคม',
+      'มิถุนายน',
+      'กรกฎาคม',
+      'สิงหาคม',
+      'กันยายน',
+      'ตุลาคม',
+      'พฤศจิกายน',
+      'ธันวาคม',
+    ];
     const day = date.getDate();
     const month = thaiMonths[date.getMonth()];
     const year = date.getFullYear() + 543;
@@ -128,25 +179,32 @@ const Admin = () => {
           </div>
         </div>
 
-        {/* Create Form */}
+        {/* Create/Edit Form */}
         <div className="form-card">
           <div className="form-header">
             <Plus className="form-icon" />
-            <h2 className="form-title">กำหนดช่วงเวลากิจกรรม</h2>
+            <h2 className="form-title">
+              {editItem ? 'แก้ไขกิจกรรม' : 'กำหนดช่วงเวลากิจกรรม'}
+            </h2>
           </div>
 
           <div className="form-content">
-            {/* Type Dropdown */}
+            {/* Type */}
             <div className="form-group">
               <label className="form-label">ประเภทกิจกรรม</label>
               <div className="select-wrapper">
                 <select
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, type: e.target.value })
+                  }
                   className="form-select"
                 >
                   {types.map((type) => (
-                    <option key={type} value={type === 'เลือกประเภทกิจกรรม' ? '' : type}>
+                    <option
+                      key={type}
+                      value={type === 'เลือกประเภทกิจกรรม' ? '' : type}
+                    >
                       {type}
                     </option>
                   ))}
@@ -155,7 +213,7 @@ const Admin = () => {
               </div>
             </div>
 
-            {/* Day Selection */}
+            {/* Days */}
             <div className="form-group">
               <label className="form-label">
                 วัน <span className="form-label-hint">(เลือกได้มากกว่า 1 วัน)</span>
@@ -166,7 +224,8 @@ const Admin = () => {
                     key={day}
                     type="button"
                     onClick={() => toggleDay(day)}
-                    className={`day-button ${formData.days.includes(day) ? 'day-button-active' : ''}`}
+                    className={`day-button ${formData.days.includes(day) ? 'day-button-active' : ''
+                      }`}
                   >
                     {day}
                   </button>
@@ -174,14 +233,16 @@ const Admin = () => {
               </div>
             </div>
 
-            {/* Time Selection */}
+            {/* Time */}
             <div className="time-grid">
               <div className="form-group">
                 <label className="form-label">เวลาเริ่ม</label>
                 <div className="select-wrapper">
                   <select
                     value={formData.startTime}
-                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, startTime: e.target.value })
+                    }
                     className="form-select"
                   >
                     <option value="">เลือกเวลาเริ่ม</option>
@@ -200,7 +261,9 @@ const Admin = () => {
                 <div className="select-wrapper">
                   <select
                     value={formData.endTime}
-                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endTime: e.target.value })
+                    }
                     className="form-select"
                   >
                     <option value="">เลือกเวลาสิ้นสุด</option>
@@ -216,15 +279,15 @@ const Admin = () => {
             </div>
 
             {/* Submit Button */}
-            <button onClick={handleCreate} className="submit-button">
-              บันทึก
+            <button onClick={handleSave} className="submit-button">
+              {editItem ? 'อัปเดต' : 'บันทึก'}
             </button>
           </div>
         </div>
 
-        {/* Schedule List */}
+        {/* List */}
         <div className="list-card">
-          {/* Filter Section */}
+          {/* Filter */}
           <div className="filter-section">
             <label className="form-label">กรองตามประเภท</label>
             <div className="select-wrapper filter-select">
@@ -243,50 +306,41 @@ const Admin = () => {
             </div>
           </div>
 
-          {/* Results Count */}
+          {/* Count */}
           <div className="results-count">
             แสดง {filteredSchedules.length} รายการ
             {filterType !== 'ทั้งหมด' && ` (กรอง: ${filterType})`}
           </div>
 
-          {/* Schedule Items */}
+          {/* Schedule List */}
           <div className="schedule-list">
             {filteredSchedules.length === 0 ? (
-              <div className="empty-state">
-                ไม่พบรายการที่ค้นหา
-              </div>
+              <div className="empty-state">ไม่พบรายการที่ค้นหา</div>
             ) : (
               sortedDates.map((date) => (
                 <div key={date} className="date-group">
-                  {/* Date Separator */}
                   <div className="date-separator">
-                    <div className="date-badge">
-                      {formatDate(date)}
-                    </div>
+                    <div className="date-badge">{formatDate(date)}</div>
                     <div className="date-line"></div>
                   </div>
 
-                  {/* Schedule Items for this date */}
                   <div className="schedule-items">
                     {groupedSchedules[date].map((schedule) => (
                       <div key={schedule.id} className="schedule-item">
-                        {/* Day Badge */}
-                        <div className="schedule-day-badge">
-                          {schedule.day}
-                        </div>
+                        <div className="schedule-day-badge">{schedule.day}</div>
 
-                        {/* Info */}
                         <div className="schedule-info">
                           <h3 className="schedule-type">{schedule.type}</h3>
                           <p className="schedule-time">
-                            <span>🕐</span>
-                            {schedule.time}
+                            🕐 {schedule.time}
                           </p>
                         </div>
 
-                        {/* Actions */}
                         <div className="schedule-actions">
-                          <button className="action-button action-edit">
+                          <button
+                            className="action-button action-edit"
+                            onClick={() => handleEdit(schedule)}
+                          >
                             แก้ไข
                           </button>
                           <button

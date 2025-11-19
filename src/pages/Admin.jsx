@@ -78,7 +78,15 @@ const Admin = () => {
       }));
 
       try {
+        // ถ้าเป็นการแก้ไข ให้ลบรายการเก่าออกก่อน
+        if (editItem) {
+          await deleteScheduleById(editItem.id);
+        }
+
+        // เพิ่มรายการใหม่
         await Promise.all(newSchedules.map((s) => addScheduleDoc(s)));
+
+        // รีเซ็ตฟอร์ม
         setFormData({ type: '', days: [], startTime: '', endTime: '' });
         setEditItem(null);
       } catch (err) {
@@ -86,6 +94,7 @@ const Admin = () => {
       }
     }
   };
+
 
   // --------------------------- TOGGLE DAY ---------------------------
   const toggleDay = (day) => {
@@ -324,7 +333,7 @@ const Admin = () => {
               sortedDates.map((date) => (
                 <div key={date} className="date-group">
                   <div className="date-separator">
-                    <div className="date-badge">{formatDate(date)}</div>
+                    <div className="date-badge">บันทึกเมื่อ {formatDate(date)}</div>
                     <div className="date-line"></div>
                   </div>
 

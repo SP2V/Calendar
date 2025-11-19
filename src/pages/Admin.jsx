@@ -1,4 +1,4 @@
-// AdminScheduleUI.jsx
+// Admin.jsx
 import React, { useState } from 'react';
 import './Admin.css';
 
@@ -39,12 +39,20 @@ const Admin = () => {
   });
 
   const days = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
-  const types = ['เลือกประเภทกิจกรรม', 'ประชุม', 'อบรม', 'สัมมนา', 'Presentation', 'Workshop'];
-  const timeOptions = [
-    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
-    '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
-  ];
+  const types = ['เลือกประเภทกิจกรรม', 'ประชุม', 'อบรม', 'สัมมนา', 'กินข้าว', 'เที่ยว'];
+  // const types = ['เลือกประเภทกิจกรรม', 'Presentation', 'Workshop'];
+  // Generate time options from 00:00 to 23:55 every 5 minutes
+  const timeOptions = (() => {
+    const opts = [];
+    for (let h = 0; h <= 23; h++) {
+      for (let m = 0; m < 60; m += 5) {
+        const hh = String(h).padStart(2, '0');
+        const mm = String(m).padStart(2, '0');
+        opts.push(`${hh}:${mm}`);
+      }
+    }
+    return opts;
+  })();
 
   const handleCreate = () => {
     if (formData.type && formData.days.length > 0 && formData.startTime && formData.endTime) {

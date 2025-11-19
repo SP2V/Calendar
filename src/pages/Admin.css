@@ -1,811 +1,385 @@
-.admin-container {
+/* AdminScheduleUI.css */
+
+/* Container */
+.admin-schedule-container {
   min-height: 100vh;
-  background: #ffffff;
-  padding: 0;
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  background: linear-gradient(to bottom right, #f0f9ff, #e0e7ff, #fce7f3);
+  padding: 2rem;
 }
 
-/* Layout แบบ 2 คอลัมน์: Event Sidebar (ซ้าย 30%) และ Calendar (ขวา 70%) */
-.admin-layout {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 1rem;
-  padding: 1rem;
-  max-width: 100%;
+.admin-schedule-wrapper {
+  max-width: 56rem;
   margin: 0 auto;
-  height: auto;
-  align-items: start;
 }
 
-/* ส่วน Time Slots (ซ้าย) - Event Sidebar */
-.time-slots-section {
-  background: #ffffff;
-  border-radius: 0;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
-  border-right: 1px solid #e0e0e0;
-  height: 100vh;
-  position: sticky;
-  top: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
-
-/* ส่วน Calendar (ขวา) */
-.calendar-section {
-  background: #ffffff;
-  border-radius: 0;
-  padding: 1.5rem 2rem;
-  display: flex;
-  flex-direction: column;
-  overflow: visible;
-  min-height: 0;
-  align-self: start;
-}
-
-/* หัวข้อของแต่ละส่วน */
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #4285f4;
-}
-
-.section-icon {
-  font-size: 1.5rem;
-}
-
-.section-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: #202124;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ฟอร์มสำหรับเพิ่ม Time Slot */
-.add-time-slot-form {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-field label {
-  font-size: 0.85rem;
-  color: #5f6368;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.time-icon {
-  font-size: 1rem;
-}
-
-.form-field input,
-.form-field select {
-  padding: 0.75rem;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  transition: all 0.2s;
+/* Header Card */
+.header-card {
   background: white;
-  width: 100%;
-  font-family: 'Roboto', sans-serif;
-}
-
-.form-field input:focus,
-.form-field select:focus {
-  outline: none;
-  border-color: #4285f4;
-  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
-}
-
-.form-field input::placeholder {
-  color: #9aa0a6;
-}
-
-/* ปุ่มเพิ่ม */
-.btn-add {
-  background: #3367d6;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-  width: 100%;
-  margin-top: 0.5rem;
-}
-
-.btn-add:hover {
-  background: #3367d6;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-}
-
-.btn-icon {
-  font-size: 1.2rem;
-  font-weight: 300;
-}
-
-/* ตาราง Time Slots */
-.time-slots-table {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.time-slots-table table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-
-.time-slots-table thead {
-  position: sticky;
-  top: 0;
-  background: #f8f9fa;
-  z-index: 10;
-}
-
-.time-slots-table th {
-  background: #f8f9fa;
-  padding: 0.75rem;
-  text-align: left;
-  font-weight: 500;
-  color: #5f6368;
-  font-size: 0.8rem;
-  border-bottom: 1px solid #e0e0e0;
-  white-space: nowrap;
-}
-
-.time-slots-table td {
-  padding: 0.75rem;
-  border-bottom: 1px solid #f0f0f0;
-  color: #202124;
-  word-break: break-word;
-  font-size: 0.85rem;
-}
-
-/* สีตัวอย่างในตาราง */
-.color-swatch {
-  display: inline-block;
-  width: 24px;
-  height: 16px;
-  border-radius: 3px;
-  border: 1px solid rgba(0,0,0,0.12);
-  vertical-align: middle;
-  cursor: pointer;
-}
-
-.time-slots-table tr:hover {
-  background: #f8f9fa;
-}
-
-.empty-message {
-  text-align: center;
-  color: #9aa0a6;
-  padding: 1.5rem !important;
-  font-style: italic;
-  font-size: 0.85rem;
-}
-
-/* ปุ่มลบ */
-.btn-delete {
-  background: #f1f3f4;
-  color: #d33b27;
-  border: 1px solid #dadce0;
-  padding: 0.4rem 0.75rem;
-  border-radius: 3px;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-  font-weight: 500;
-}
-
-.btn-delete:hover {
-  background: #f8f9fa;
-  border-color: #d33b27;
-}
-
-/* สีตัวอย่างในตาราง */
-.color-swatch {
-  display: inline-block;
-  width: 22px;
-  height: 14px;
-  border-radius: 4px;
-  border: 1px solid rgba(0,0,0,0.12);
-  vertical-align: middle;
-}
-
-/* Checkbox Group Styling */
-.checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: #f8f9fa;
-  border-radius: 4px;
-  border: 1px solid #e0e0e0;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: #555;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.checkbox-label input[type="checkbox"] {
-  cursor: pointer;
-  width: 16px;
-  height: 16px;
-  margin: 0;
-}
-
-.checkbox-label input[type="checkbox"]:checked {
-  accent-color: #4a90e2;
-}
-
-.checkbox-label:hover {
-  color: #333;
-}
-
-.checkbox-label input[type="checkbox"]:focus {
-  outline: none;
-}
-
-.time-slots-table tr:hover {
-  background: #f8f9fa;
-}
-
-.empty-message {
-  text-align: center;
-  color: #999;
-  padding: 1rem !important;
-  font-style: italic;
-  font-size: 0.7rem;
-}
-
-/* ปุ่มลบ */
-.btn-delete {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  cursor: pointer;
-  transition: background 0.2s;
-  white-space: nowrap;
-}
-
-.btn-delete:hover {
-  background: #dc2626;
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .admin-layout {
-    grid-template-columns: 1fr;
-    height: auto;
-  }
-
-  .time-slots-section,
-  .calendar-section {
-    /* ให้ปรับความสูงตามเนื้อหา บนอุปกรณ์เล็ก */
-    min-height: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .admin-container {
-    padding: 1rem;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .calendar-days {
-    gap: 0.25rem;
-  }
-
-  .calendar-day {
-    font-size: 0.8rem;
-  }
-}
-
-/* Modal Styling - Google Calendar Style */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 8px;
-  padding: 0;
-  width: 95%;
-  max-width: 450px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e8eaed;
-  background: #fff;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #202124;
-  font-weight: 500;
-  letter-spacing: 0.2px;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #5f6368;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-  border-radius: 50%;
-}
-
-.modal-close:hover {
-  background: #f1f3f4;
-  color: #202124;
-}
-
-.modal-form {
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-/* Form Field Groups */
-.form-field-group {
-  margin-bottom: 1.25rem;
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-icon {
+  padding: 0.75rem;
+  background: linear-gradient(to bottom right, #3b82f6, #6366f1);
+  border-radius: 0.75rem;
+}
+
+.header-icon .icon {
+  width: 2rem;
+  height: 2rem;
+  color: white;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #111827;
+}
+
+.header-subtitle {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Form Card */
+.form-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #3b82f6;
+}
+
+.form-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.form-content {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
+}
+
+/* Form Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
 }
 
 .form-label {
-  font-size: 0.8rem;
-  color: #5f6368;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
   display: block;
-}
-
-.form-input {
-  padding: 0.75rem 0.75rem;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  color: #202124;
-  background: #fff;
-  transition: all 0.2s;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-}
-
-.form-input::placeholder {
-  color: #9aa0a6;
-}
-
-/* Day Times Container */
-.day-times-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.day-time-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.3rem;
-  padding: 0.5rem 0;
-  padding-left: 0.25rem;
-}
-
-.day-checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  min-width: 30px;
-  flex-shrink: 0;
-}
-
-.day-checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: #4a90e2;
-  flex-shrink: 0;
-}
-
-.day-label {
-  font-size: 0.85rem;
-  color: #202124;
-  min-width: 20px;
-  text-align: center;
+  color: #374151;
   font-weight: 500;
+  margin-bottom: 0.5rem;
 }
 
-.time-inputs-inline {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex: 1;
-  margin-left: 1.8rem;
+.form-label-hint {
+  font-size: 0.875rem;
+  color: #6b7280;
 }
 
-.time-input {
-  flex: 1;
-  padding: 0.6rem 0.5rem;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-family: inherit;
-  color: #202124;
-  background: #fff;
-  transition: all 0.2s;
-  text-align: center;
-}
-
-
-
-.time-input:focus {
-  outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-}
-
-.time-dash {
-  color: #dadce0;
-  font-weight: 300;
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-/* Form Options Row */
-.form-options-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-/* Specific Dates rows (ปรับสไตล์ให้เป็นกล่องที่สวยงาม) */
-.specific-dates-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-.specific-date-row {
-  display: flex;
-  width: 100%;
-  flex-direction: column; /* วาง date และ time คนละบรรทัด */
-  gap: 0.5rem;
-  align-items: stretch;
-  background: #ffffff;
-  padding: 0.5rem;
-  border-radius: 8px;
-  border: 1px solid #eceff1;
-  box-shadow: 0 4px 10px rgba(16, 24, 40, 0.03);
-}
-
-.specific-date-row input[type="date"] {
-  padding: 0.6rem 0.5rem;
-  border: 1px solid #e6eef8;
-  border-radius: 6px;
-  background: #fff;
-  font-size: 1rem;
-  color: #202124;
-  min-width: 180px;
-  text-align: center;
-  cursor: pointer;
-}
-
-.specific-date-row input[type="date"]:focus {
-  outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-}
-
-/* Date input wrapper to overlay display text */
-.date-input-wrapper {
+/* Select Wrapper */
+.select-wrapper {
   position: relative;
-  display: inline-block;
-  width: 100%;
-}
-
-.date-picker-input {
-  opacity: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-  z-index: 10;
-}
-
-.date-display {
-  display: block;
-  padding: 0.6rem 0.5rem;
-  border: 1px solid #e6eef8;
-  border-radius: 6px;
-  background: #fff;
-  font-size: 1rem;
-  color: #202124;
-  text-align: center;
-  min-width: 180px;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 0.5px;
-  pointer-events: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.date-input-wrapper:focus-within .date-display {
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-}
-
-.specific-date-row .time-row .time-l {
-  margin: 0;
-}
-
-.specific-date-row .time-input {
-  padding: 0.5rem 0.6rem;
-  border: 1px solid #e6eef8;
-  border-radius: 6px;
-  background: #fff;
-  font-size: 0.95rem;
-  text-align: center;
-  min-width: 90px;
-}
-
-.specific-date-row .time-dash {
-  color: #cfd8e3;
-  font-size: 1.1rem;
-}
-
-/* ปุ่มลบสำหรับ specific-date ให้เป็นสีแดงเด่นและมีขนาดเล็ก */
-.time-row {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  width: 100%;
-}
-  
-
-.time-row-start .time-label{
-  font-size: small;
-  color: #828282;
-  margin: 0;
-  font-weight: 500;
-  text-align: start;
-  min-width: 30px;
-}
-
-.time-row-end .time-label{
-  font-size: small;
-  color: #828282;
-  margin: 0;
-  font-weight: 500;
-  text-align: start;
-  min-width: 30px;
-}
-
-.time-row .time-input {
-  flex: 0 0 120px;
-}
-
-.time-row .btn-delete {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 0.45rem 0.7rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  margin-left: auto; /* ดันปุ่มไปขวา */
-}
-
-.specific-date-row .btn-delete:hover {
-  background: #dc2626;
-}
-
-.specific-date-row .btn-delete:active {
-  transform: translateY(1px);
-}
-
-
-.form-option {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.color-input {
-  width: 100%;
-  height: 40px;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.color-input:focus {
-  outline: none;
-  border-color: #4a90e2;
 }
 
 .form-select {
-  padding: 0.6rem 0.75rem;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  color: #202124;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
   background: white;
-  cursor: pointer;
+  font-size: 1rem;
   transition: all 0.2s;
+  appearance: none;
+  cursor: pointer;
 }
 
 .form-select:focus {
   outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.modal-footer {
+.select-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+/* Day Buttons */
+.day-buttons {
   display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  padding: 1.5rem;
-  /* border-top: 1px solid #e8eaed; */
-  /* background: #f8f9fa; */
+  gap: 0.5rem;
 }
 
-.btn-cancel {
-  background: transparent;
-  color: #4a90e2;
+.day-button {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  background: #f3f4f6;
+  color: #374151;
   border: none;
-  padding: 0.6rem 1.5rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
-.btn-cancel:hover {
-  background: rgba(74, 144, 226, 0.1);
+.day-button:hover {
+  background: #e5e7eb;
 }
 
-.btn-submit {
-  background: #4a90e2;
+.day-button-active {
+  background: #3b82f6;
   color: white;
-  border: none;
-  padding: 0.6rem 2.5rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+
+/* Time Grid */
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+/* Submit Button */
+.submit-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #3b82f6;
+  color: white;
+  border-radius: 0.75rem;
   font-weight: 600;
+  border: none;
   cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.submit-button:hover {
+  background: #2563eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* List Card */
+.list-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+/* Filter Section */
+.filter-section {
+  margin-bottom: 1.5rem;
+}
+
+.filter-select {
+  max-width: 20rem;
+}
+
+/* Results Count */
+.results-count {
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Schedule List */
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+/* Date Group */
+.date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Date Separator */
+.date-separator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.date-badge {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.date-line {
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+/* Schedule Items */
+.schedule-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Schedule Item */
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 0.75rem;
   transition: all 0.2s;
 }
 
-.btn-submit:hover {
-  background: #357abd;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+.schedule-item:hover {
+  background: #f3f4f6;
 }
 
-.btn-add-event {
-  background: #4a90e2;
-  color: white;
-  border: none;
-  padding: 0.75rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
+/* Schedule Day Badge */
+.schedule-day-badge {
+  flex-shrink: 0;
+  width: 3.5rem;
+  height: 3.5rem;
+  background: #3b82f6;
+  border-radius: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-  width: 100%;
-  margin-bottom: 1rem;
-}
-
-.left-controls .btn-add-event {
-  width: auto;
-  margin-bottom: 0;
-}
-
-/* ปุ่ม Active (selected) */
-.btn-add-event.btn-active {
-  background: #4a90e2;
   color: white;
-  box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+  font-weight: bold;
+  font-size: 1.125rem;
 }
 
-/* ปุ่ม Inactive (not selected) */
-.btn-add-event.btn-inactive {
-  background: #f1f3f4;
-  color: #5f6368;
-  border: 1px solid #dadce0;
+/* Schedule Info */
+.schedule-info {
+  flex: 1;
 }
 
-.btn-add-event.btn-inactive:hover {
-  background: #e8eaed;
+.schedule-type {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
 }
 
-.btn-add-event:hover {
-  background: #357abd;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+.schedule-time {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0 0;
+}
+
+/* Schedule Actions */
+.schedule-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-edit {
+  background: #10b981;
+  color: white;
+}
+
+.action-edit:hover {
+  background: #059669;
+}
+
+.action-delete {
+  background: #ef4444;
+  color: white;
+}
+
+.action-delete:hover {
+  background: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-schedule-container {
+    padding: 1rem;
+  }
+
+  .day-buttons {
+    flex-wrap: wrap;
+  }
+
+  .day-button {
+    flex: 1 0 calc(33.333% - 0.5rem);
+    min-width: 0;
+  }
+
+  .time-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-item {
+    flex-wrap: wrap;
+  }
+
+  .schedule-actions {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .action-button {
+    flex: 1;
+  }
 }

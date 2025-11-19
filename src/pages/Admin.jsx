@@ -1,460 +1,304 @@
-// นำเข้า useState hook จาก React สำหรับจัดการ state
-import { useState, useEffect } from 'react'
-// นำเข้า CSS สำหรับ Admin component
-import './Admin.css'
-// นำเข้า Calendar component
-import Calendar from '../components/Calendar'
+// AdminScheduleUI.jsx
+import React, { useState } from 'react';
+import './Admin.css';
 
-/**n+ * Admin Component - หน้า Admin สำหรับจัดการ Time Slots และแสดงปฏิทิน
- *
- * คำอธิบายโดยรวม:
- * - ฝั่งซ้าย: ฟอร์มสำหรับสร้างหรือรายการ Time Slots (เวลา, วัน, สี, ประเภท recurring)
- * - ฟอร์มรองรับ 2 โหมด:
- *    1) ซ้ำทุกสัปดาห์ (recurring): ผู้ดูแลเลือกวันในสัปดาห์แต่ละวันเป็น checkbox และกำหนดเวลาเริ่ม/สิ้นสุด
- *    2) ไม่ซ้ำ (specificDates): ผู้ดูแลสามารถเพิ่มรายการวันที่เฉพาะเจาะจงพร้อมเวลา
- * - ฝั่งขวา: ปฏิทิน (Calendar) ที่รับ prop `timeSlots` และจะแสดงกิจกรรมตามกฎต่อไปนี้
- *    - ถ้าเป็น recurring: แสดงเฉพาะวันในสัปดาห์ที่กำหนด และถ้า `startDate` ถูกกำหนดไว้ จะไม่แสดงย้อนหลังก่อนวันนั้น
- *    - ถ้าเป็น non-recurring: แสดงเฉพาะวันที่อยู่ใน `specificDates`
- * - persistence: ข้อมูล `timeSlots` ถูกเก็บใน `localStorage` ของเบราว์เซอร์เพื่อเก็บข้อมูลข้าม session
- *
- * โครงสร้างของ Time Slot:
- * {
- *   id: number,
- *   activityId: string,
- *   dayTimes: { monday: { startTime, endTime }, ... },
- *   color: string,
- *   isRecurring: boolean,
- *   startDate?: ISOString (สำหรับ recurring เพื่อจำกัดวันเริ่มต้น),
- *   specificDates?: [{ date: 'YYYY-MM-DD', startTime, endTime }]
- * }
- */
-function Admin() {
-  // State สำหรับเก็บรายการ Time Slots (โหลดจาก localStorage ตอนเริ่ม)
-  const [timeSlots, setTimeSlots] = useState(() => {
-    try {
-      const raw = localStorage.getItem('timeSlots')
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (Array.isArray(parsed)) return parsed
-      }
-    } catch {
-      // ignore
+// Inline SVG icons to avoid external dependency on lucide-react
+const CalendarIcon = ({ className = '' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M16 2v4M8 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+const Plus = ({ className = '' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+const ChevronDown = ({ className = '' }) => (
+  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+const Admin = () => {
+  const [schedules, setSchedules] = useState([
+    { id: 1, day: 'จ.', type: 'ประชุม', time: '08:30 - 12:00', createdDate: '2025-11-18' },
+    { id: 2, day: 'อ.', type: 'ประชุม', time: '09:30 - 12:00', createdDate: '2025-11-18' },
+    { id: 3, day: 'พ.', type: 'อบรม', time: '08:30 - 12:00', createdDate: '2025-11-17' },
+  ]);
+
+  const [filterType, setFilterType] = useState('ทั้งหมด');
+
+  const [formData, setFormData] = useState({
+    type: '',
+    days: [],
+    startTime: '',
+    endTime: '',
+  });
+
+  const days = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
+  const types = ['เลือกประเภทกิจกรรม', 'ประชุม', 'อบรม', 'สัมมนา', 'Presentation', 'Workshop'];
+  const timeOptions = [
+    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+    '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+    '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
+  ];
+
+  const handleCreate = () => {
+    if (formData.type && formData.days.length > 0 && formData.startTime && formData.endTime) {
+      const currentDate = new Date().toISOString().split('T')[0];
+      const newSchedules = formData.days.map((day, index) => ({
+        id: schedules.length + index + 1,
+        day: day.slice(0, 2) + '.',
+        type: formData.type,
+        time: `${formData.startTime} - ${formData.endTime}`,
+        createdDate: currentDate,
+      }));
+      setSchedules([...schedules, ...newSchedules]);
+      setFormData({ type: '', days: [], startTime: '', endTime: '' });
     }
-    return []
-  })
+  };
 
-  // State สำหรับเก็บข้อมูล Time Slot ใหม่ที่กำลังจะเพิ่ม
-  const [newTimeSlot, setNewTimeSlot] = useState({
-    activityId: '',
-    dayTimes: {}, // object เก็บเวลาของแต่ละวัน เช่น { monday: { startTime: '09:00', endTime: '10:00' }, ... }
-    color: '#4a90e2',
-    isRecurring: true, // true = ซ้ำทุก week, false = ไม่ซ้ำ
-    specificDates: [] // สำหรับกรณีไม่ซ้ำ: [{ date: 'YYYY-MM-DD', startTime: '09:00', endTime: '10:00' }, ...]
-  })
+  const toggleDay = (day) => {
+    setFormData(prev => ({
+      ...prev,
+      days: prev.days.includes(day)
+        ? prev.days.filter(d => d !== day)
+        : [...prev.days, day]
+    }));
+  };
 
-  // รายชื่อวันในสัปดาห์
-  const daysOfWeek = [
-    { value: 'monday', label: 'จันทร์', abbr: 'จ.', order: 1 },
-    { value: 'tuesday', label: 'อังคาร', abbr: 'อ.', order: 2 },
-    { value: 'wednesday', label: 'พุธ', abbr: 'พ.', order: 3 },
-    { value: 'thursday', label: 'พฤหัสบดี', abbr: 'พฤ.', order: 4 },
-    { value: 'friday', label: 'ศุกร์', abbr: 'ศ.', order: 5 },
-    { value: 'saturday', label: 'เสาร์', abbr: 'ส.', order: 6 },
-    { value: 'sunday', label: 'อาทิตย์', abbr: 'อา.', order: 7 }
-  ]
+  const handleDelete = (id) => {
+    setSchedules(schedules.filter(s => s.id !== id));
+  };
 
-  // ล้างฟอร์ม (ใช้ทั้งปุ่มยกเลิกและหลังบันทึก)
-  const resetNewTimeSlot = () => {
-    setNewTimeSlot({
-      activityId: '',
-      dayTimes: {},
-      color: '#4a90e2',
-      isRecurring: true,
-      specificDates: []
-    })
-  }
+  const filteredSchedules = filterType === 'ทั้งหมด' 
+    ? schedules 
+    : schedules.filter(schedule => schedule.type === filterType);
 
-  // ควบคุมการแสดงฟอร์มเพิ่มกิจกรรมหรือรายการกิจกรรม
-  const [showAddForm, setShowAddForm] = useState(true)
+  const uniqueTypes = ['ทั้งหมด', ...new Set(schedules.map(s => s.type))];
 
-  // เก็บรายการ timeSlots ลง localStorage ทุกครั้งที่มีการเปลี่ยนแปลง
-  useEffect(() => {
-    try {
-      localStorage.setItem('timeSlots', JSON.stringify(timeSlots))
-    } catch (err) {
-      console.warn('Failed to save timeSlots', err)
+  // Group schedules by created date
+  const groupedSchedules = filteredSchedules.reduce((groups, schedule) => {
+    const date = schedule.createdDate;
+    if (!groups[date]) {
+      groups[date] = [];
     }
-  }, [timeSlots])
+    groups[date].push(schedule);
+    return groups;
+  }, {});
 
-  /**
-   * ฟังก์ชันสำหรับเพิ่ม Time Slot ใหม่
-   * @param {Event} e - event object จาก form submission
-   */
-  const handleAddTimeSlot = (e) => {
-    e.preventDefault() // ป้องกันการ reload หน้าเมื่อ submit form
+  // Sort dates (newest first)
+  const sortedDates = Object.keys(groupedSchedules).sort((a, b) => new Date(b) - new Date(a));
 
-    // ดึงวันที่เลือก (keys ของ dayTimes ที่มีค่า)
-    const selectedDays = Object.keys(newTimeSlot.dayTimes).filter(day =>
-      newTimeSlot.dayTimes[day].startTime && newTimeSlot.dayTimes[day].endTime
-    )
-
-    // ตรวจสอบว่ามีข้อมูลครบถ้วนแล้ว
-    const hasSpecific = newTimeSlot.specificDates && newTimeSlot.specificDates.some(d => d.date && d.startTime && d.endTime)
-    const ok = newTimeSlot.activityId && (newTimeSlot.isRecurring ? selectedDays.length > 0 : hasSpecific)
-
-    if (ok) {
-      const slotObj = {
-        id: Date.now(),
-        activityId: newTimeSlot.activityId,
-        dayTimes: { ...newTimeSlot.dayTimes },
-        color: newTimeSlot.color || '#4a90e2',
-        isRecurring: newTimeSlot.isRecurring
-      }
-
-      if (newTimeSlot.isRecurring) {
-        // startDate controls from when a recurring slot is active (midnight of today)
-        const now = new Date()
-        slotObj.startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
-      } else {
-        // for non-recurring store specificDates
-        slotObj.specificDates = (newTimeSlot.specificDates || []).filter(d => d.date && d.startTime && d.endTime)
-      }
-
-      setTimeSlots([...timeSlots, slotObj])
-
-      // รีเซ็ตฟอร์มให้เป็นค่าว่าง
-      resetNewTimeSlot()
-    }
-  }
-
-  /**
-   * ฟังก์ชันสำหรับลบ Time Slot
-   * @param {number} id - ID ของ Time Slot ที่ต้องการลบ
-   */
-  const handleDeleteTimeSlot = (id) => {
-    // กรอง Time Slot ออกโดยเก็บเฉพาะ Time Slot ที่ id ไม่เท่ากับ id ที่ส่งมา
-    setTimeSlots(timeSlots.filter(slot => slot.id !== id))
-  }
-
-  /**
-   * ฟังก์ชันสำหรับแปลงช่วงวันเป็นชื่อวันภาษาไทย
-   * @param {Object} dayTimes - object ของวันและเวลา
-   * @returns {string} ชื่อวันภาษาไทยในรูปแบบรายการ
-   */
-  const getDayRangeLabel = (dayTimes) => {
-    if (!dayTimes || Object.keys(dayTimes).length === 0) return ''
-
-    // เรียงลำดับวันตามลำดับสัปดาห์
-    const selectedDayValues = Object.keys(dayTimes).filter(day => dayTimes[day].startTime && dayTimes[day].endTime)
-    const sortedDays = selectedDayValues
-      .map(dayValue => daysOfWeek.find(d => d.value === dayValue))
-      .sort((a, b) => (a?.order || 0) - (b?.order || 0))
-
-    return sortedDays.map(d => d?.abbr).join(', ')
-  }
+  // Format date to Thai
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
+                        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    const day = date.getDate();
+    const month = thaiMonths[date.getMonth()];
+    const year = date.getFullYear() + 543;
+    return `${day} ${month} ${year}`;
+  };
 
   return (
-    <div className="admin-container">
-      <div className="admin-layout">
-        {/* ส่วนซ้าย: ตาราง Time Slots */}
-        <div className="time-slots-section">
+    <div className="admin-schedule-container">
+      <div className="admin-schedule-wrapper">
+        {/* Header */}
+        <div className="header-card">
+          <div className="header-content">
+            <div className="header-icon">
+              <CalendarIcon className="icon" />
+            </div>
+            <div>
+              <h1 className="header-title">Admin Schedule Management</h1>
+              <p className="header-subtitle">จัดการตารางเวลาและกิจกรรมทั้งหมด</p>
+            </div>
+          </div>
+        </div>
 
-          <div className="left-controls" style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <button
-              type="button"
-              className={`btn-add-event ${showAddForm ? 'btn-active' : 'btn-inactive'}`}
-              onClick={() => setShowAddForm(true)}
-              style={{ flex: 1 }}
-            >
-              ✚ เพิ่มกิจกรรม
-            </button>
-            <button
-              type="button"
-              className={`btn-add-event ${!showAddForm ? 'btn-active' : 'btn-inactive'}`}
-              onClick={() => setShowAddForm(false)}
-              style={{ flex: 1 }}
-            >
-              📋 รายการกิจกรรม
-            </button>
+        {/* Create Form */}
+        <div className="form-card">
+          <div className="form-header">
+            <Plus className="form-icon" />
+            <h2 className="form-title">กำหนดช่วงเวลากิจกรรม</h2>
           </div>
 
-          {/* ฟอร์มเพิ่มกิจกรรม แสดงที่ด้านซ้ายโดยตรง (ไม่เป็น modal) */}
-          {showAddForm ? (
-            <form onSubmit={handleAddTimeSlot} className="add-time-slot-form modal-form">
-              {/* ฟิลด์กรอก Activity ID */}
-              <div className="form-field-group">
-                <label className="form-label">ชื่อกิจกรรม</label>
-                <input
-                  type="text"
-                  value={newTimeSlot.activityId}
-                  onChange={(e) => setNewTimeSlot({ ...newTimeSlot, activityId: e.target.value })}
-                  placeholder="กรอก Activity ID"
-                  className="form-input"
-                  autoFocus
-                />
+          <div className="form-content">
+            {/* Type Dropdown */}
+            <div className="form-group">
+              <label className="form-label">ประเภทกิจกรรม</label>
+              <div className="select-wrapper">
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  className="form-select"
+                >
+                  {types.map((type) => (
+                    <option key={type} value={type === 'เลือกประเภทกิจกรรม' ? '' : type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="select-icon" />
               </div>
+            </div>
 
-              {/* ฟิลด์เลือกวันแบบ Checkbox พร้อมเวลา */}
-              <div className="form-field-group">
-                
-                <div className="form-field-group form-options-row">
-                  <div className="form-option">
-                    <label className="form-label">สี</label>
-                    <input
-                      type="color"
-                      value={newTimeSlot.color}
-                      onChange={(e) => setNewTimeSlot({ ...newTimeSlot, color: e.target.value })}
-                      className="color-input"
-                    />
-                  </div>
-                </div>
-                {/* ฟิลด์สีและซ้ำทุก week ในแถวเดียว */}
-                <div className="form-option">
-                  <label className="form-label">เวลาว่างทั่วไป</label>
+            {/* Day Selection */}
+            <div className="form-group">
+              <label className="form-label">
+                วัน <span className="form-label-hint">(เลือกได้มากกว่า 1 วัน)</span>
+              </label>
+              <div className="day-buttons">
+                {days.map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => toggleDay(day)}
+                    className={`day-button ${formData.days.includes(day) ? 'day-button-active' : ''}`}
+                  >
+                    {day}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Time Selection */}
+            <div className="time-grid">
+              <div className="form-group">
+                <label className="form-label">เวลาเริ่ม</label>
+                <div className="select-wrapper">
                   <select
-                    value={newTimeSlot.isRecurring ? 'yes' : 'no'}
-                    onChange={(e) => setNewTimeSlot({ ...newTimeSlot, isRecurring: e.target.value === 'yes' })}
+                    value={formData.startTime}
+                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                     className="form-select"
                   >
-                    <option value="yes">ซ้ำทุกสัปดาห์</option>
-                    <option value="no">ไม่เกิดซ้ำ</option>
+                    <option value="">เลือกเวลาเริ่ม</option>
+                    {timeOptions.map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
                   </select>
+                  <ChevronDown className="select-icon" />
                 </div>
-                <label className="form-label">เลือกวันและกำหนดเวลา</label>
+              </div>
 
-                {/* ถ้าเป็น recurring ให้เลือกวันในสัปดาห์เป็น checkbox */}
-                {newTimeSlot.isRecurring ? (
-                  <div className="day-times-container">
-                    {daysOfWeek.map(day => {
-                      const isSelected = !!newTimeSlot.dayTimes[day.value]
+              <div className="form-group">
+                <label className="form-label">เวลาสิ้นสุด</label>
+                <div className="select-wrapper">
+                  <select
+                    value={formData.endTime}
+                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                    className="form-select"
+                  >
+                    <option value="">เลือกเวลาสิ้นสุด</option>
+                    {timeOptions.map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="select-icon" />
+                </div>
+              </div>
+            </div>
 
-                      return (
-                        <div key={day.value} className="day-time-item">
-                          <label className="day-checkbox-label">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setNewTimeSlot({
-                                    ...newTimeSlot,
-                                    dayTimes: {
-                                      ...newTimeSlot.dayTimes,
-                                      [day.value]: { startTime: '09:00', endTime: '17:00' }
-                                    }
-                                  })
-                                } else {
-                                  const updatedDayTimes = { ...newTimeSlot.dayTimes }
-                                  delete updatedDayTimes[day.value]
-                                  setNewTimeSlot({
-                                    ...newTimeSlot,
-                                    dayTimes: updatedDayTimes
-                                  })
-                                }
-                              }}
-                            />
-                            <span className="day-label">{day.abbr || day.label}</span>
-                          </label>
+            {/* Submit Button */}
+            <button onClick={handleCreate} className="submit-button">
+              บันทึก
+            </button>
+          </div>
+        </div>
 
-                          {isSelected && (
-                            <div className="time-inputs-inline">
-                              <input
-                                type="time"
-                                value={newTimeSlot.dayTimes[day.value].startTime}
-                                onChange={(e) => setNewTimeSlot({
-                                  ...newTimeSlot,
-                                  dayTimes: {
-                                    ...newTimeSlot.dayTimes,
-                                    [day.value]: {
-                                      ...newTimeSlot.dayTimes[day.value],
-                                      startTime: e.target.value
-                                    }
-                                  }
-                                })}
-                                className="time-input"
-                              />
-                              <span className="time-dash">−</span>
-                              <input
-                                type="time"
-                                value={newTimeSlot.dayTimes[day.value].endTime}
-                                onChange={(e) => setNewTimeSlot({
-                                  ...newTimeSlot,
-                                  dayTimes: {
-                                    ...newTimeSlot.dayTimes,
-                                    [day.value]: {
-                                      ...newTimeSlot.dayTimes[day.value],
-                                      endTime: e.target.value
-                                    }
-                                  }
-                                })}
-                                className="time-input"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
+        {/* Schedule List */}
+        <div className="list-card">
+          {/* Filter Section */}
+          <div className="filter-section">
+            <label className="form-label">กรองตามประเภท</label>
+            <div className="select-wrapper filter-select">
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="form-select"
+              >
+                {uniqueTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="select-icon" />
+            </div>
+          </div>
+
+          {/* Results Count */}
+          <div className="results-count">
+            แสดง {filteredSchedules.length} รายการ
+            {filterType !== 'ทั้งหมด' && ` (กรอง: ${filterType})`}
+          </div>
+
+          {/* Schedule Items */}
+          <div className="schedule-list">
+            {filteredSchedules.length === 0 ? (
+              <div className="empty-state">
+                ไม่พบรายการที่ค้นหา
+              </div>
+            ) : (
+              sortedDates.map((date) => (
+                <div key={date} className="date-group">
+                  {/* Date Separator */}
+                  <div className="date-separator">
+                    <div className="date-badge">
+                      {formatDate(date)}
+                    </div>
+                    <div className="date-line"></div>
                   </div>
-                ) : (
-                  <div className="specific-dates-container">
-                    {newTimeSlot.specificDates && newTimeSlot.specificDates.map((d, i) => (
-                      <div className="specific-date-row" key={i}>
-                        <div className="date-input-wrapper">
-                          <input
-                            type="date"
-                            value={d.date}
-                            onChange={(e) => {
-                              const updated = (newTimeSlot.specificDates || []).slice()
-                              updated[i] = { ...updated[i], date: e.target.value }
-                              setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
-                            }}
-                            className="date-picker-input"
-                          />
-                          <span className="date-display">
-                            {d.date ? d.date.split('-').reverse().join('/') : 'dd/mm/yyyy'}
-                          </span>
+
+                  {/* Schedule Items for this date */}
+                  <div className="schedule-items">
+                    {groupedSchedules[date].map((schedule) => (
+                      <div key={schedule.id} className="schedule-item">
+                        {/* Day Badge */}
+                        <div className="schedule-day-badge">
+                          {schedule.day}
                         </div>
 
-                        <div className="time-row">
-                          <div className='time-row-start'>
-                            <label className="time-label">เวลาเริ่ม</label>
-                            <input
-                              type="time"
-                              value={d.startTime}
-                              onChange={(e) => {
-                                const updated = (newTimeSlot.specificDates || []).slice()
-                                updated[i] = { ...updated[i], startTime: e.target.value }
-                                setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
-                              }}
-                              className="time-input"
-                            />
-                          </div>
-                          {/* <span className="time-dash">−</span> */}
-                          <div className='time-row-end'>
-                            <label className="time-label">เวลาสิ้นสุด</label>
-                            <input
-                              type="time"
-                              value={d.endTime}
-                              onChange={(e) => {
-                                const updated = (newTimeSlot.specificDates || []).slice()
-                                updated[i] = { ...updated[i], endTime: e.target.value }
-                                setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
-                              }}
-                              className="time-input"
-                            />
-                          </div>
-
+                        {/* Info */}
+                        <div className="schedule-info">
+                          <h3 className="schedule-type">{schedule.type}</h3>
+                          <p className="schedule-time">
+                            <span>🕐</span>
+                            {schedule.time}
+                          </p>
                         </div>
-                        <button type="button" className="btn-delete" onClick={() => {
-                          const updated = (newTimeSlot.specificDates || []).slice()
-                          updated.splice(i, 1)
-                          setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
-                        }}>ลบ</button>
+
+                        {/* Actions */}
+                        <div className="schedule-actions">
+                          <button className="action-button action-edit">
+                            แก้ไข
+                          </button>
+                          <button
+                            onClick={() => handleDelete(schedule.id)}
+                            className="action-button action-delete"
+                          >
+                            ยกเลิก
+                          </button>
+                        </div>
                       </div>
                     ))}
-
-                    <div style={{ marginTop: '0.5rem' }}>
-                      <button type="button" className="btn-add" onClick={() => {
-                        const updated = (newTimeSlot.specificDates || []).slice()
-                        updated.push({ date: '', startTime: '09:00', endTime: '10:00' })
-                        setNewTimeSlot({ ...newTimeSlot, specificDates: updated })
-                      }}>+ เพิ่มวันที่</button>
-                    </div>
                   </div>
-                )}
-              </div>
-
-              {/* ปุ่ม */}
-              <div className="modal-footer" style={{ padding: 0, marginTop: 0 }}>
-                <button
-                  type="submit"
-                  className="btn-submit"
-                >
-                  บันทึก
-                </button>
-              </div>
-            </form>
-
-          ) : (
-            <div className="time-slots-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Activity ID</th>
-                    <th>สี</th>
-                    <th>วัน</th>
-                    <th>เวลา</th>
-                    <th>จัดการ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {timeSlots.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="empty-message">
-                        ยังไม่มี Time Slots
-                      </td>
-                    </tr>
-                  ) : (
-                    timeSlots.map(slot => {
-                      // สร้างรายการเวลาของแต่ละวัน
-                      const dayTimesList = Object.keys(slot.dayTimes)
-                        .filter(day => slot.dayTimes[day].startTime && slot.dayTimes[day].endTime)
-                        .map(day => {
-                          const dayLabel = daysOfWeek.find(d => d.value === day)?.label || day
-                          return `${dayLabel} ${slot.dayTimes[day].startTime}-${slot.dayTimes[day].endTime}`
-                        })
-
-                      return (
-                        <tr key={slot.id}>
-                          <td>{slot.activityId}</td>
-                          <td>
-                            <span
-                              className="color-swatch"
-                              style={{ background: slot.color || '#4a90e2' }}
-                              title={slot.color || '#4a90e2'}
-                            />
-                          </td>
-                          <td>{slot.isRecurring ? getDayRangeLabel(slot.dayTimes) : (slot.specificDates ? slot.specificDates.map(d => d.date).join(', ') : '')}</td>
-                          <td>
-                            <div style={{ fontSize: '0.65rem', lineHeight: '1.2' }}>
-                              {dayTimesList.length > 0 ? (
-                                dayTimesList.map((time, idx) => (
-                                  <div key={idx}>{time}</div>
-                                ))
-                              ) : (
-                                <span>-</span>
-                              )}
-                            </div>
-                          </td>
-                          <td>
-                            <button
-                              onClick={() => handleDeleteTimeSlot(slot.id)}
-                              className="btn-delete"
-                            >
-                              ลบ
-                            </button>
-                          </td>
-                        </tr>
-                      )
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* ส่วนขวา: ปฏิทิน */}
-        <div className="calendar-section">
-
-          {/* แสดง Calendar component */}
-          <Calendar timeSlots={timeSlots} />
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
-
-
     </div>
-  )
-}
+  );
+};
 
-export default Admin
+export default Admin;

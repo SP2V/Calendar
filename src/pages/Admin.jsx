@@ -8,7 +8,7 @@ import {
   updateScheduleById,
 } from '../firebase';
 
-// Inline SVG icons
+// --------------------------- ICONS ---------------------------
 const CalendarIcon = ({ className = '' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" />
@@ -26,10 +26,11 @@ const ChevronDown = ({ className = '' }) => (
   </svg>
 );
 
+// --------------------------- MAIN COMPONENT ---------------------------
 const Admin = () => {
   const [schedules, setSchedules] = useState([]);
   const [filterType, setFilterType] = useState('ทั้งหมด');
-  const [editItem, setEditItem] = useState(null); // สำหรับโหมดแก้ไข
+  const [editItem, setEditItem] = useState(null);
 
   const [formData, setFormData] = useState({
     type: '',
@@ -54,34 +55,39 @@ const Admin = () => {
     return opts;
   })();
 
-  // 📥 Create หรือ Update
+  // --------------------------- SAVE (CREATE / UPDATE) ---------------------------
   const handleSave = async () => {
     if (formData.type && formData.days.length > 0 && formData.startTime && formData.endTime) {
       const currentDate = new Date().toISOString().split('T')[0];
+
+      const shortDayMap = {
+        'จันทร์': 'จ.',
+        'อังคาร': 'อ.',
+        'พุธ': 'พ.',
+        'พฤหัสบดี': 'พฤ.',
+        'ศุกร์': 'ศ.',
+        'เสาร์': 'ส.',
+        'อาทิตย์': 'อา.',
+      };
+
       const newSchedules = formData.days.map((day) => ({
-        day: day.slice(0, 2) + '.',
+        day: shortDayMap[day] || day,
         type: formData.type,
         time: `${formData.startTime} - ${formData.endTime}`,
         createdDate: currentDate,
       }));
 
       try {
-        if (editItem) {
-          // 🔁 Update mode
-          await updateScheduleById(editItem.id, newSchedules[0]);
-          setEditItem(null);
-        } else {
-          // ➕ Create mode
-          await Promise.all(newSchedules.map((s) => addScheduleDoc(s)));
-        }
+        await Promise.all(newSchedules.map((s) => addScheduleDoc(s)));
         setFormData({ type: '', days: [], startTime: '', endTime: '' });
+        setEditItem(null);
       } catch (err) {
-        console.error('Error saving schedules:', err);
+        console.error('Error adding schedules:', err);
       }
     }
   };
 
-  // ✅ Toggle วันที่
+  // --------------------------- TOGGLE DAY ---------------------------
   const toggleDay = (day) => {
     setFormData((prev) => ({
       ...prev,
@@ -91,7 +97,7 @@ const Admin = () => {
     }));
   };
 
-  // ❌ ลบรายการ
+  // --------------------------- DELETE ---------------------------
   const handleDelete = async (id) => {
     if (window.confirm('แน่ใจว่าต้องการลบรายการนี้?')) {
       try {
@@ -102,18 +108,27 @@ const Admin = () => {
     }
   };
 
-  // ✏️ แก้ไขรายการ
+  // --------------------------- EDIT ---------------------------
   const handleEdit = (item) => {
     setEditItem(item);
+    const fullDayMap = {
+      'จ.': 'จันทร์',
+      'อ.': 'อังคาร',
+      'พ.': 'พุธ',
+      'พฤ.': 'พฤหัสบดี',
+      'ศ.': 'ศุกร์',
+      'ส.': 'เสาร์',
+      'อา.': 'อาทิตย์',
+    };
     setFormData({
       type: item.type,
-      days: [item.day.replace('.', '')],
+      days: [fullDayMap[item.day] || item.day],
       startTime: item.time.split(' - ')[0],
       endTime: item.time.split(' - ')[1],
     });
   };
 
-  // 📡 ดึงข้อมูลแบบเรียลไทม์
+  // --------------------------- FIRESTORE REALTIME ---------------------------
   useEffect(() => {
     const unsub = subscribeSchedules((items) => {
       setSchedules(items);
@@ -121,6 +136,7 @@ const Admin = () => {
     return () => unsub();
   }, []);
 
+  // --------------------------- FILTERING ---------------------------
   const filteredSchedules =
     filterType === 'ทั้งหมด'
       ? schedules
@@ -128,7 +144,7 @@ const Admin = () => {
 
   const uniqueTypes = ['ทั้งหมด', ...new Set(schedules.map((s) => s.type))];
 
-  // Group by createdDate
+  // --------------------------- GROUP BY DATE ---------------------------
   const groupedSchedules = filteredSchedules.reduce((groups, s) => {
     const date = s.createdDate;
     if (!groups[date]) groups[date] = [];
@@ -136,11 +152,20 @@ const Admin = () => {
     return groups;
   }, {});
 
+  // ✅ เรียงลำดับวันในแต่ละกลุ่ม
+  const dayOrder = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
+  for (const date in groupedSchedules) {
+    groupedSchedules[date].sort(
+      (a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day)
+    );
+  }
+
+  // ✅ เรียงวันที่ใหม่สุดอยู่บนสุด
   const sortedDates = Object.keys(groupedSchedules).sort(
     (a, b) => new Date(b) - new Date(a)
   );
 
-  // แปลงวันที่เป็นไทย
+  // --------------------------- FORMAT THAI DATE ---------------------------
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const thaiMonths = [
@@ -163,10 +188,12 @@ const Admin = () => {
     return `${day} ${month} ${year}`;
   };
 
+  // --------------------------- RENDER ---------------------------
   return (
     <div className="admin-schedule-container">
       <div className="admin-schedule-wrapper">
-        {/* Header */}
+
+        {/* HEADER */}
         <div className="header-card">
           <div className="header-content">
             <div className="header-icon">
@@ -179,32 +206,25 @@ const Admin = () => {
           </div>
         </div>
 
-        {/* Create/Edit Form */}
+        {/* FORM */}
         <div className="form-card">
           <div className="form-header">
             <Plus className="form-icon" />
-            <h2 className="form-title">
-              {editItem ? 'แก้ไขกิจกรรม' : 'กำหนดช่วงเวลากิจกรรม'}
-            </h2>
+            <h2 className="form-title">{editItem ? 'แก้ไขกิจกรรม' : 'กำหนดช่วงเวลากิจกรรม'}</h2>
           </div>
 
           <div className="form-content">
-            {/* Type */}
+            {/* TYPE */}
             <div className="form-group">
               <label className="form-label">ประเภทกิจกรรม</label>
               <div className="select-wrapper">
                 <select
                   value={formData.type}
-                  onChange={(e) =>
-                    setFormData({ ...formData, type: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   className="form-select"
                 >
                   {types.map((type) => (
-                    <option
-                      key={type}
-                      value={type === 'เลือกประเภทกิจกรรม' ? '' : type}
-                    >
+                    <option key={type} value={type === 'เลือกประเภทกิจกรรม' ? '' : type}>
                       {type}
                     </option>
                   ))}
@@ -213,19 +233,16 @@ const Admin = () => {
               </div>
             </div>
 
-            {/* Days */}
+            {/* DAYS */}
             <div className="form-group">
-              <label className="form-label">
-                วัน <span className="form-label-hint">(เลือกได้มากกว่า 1 วัน)</span>
-              </label>
+              <label className="form-label">วัน <span className="form-label-hint">(เลือกได้มากกว่า 1 วัน)</span></label>
               <div className="day-buttons">
                 {days.map((day) => (
                   <button
                     key={day}
                     type="button"
                     onClick={() => toggleDay(day)}
-                    className={`day-button ${formData.days.includes(day) ? 'day-button-active' : ''
-                      }`}
+                    className={`day-button ${formData.days.includes(day) ? 'day-button-active' : ''}`}
                   >
                     {day}
                   </button>
@@ -233,23 +250,19 @@ const Admin = () => {
               </div>
             </div>
 
-            {/* Time */}
+            {/* TIME */}
             <div className="time-grid">
               <div className="form-group">
                 <label className="form-label">เวลาเริ่ม</label>
                 <div className="select-wrapper">
                   <select
                     value={formData.startTime}
-                    onChange={(e) =>
-                      setFormData({ ...formData, startTime: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                     className="form-select"
                   >
                     <option value="">เลือกเวลาเริ่ม</option>
                     {timeOptions.map((time) => (
-                      <option key={time} value={time}>
-                        {time}
-                      </option>
+                      <option key={time} value={time}>{time}</option>
                     ))}
                   </select>
                   <ChevronDown className="select-icon" />
@@ -261,16 +274,12 @@ const Admin = () => {
                 <div className="select-wrapper">
                   <select
                     value={formData.endTime}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endTime: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                     className="form-select"
                   >
                     <option value="">เลือกเวลาสิ้นสุด</option>
                     {timeOptions.map((time) => (
-                      <option key={time} value={time}>
-                        {time}
-                      </option>
+                      <option key={time} value={time}>{time}</option>
                     ))}
                   </select>
                   <ChevronDown className="select-icon" />
@@ -278,16 +287,15 @@ const Admin = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* BUTTON */}
             <button onClick={handleSave} className="submit-button">
               {editItem ? 'อัปเดต' : 'บันทึก'}
             </button>
           </div>
         </div>
 
-        {/* List */}
+        {/* LIST */}
         <div className="list-card">
-          {/* Filter */}
           <div className="filter-section">
             <label className="form-label">กรองตามประเภท</label>
             <div className="select-wrapper filter-select">
@@ -297,22 +305,18 @@ const Admin = () => {
                 className="form-select"
               >
                 {uniqueTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
+                  <option key={type} value={type}>{type}</option>
                 ))}
               </select>
               <ChevronDown className="select-icon" />
             </div>
           </div>
 
-          {/* Count */}
           <div className="results-count">
             แสดง {filteredSchedules.length} รายการ
             {filterType !== 'ทั้งหมด' && ` (กรอง: ${filterType})`}
           </div>
 
-          {/* Schedule List */}
           <div className="schedule-list">
             {filteredSchedules.length === 0 ? (
               <div className="empty-state">ไม่พบรายการที่ค้นหา</div>
@@ -328,14 +332,10 @@ const Admin = () => {
                     {groupedSchedules[date].map((schedule) => (
                       <div key={schedule.id} className="schedule-item">
                         <div className="schedule-day-badge">{schedule.day}</div>
-
                         <div className="schedule-info">
                           <h3 className="schedule-type">{schedule.type}</h3>
-                          <p className="schedule-time">
-                            🕐 {schedule.time}
-                          </p>
+                          <p className="schedule-time">🕐 {schedule.time}</p>
                         </div>
-
                         <div className="schedule-actions">
                           <button
                             className="action-button action-edit"

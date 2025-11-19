@@ -5,7 +5,7 @@ import {
   subscribeSchedules,
   addScheduleDoc,
   deleteScheduleById,
-  updateScheduleById,
+  // updateScheduleById,
 } from '../firebase';
 
 // --------------------------- ICONS ---------------------------

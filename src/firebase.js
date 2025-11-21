@@ -105,3 +105,23 @@ export default {
     deleteScheduleById,
     subscribeSchedules,
 };
+
+// --------------------------- ACTIVITY TYPES ---------------------------
+
+// ✅ subscribe แบบ realtime
+export const subscribeActivityTypes = (callback) => {
+    const typesRef = collection(db, "activityTypes");
+    return onSnapshot(typesRef, (snapshot) => {
+        const types = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+        callback(types);
+    });
+};
+
+// ✅ เพิ่มประเภทกิจกรรมใหม่
+export const addActivityTypeDoc = async (name) => {
+    const typesRef = collection(db, "activityTypes");
+    await addDoc(typesRef, { name });
+};

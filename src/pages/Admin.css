@@ -114,7 +114,7 @@
   border: 1px solid #d1d5db;
   border-radius: 0.75rem;
   background: white;
-  font-size: 1rem;
+  font-size: 0.95rem;
   transition: all 0.2s;
   appearance: none;
   cursor: pointer;
@@ -168,8 +168,10 @@
 /* Time Grid */
 .time-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  /* แก้จาก repeat(2, 1fr) เป็นแบบด้านล่าง */
+  grid-template-columns: 1fr 1fr auto; 
   gap: 1rem;
+  align-items: end; /* สำคัญ: จัดให้ปุ่มอยู่ชิดล่างเพื่อให้ตรงกับช่อง Input (ไม่ลอยขึ้นไปเสมอ Label) */
 }
 
 /* Submit Button */
@@ -204,8 +206,103 @@
   margin-bottom: 1.5rem;
 }
 
+.filter-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .filter-select {
   max-width: 20rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Add Activity Row */
+.add-activity-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.add-activity-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.add-activity-input:focus {
+  outline: none;
+  border-color: #3b82f6 !important; /* เส้นขอบสีฟ้าเมื่อคลิก */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* เงาฟ้าอ่อน */
+}
+
+.add-activity-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+  white-space: nowrap;
+}
+
+.add-activity-btn:hover {
+  background: #2563eb;
+  /* box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); */
+  /* transform: translateY(-1px); */
+}
+
+.add-activity-btn:active {
+  transform: translateY(0);
+}
+
+.add-activity-btn .button-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.add-activity-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  /* box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); */
+  white-space: nowrap;
+}
+
+.add-activity-button:hover {
+  background: #2563eb;
+  /* box-shadow: #3b82f6; */
+  /* transform: translateY(-1px); */
+}
+
+.add-activity-button:active {
+  transform: translateY(0);
+}
+
+.add-activity-button .button-icon {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 /* Results Count */
@@ -351,6 +448,33 @@
   background: #dc2626;
 }
 
+/* Toggle Time Input Button */
+.toggle-time-input-button {
+  width: auto;
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-time-input-button:hover {
+  background: #e5e7eb;
+}
+
+.toggle-time-input-button .button-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+
 /* Responsive */
 @media (max-width: 768px) {
   .admin-schedule-container {
@@ -368,6 +492,29 @@
 
   .time-grid {
     grid-template-columns: 1fr;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-select {
+    max-width: 100%;
+  }
+
+    .add-activity-row {
+    flex-direction: column;
+  }
+
+  .add-activity-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .add-activity-button {
+    width: 100%;
+    justify-content: center;
   }
 
   .schedule-item {

@@ -26,11 +26,33 @@ const ChevronDown = ({ className = '' }) => (
   </svg>
 );
 
+const KeyboardIcon = ({ className = '' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 7C2 6.44772 2.44772 6 3 6H21C21.5523 6 22 6.44772 22 7V17C22 17.5523 21.5523 18 21 18H3C2.44772 18 2 17.5523 2 17V7Z" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M6 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M10 10H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M14 10H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M18 10H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M6 14H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M10 14H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16 14H18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const ClockIcon = ({ className = '' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 // --------------------------- MAIN COMPONENT ---------------------------
 const Admin = () => {
   const [schedules, setSchedules] = useState([]);
   const [filterType, setFilterType] = useState('ทั้งหมด');
   const [editItem, setEditItem] = useState(null);
+  const [newType, setNewType] = useState('');
+  const [isTextInput, setIsTextInput] = useState(false);
 
   const [formData, setFormData] = useState({
     type: '',
@@ -39,8 +61,8 @@ const Admin = () => {
     endTime: '',
   });
 
-  const days = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
-  const types = ['เลือกประเภทกิจกรรม', 'ประชุม', 'อบรม', 'สัมมนา', 'กินข้าว', 'เที่ยว'];
+  const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+  const [types, setTypes] = useState(['เลือกประเภทกิจกรรม', 'ประชุม', 'อบรม', 'สัมมนา', 'กินข้าว', 'เที่ยว']);
 
   // สร้างตัวเลือกเวลา (ทุก 5 นาที)
   const timeOptions = (() => {
@@ -61,13 +83,13 @@ const Admin = () => {
       const currentDate = new Date().toISOString().split('T')[0];
 
       const shortDayMap = {
+        'อาทิตย์': 'อา.',
         'จันทร์': 'จ.',
         'อังคาร': 'อ.',
         'พุธ': 'พ.',
         'พฤหัสบดี': 'พฤ.',
         'ศุกร์': 'ศ.',
         'เสาร์': 'ส.',
-        'อาทิตย์': 'อา.',
       };
 
       const newSchedules = formData.days.map((day) => ({
@@ -96,6 +118,15 @@ const Admin = () => {
   };
 
 
+  // --------------------------- ADD NEW TYPE ---------------------------
+  const handleAddType = () => {
+    if (newType.trim() && !types.includes(newType.trim())) {
+      setTypes([...types, newType.trim()]);
+      setFormData({ ...formData, type: newType.trim() });
+      setNewType('');
+    }
+  };
+
   // --------------------------- TOGGLE DAY ---------------------------
   const toggleDay = (day) => {
     setFormData((prev) => ({
@@ -121,13 +152,13 @@ const Admin = () => {
   const handleEdit = (item) => {
     setEditItem(item);
     const fullDayMap = {
+      'อา.': 'อาทิตย์',
       'จ.': 'จันทร์',
       'อ.': 'อังคาร',
       'พ.': 'พุธ',
       'พฤ.': 'พฤหัสบดี',
       'ศ.': 'ศุกร์',
       'ส.': 'เสาร์',
-      'อา.': 'อาทิตย์',
     };
     setFormData({
       type: item.type,
@@ -162,7 +193,7 @@ const Admin = () => {
   }, {});
 
   // ✅ เรียงลำดับวันในแต่ละกลุ่ม
-  const dayOrder = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
+  const dayOrder = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
   for (const date in groupedSchedules) {
     groupedSchedules[date].sort(
       (a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day)
@@ -242,6 +273,25 @@ const Admin = () => {
               </div>
             </div>
 
+            {/* 🆕 ช่องเพิ่มกิจกรรมใหม่ */}
+            <div className="form-group">
+              <label className="form-label">เพิ่มประเภทกิจกรรมใหม่</label>
+              <div className="add-activity-row">
+                <input
+                  type="text"
+                  placeholder="พิมพ์ชื่อกิจกรรมใหม่..."
+                  value={newType}
+                  onChange={(e) => setNewType(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddType()}
+                  className="add-activity-input"
+                />
+                <button type="button" onClick={handleAddType} className="add-activity-btn">
+                  <Plus className="button-icon" />
+                  เพิ่มกิจกรรม
+                </button>
+              </div>
+            </div>
+
             {/* DAYS */}
             <div className="form-group">
               <label className="form-label">วัน <span className="form-label-hint">(เลือกได้มากกว่า 1 วัน)</span></label>
@@ -263,38 +313,75 @@ const Admin = () => {
             <div className="time-grid">
               <div className="form-group">
                 <label className="form-label">เวลาเริ่ม</label>
-                <div className="select-wrapper">
-                  <select
+                {isTextInput ? (
+                  <input
+                    type="text"
                     value={formData.startTime}
                     onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                     className="form-select"
-                  >
-                    <option value="">เลือกเวลาเริ่ม</option>
-                    {timeOptions.map((time) => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="select-icon" />
-                </div>
+                    placeholder="HH:MM"
+                  />
+                ) : (
+                  <div className="select-wrapper">
+                    <select
+                      value={formData.startTime}
+                      onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                      className="form-select"
+                    >
+                      <option value="">เลือกเวลา</option>
+                      {timeOptions.map((time) => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="select-icon" />
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
                 <label className="form-label">เวลาสิ้นสุด</label>
-                <div className="select-wrapper">
-                  <select
+                {isTextInput ? (
+                  <input
+                    type="text"
                     value={formData.endTime}
                     onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                     className="form-select"
-                  >
-                    <option value="">เลือกเวลาสิ้นสุด</option>
-                    {timeOptions.map((time) => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="select-icon" />
-                </div>
+                    placeholder="HH:MM"
+                  />
+                ) : (
+                  <div className="select-wrapper">
+                    <select
+                      value={formData.endTime}
+                      onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                      className="form-select"
+                    >
+                      <option value="">เลือกเวลา</option>
+                      {timeOptions.map((time) => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="select-icon" />
+                  </div>
+                )}
+              </div>
+              {/* BUTTON TO TOGGLE */}
+              <div className="form-group">
+                <button onClick={() => setIsTextInput(!isTextInput)} className="toggle-time-input-button">
+                  {isTextInput ? (
+                    <>
+                      <ClockIcon className="button-icon" />
+                      {/* <span>ใช้ช่องเลือกเวลา</span> */}
+                    </>
+                  ) : (
+                    <>
+                      <KeyboardIcon className="button-icon" />
+                      {/* <span>ใช้การพิมพ์</span> */}
+                    </>
+                  )}
+                </button>
               </div>
             </div>
+
 
             {/* BUTTON */}
             <button onClick={handleSave} className="submit-button">
@@ -304,20 +391,22 @@ const Admin = () => {
         </div>
 
         {/* LIST */}
-        <div className="list-card">
+        {/* <div className="list-card">
           <div className="filter-section">
             <label className="form-label">กรองตามประเภท</label>
-            <div className="select-wrapper filter-select">
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="form-select"
-              >
-                {uniqueTypes.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-              <ChevronDown className="select-icon" />
+            <div className="filter-row">
+              <div className="select-wrapper filter-select">
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="form-select"
+                >
+                  {uniqueTypes.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+                <ChevronDown className="select-icon" />
+              </div>
             </div>
           </div>
 
@@ -366,7 +455,7 @@ const Admin = () => {
               ))
             )}
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

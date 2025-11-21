@@ -1,5 +1,3 @@
-/* AdminScheduleUI.css */
-
 /* Container */
 .admin-schedule-container {
   min-height: 100vh;
@@ -169,10 +167,10 @@
 .time-grid {
   display: grid;
   /* แก้จาก repeat(2, 1fr) เป็นแบบด้านล่าง */
-  grid-template-columns: 1fr 1fr auto; 
+  grid-template-columns: 1fr 1fr auto;
   gap: 1rem;
-  align-items: end; /* สำคัญ: จัดให้ปุ่มอยู่ชิดล่างเพื่อให้ตรงกับช่อง Input (ไม่ลอยขึ้นไปเสมอ Label) */
-}
+  align-items: end;
+  /* สำคัญ: จัดให้ปุ่มอยู่ชิดล่างเพื่อให้ตรงกับช่อง Input (ไม่ลอยขึ้นไปเสมอ Label) */}
 
 /* Submit Button */
 .submit-button {
@@ -237,8 +235,9 @@
 
 .add-activity-input:focus {
   outline: none;
-  border-color: #3b82f6 !important; /* เส้นขอบสีฟ้าเมื่อคลิก */
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* เงาฟ้าอ่อน */
+  border-color: #3b82f6 !important;
+  /* เส้นขอบสีฟ้าเมื่อคลิก */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);  /* เงาฟ้าอ่อน */
 }
 
 .add-activity-btn {
@@ -474,7 +473,6 @@
   height: 1.25rem;
 }
 
-
 /* Responsive */
 @media (max-width: 768px) {
   .admin-schedule-container {
@@ -503,7 +501,7 @@
     max-width: 100%;
   }
 
-    .add-activity-row {
+  .add-activity-row {
     flex-direction: column;
   }
 

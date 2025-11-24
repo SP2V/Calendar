@@ -1,6 +1,7 @@
 // Admin.jsx
 import React, { useState, useEffect } from 'react';
 import './Admin.css';
+import TimeDropdown from "./TimeDropdown";
 import {
   subscribeSchedules,
   addScheduleDoc,
@@ -46,6 +47,7 @@ const ClockIcon = ({ className = '' }) => (
   </svg>
 );
 
+
 // --------------------------- MAIN COMPONENT ---------------------------
 const Admin = () => {
   const [schedules, setSchedules] = useState([]);
@@ -68,7 +70,7 @@ const Admin = () => {
   const timeOptions = (() => {
     const opts = [];
     for (let h = 0; h <= 23; h++) {
-      for (let m = 0; m < 60; m += 5) {
+      for (let m = 0; m < 60; m += 15) {
         const hh = String(h).padStart(2, '0');
         const mm = String(m).padStart(2, '0');
         opts.push(`${hh}:${mm}`);
@@ -138,35 +140,35 @@ const Admin = () => {
   };
 
   // --------------------------- DELETE ---------------------------
-  const handleDelete = async (id) => {
-    if (window.confirm('แน่ใจว่าต้องการลบรายการนี้?')) {
-      try {
-        await deleteScheduleById(id);
-      } catch (err) {
-        console.error('Error deleting schedule:', err);
-      }
-    }
-  };
+  // const handleDelete = async (id) => {
+  //   if (window.confirm('แน่ใจว่าต้องการลบรายการนี้?')) {
+  //     try {
+  //       await deleteScheduleById(id);
+  //     } catch (err) {
+  //       console.error('Error deleting schedule:', err);
+  //     }
+  //   }
+  // };
 
-  // --------------------------- EDIT ---------------------------
-  const handleEdit = (item) => {
-    setEditItem(item);
-    const fullDayMap = {
-      'อา.': 'อาทิตย์',
-      'จ.': 'จันทร์',
-      'อ.': 'อังคาร',
-      'พ.': 'พุธ',
-      'พฤ.': 'พฤหัสบดี',
-      'ศ.': 'ศุกร์',
-      'ส.': 'เสาร์',
-    };
-    setFormData({
-      type: item.type,
-      days: [fullDayMap[item.day] || item.day],
-      startTime: item.time.split(' - ')[0],
-      endTime: item.time.split(' - ')[1],
-    });
-  };
+  // // --------------------------- EDIT ---------------------------
+  // const handleEdit = (item) => {
+  //   setEditItem(item);
+  //   const fullDayMap = {
+  //     'อา.': 'อาทิตย์',
+  //     'จ.': 'จันทร์',
+  //     'อ.': 'อังคาร',
+  //     'พ.': 'พุธ',
+  //     'พฤ.': 'พฤหัสบดี',
+  //     'ศ.': 'ศุกร์',
+  //     'ส.': 'เสาร์',
+  //   };
+  //   setFormData({
+  //     type: item.type,
+  //     days: [fullDayMap[item.day] || item.day],
+  //     startTime: item.time.split(' - ')[0],
+  //     endTime: item.time.split(' - ')[1],
+  //   });
+  // };
 
   // --------------------------- FIRESTORE REALTIME ---------------------------
   useEffect(() => {
@@ -182,7 +184,7 @@ const Admin = () => {
       ? schedules
       : schedules.filter((s) => s.type === filterType);
 
-  const uniqueTypes = ['ทั้งหมด', ...new Set(schedules.map((s) => s.type))];
+  // const uniqueTypes = ['ทั้งหมด', ...new Set(schedules.map((s) => s.type))];
 
   // --------------------------- GROUP BY DATE ---------------------------
   const groupedSchedules = filteredSchedules.reduce((groups, s) => {
@@ -201,32 +203,32 @@ const Admin = () => {
   }
 
   // ✅ เรียงวันที่ใหม่สุดอยู่บนสุด
-  const sortedDates = Object.keys(groupedSchedules).sort(
-    (a, b) => new Date(b) - new Date(a)
-  );
+  // const sortedDates = Object.keys(groupedSchedules).sort(
+  //   (a, b) => new Date(b) - new Date(a)
+  // );
 
   // --------------------------- FORMAT THAI DATE ---------------------------
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const thaiMonths = [
-      'มกราคม',
-      'กุมภาพันธ์',
-      'มีนาคม',
-      'เมษายน',
-      'พฤษภาคม',
-      'มิถุนายน',
-      'กรกฎาคม',
-      'สิงหาคม',
-      'กันยายน',
-      'ตุลาคม',
-      'พฤศจิกายน',
-      'ธันวาคม',
-    ];
-    const day = date.getDate();
-    const month = thaiMonths[date.getMonth()];
-    const year = date.getFullYear() + 543;
-    return `${day} ${month} ${year}`;
-  };
+  // const formatDate = (dateString) => {
+  //   const date = new Date(dateString);
+  //   const thaiMonths = [
+  //     'มกราคม',
+  //     'กุมภาพันธ์',
+  //     'มีนาคม',
+  //     'เมษายน',
+  //     'พฤษภาคม',
+  //     'มิถุนายน',
+  //     'กรกฎาคม',
+  //     'สิงหาคม',
+  //     'กันยายน',
+  //     'ตุลาคม',
+  //     'พฤศจิกายน',
+  //     'ธันวาคม',
+  //   ];
+  //   const day = date.getDate();
+  //   const month = thaiMonths[date.getMonth()];
+  //   const year = date.getFullYear() + 543;
+  //   return `${day} ${month} ${year}`;
+  // };
 
   // --------------------------- RENDER ---------------------------
   return (
@@ -311,8 +313,11 @@ const Admin = () => {
 
             {/* TIME */}
             <div className="time-grid">
+
+              {/* เวลาเริ่ม */}
               <div className="form-group">
                 <label className="form-label">เวลาเริ่ม</label>
+
                 {isTextInput ? (
                   <input
                     type="text"
@@ -322,24 +327,18 @@ const Admin = () => {
                     placeholder="HH:MM"
                   />
                 ) : (
-                  <div className="select-wrapper">
-                    <select
-                      value={formData.startTime}
-                      onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                      className="form-select"
-                    >
-                      <option value="">เลือกเวลา</option>
-                      {timeOptions.map((time) => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="select-icon" />
-                  </div>
+                  <TimeDropdown
+                    value={formData.startTime}
+                    onChange={(time) => setFormData({ ...formData, startTime: time })}
+                    timeOptions={timeOptions}
+                  />
                 )}
               </div>
 
+              {/* เวลาสิ้นสุด */}
               <div className="form-group">
                 <label className="form-label">เวลาสิ้นสุด</label>
+
                 {isTextInput ? (
                   <input
                     type="text"
@@ -349,38 +348,30 @@ const Admin = () => {
                     placeholder="HH:MM"
                   />
                 ) : (
-                  <div className="select-wrapper">
-                    <select
-                      value={formData.endTime}
-                      onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                      className="form-select"
-                    >
-                      <option value="">เลือกเวลา</option>
-                      {timeOptions.map((time) => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="select-icon" />
-                  </div>
+                  <TimeDropdown
+                    value={formData.endTime}
+                    onChange={(time) => setFormData({ ...formData, endTime: time })}
+                    timeOptions={timeOptions}
+                  />
                 )}
               </div>
-              {/* BUTTON TO TOGGLE */}
+
+              {/* ปุ่มสลับโหมด */}
               <div className="form-group">
-                <button onClick={() => setIsTextInput(!isTextInput)} className="toggle-time-input-button">
+                <button
+                  onClick={() => setIsTextInput(!isTextInput)}
+                  className="toggle-time-input-button"
+                >
                   {isTextInput ? (
-                    <>
-                      <ClockIcon className="button-icon" />
-                      {/* <span>ใช้ช่องเลือกเวลา</span> */}
-                    </>
+                    <ClockIcon className="button-icon" />
                   ) : (
-                    <>
-                      <KeyboardIcon className="button-icon" />
-                      {/* <span>ใช้การพิมพ์</span> */}
-                    </>
+                    <KeyboardIcon className="button-icon" />
                   )}
                 </button>
               </div>
+
             </div>
+
 
 
             {/* BUTTON */}

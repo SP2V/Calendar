@@ -108,20 +108,31 @@
 
 .form-select {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.75rem;
-  background: white;
-  font-size: 0.95rem;
   transition: all 0.2s;
   appearance: none;
   cursor: pointer;
+  height: 38px;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #767676;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .form-select:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-select option {
+  padding: 4px 6px;
+  font-size: 14px;
 }
 
 .select-icon {
@@ -170,7 +181,8 @@
   grid-template-columns: 1fr 1fr auto;
   gap: 1rem;
   align-items: end;
-  /* สำคัญ: จัดให้ปุ่มอยู่ชิดล่างเพื่อให้ตรงกับช่อง Input (ไม่ลอยขึ้นไปเสมอ Label) */}
+  /* สำคัญ: จัดให้ปุ่มอยู่ชิดล่างเพื่อให้ตรงกับช่อง Input (ไม่ลอยขึ้นไปเสมอ Label) */
+}
 
 /* Submit Button */
 .submit-button {
@@ -237,7 +249,8 @@
   outline: none;
   border-color: #3b82f6 !important;
   /* เส้นขอบสีฟ้าเมื่อคลิก */
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);  /* เงาฟ้าอ่อน */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  /* เงาฟ้าอ่อน */
 }
 
 .add-activity-btn {

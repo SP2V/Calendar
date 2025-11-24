@@ -246,7 +246,7 @@ const Admin = () => {
                     type="text"
                     value={formData.startTime}
                     onChange={e => setFormData({ ...formData, startTime: e.target.value })}
-                    className="form-select"
+                    className="add-activity-input"
                     placeholder="HH:MM"
                   />
                 ) : (
@@ -264,7 +264,7 @@ const Admin = () => {
                     type="text"
                     value={formData.endTime}
                     onChange={e => setFormData({ ...formData, endTime: e.target.value })}
-                    className="form-select"
+                    className="add-activity-input"
                     placeholder="HH:MM"
                   />
                 ) : (

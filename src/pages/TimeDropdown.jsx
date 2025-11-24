@@ -6,7 +6,10 @@ const TimeDropdown = ({ value, onChange, timeOptions }) => {
 
     return (
         <div className="time-dropdown">
-            <div className="display" onClick={() => setOpen(!open)}>
+            <div
+                className={`display ${value ? 'has-value' : ''}`}
+                onClick={() => setOpen(!open)}
+            >
                 {value || "เลือกเวลา"}
             </div>
 

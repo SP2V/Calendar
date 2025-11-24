@@ -1,5 +1,4 @@
 // firebase.js
-// Firebase helper (Vite + Firestore)
 import { initializeApp } from 'firebase/app';
 import {
     getFirestore,
@@ -39,6 +38,8 @@ try {
     console.error('Error initializing Firebase:', err);
 }
 
+// ================= SCHEDULES =================
+
 // ✅ CREATE
 export async function addScheduleDoc(schedule) {
     if (!db) throw new Error('Firestore not initialized');
@@ -49,15 +50,15 @@ export async function addScheduleDoc(schedule) {
     return docRef.id;
 }
 
-// ✅ READ (ทั้งหมด)
+// ✅ READ ALL
 export async function getAllSchedules() {
     if (!db) throw new Error('Firestore not initialized');
     const q = query(collection(db, 'schedules'), orderBy('createdDate', 'desc'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-// ✅ READ (ตาม id)
+// ✅ READ BY ID
 export async function getScheduleById(id) {
     if (!db) throw new Error('Firestore not initialized');
     const docRef = doc(db, 'schedules', id);
@@ -82,20 +83,54 @@ export async function deleteScheduleById(id) {
     return true;
 }
 
-// ✅ SUBSCRIBE (auto update เมื่อ Firestore เปลี่ยน)
+// ✅ SUBSCRIBE SCHEDULES (Realtime)
 export function subscribeSchedules(onUpdate) {
-    if (!db) return () => { };
+    if (!db) return () => {};
     const q = query(collection(db, 'schedules'), orderBy('createdDate', 'desc'));
     const unsub = onSnapshot(
         q,
-        (snapshot) => {
-            const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        snapshot => {
+            const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
             onUpdate(items);
         },
-        (err) => console.error('onSnapshot error:', err)
+        err => console.error('onSnapshot error:', err)
     );
     return unsub;
 }
+
+// ================= ACTIVITY TYPES =================
+
+// ✅ SUBSCRIBE ACTIVITY TYPES (Realtime)
+export const subscribeActivityTypes = (callback) => {
+    if (!db) return () => {};
+    const typesRef = collection(db, 'activityTypes');
+    const q = query(typesRef, orderBy('name'));
+    const unsub = onSnapshot(
+        q,
+        snapshot => {
+            // return array of strings แทน object สำหรับ dropdown
+            const types = snapshot.docs.map(doc => doc.data().name);
+            callback(types);
+        },
+        err => console.error('subscribeActivityTypes error:', err)
+    );
+    return unsub;
+};
+
+// ✅ ADD ACTIVITY TYPE
+export const addActivityType = async (name) => {
+    if (!db) throw new Error('Firestore not initialized');
+    if (!name || !name.trim()) return;
+    const typesRef = collection(db, 'activityTypes');
+    await addDoc(typesRef, { name: name.trim() });
+};
+
+// ✅ DELETE ACTIVITY TYPE (Optional)
+export const deleteActivityType = async (id) => {
+    if (!db) throw new Error('Firestore not initialized');
+    const docRef = doc(db, 'activityTypes', id);
+    await deleteDoc(docRef);
+};
 
 export default {
     addScheduleDoc,
@@ -104,24 +139,7 @@ export default {
     updateScheduleById,
     deleteScheduleById,
     subscribeSchedules,
-};
-
-// --------------------------- ACTIVITY TYPES ---------------------------
-
-// ✅ subscribe แบบ realtime
-export const subscribeActivityTypes = (callback) => {
-    const typesRef = collection(db, "activityTypes");
-    return onSnapshot(typesRef, (snapshot) => {
-        const types = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-        }));
-        callback(types);
-    });
-};
-
-// ✅ เพิ่มประเภทกิจกรรมใหม่
-export const addActivityTypeDoc = async (name) => {
-    const typesRef = collection(db, "activityTypes");
-    await addDoc(typesRef, { name });
+    subscribeActivityTypes,
+    addActivityType,
+    deleteActivityType,
 };

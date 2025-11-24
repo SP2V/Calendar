@@ -19,6 +19,10 @@
     justify-content: space-between;
 }
 
+.display.has-value {
+    color: #000; /* สีดำเมื่อมีค่าแล้ว */
+}
+
 .dropdown-list {
     position: absolute;
     width: 100%;

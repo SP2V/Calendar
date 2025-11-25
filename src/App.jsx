@@ -17,7 +17,7 @@ function App() {
   return (
     <div className="app">
       {/* แสดง Navigation bar ที่ด้านบนของทุกหน้า */}
-      <Navigation />
+      {/* <Navigation /> */}
       
       {/* กำหนด Routes สำหรับการนำทางระหว่างหน้า */}
       <Routes>

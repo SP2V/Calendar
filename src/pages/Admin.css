@@ -243,6 +243,7 @@
 
 .add-activity-input {
   flex: 1;
+  height: 40px;
   padding: 0.75rem 1rem;
   border: 1px solid #d1d5db;
   border-radius: 0.75rem;
@@ -260,6 +261,7 @@
 
 .add-activity-btn {
   display: flex;
+  height: 40px;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
@@ -544,5 +546,133 @@
 
   .action-button {
     flex: 1;
+  }
+}
+
+/* =======================
+   INLINE TYPE SELECT ROW
+   ======================= */
+.type-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap; /* ป้องกันล้นบนจอเล็ก */
+}
+
+.type-select {
+  flex: 1.2; /* dropdown กว้างกว่าเล็กน้อย */
+}
+
+.add-activity-inline-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.55rem 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.add-activity-inline-btn:hover {
+  background: #2563eb;
+}
+
+.add-activity-inline-btn:active {
+  transform: scale(0.97);
+}
+
+.add-activity-inline-btn .button-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* Responsive: จอเล็กให้เรียงเป็นบรรทัด */
+@media (max-width: 768px) {
+  .type-inline-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .add-activity-inline-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Time Input Row */
+.time-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.time-text-input {
+  flex: 1;
+  height: 38px;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #000;
+  background: white;
+  transition: all 0.2s;
+}
+
+.time-text-input::placeholder {
+  color: #9ca3af;
+}
+
+.time-text-input:focus {
+  outline: none;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ให้ dropdown มีขนาดพอดีกับ input */
+.time-dropdown {
+  flex: 1;
+}
+
+/* Header Top Row (เพิ่มแถวบนสุด) */
+.header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ปุ่มสลับโหมด */
+.session-toggle-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.session-toggle-btn:hover {
+  background: #2563eb;
+}
+
+.session-toggle-btn:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 768px) {
+  .header-top-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .session-toggle-btn {
+    align-self: stretch;
   }
 }

@@ -14,18 +14,18 @@ import {
 // --------------------------- ICONS ---------------------------
 const CalendarIcon = ({ className = '' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none">
-    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M16 2v4M8 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M16 2v4M8 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 const Plus = ({ className = '' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none">
-    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 const ChevronDown = ({ className = '' }) => (
   <svg className={className} viewBox="0 0 20 20" fill="none">
-    <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -42,6 +42,7 @@ const Admin = () => {
   const [customDuration, setCustomDuration] = useState('');
   const [currentSchedulePage, setCurrentSchedulePage] = useState(1);
   const [currentTypePage, setCurrentTypePage] = useState(1);
+  const [activityFilter, setActivityFilter] = useState('แสดงทั้งหมด');
   const itemsPerPage = 5;
 
   const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
@@ -184,7 +185,7 @@ const Admin = () => {
         <div className="header-card">
           <div className="header-top-row">
             <div className="header-content">
-              <div className="header-icon"><CalendarIcon className="icon"/></div>
+              <div className="header-icon"><CalendarIcon className="icon" /></div>
               <div>
                 <h1 className="header-title">Admin Schedule Management</h1>
                 <p className="header-subtitle">
@@ -234,6 +235,22 @@ const Admin = () => {
                 </div>
               </div>
 
+
+              {/* DAYS */}
+              <div className="form-group">
+                <label className="form-label">วัน <span className="form-label-hint">(เลือกได้มากกว่า 1 วัน)</span></label>
+                <div className="day-buttons">
+                  {days.map(day => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleDay(day)}
+                      className={`day-button ${formData.days.includes(day) ? 'day-button-active' : ''}`}
+                    >{day}</button>
+                  ))}
+                </div>
+              </div>
+
               {/* DURATION */}
               <div className="form-group">
                 <label className="form-label">ระยะเวลาการนัดหมาย</label>
@@ -274,21 +291,6 @@ const Admin = () => {
                 </div>
               </div>
 
-              {/* DAYS */}
-              <div className="form-group">
-                <label className="form-label">วัน <span className="form-label-hint">(เลือกได้มากกว่า 1 วัน)</span></label>
-                <div className="day-buttons">
-                  {days.map(day => (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => toggleDay(day)}
-                      className={`day-button ${formData.days.includes(day) ? 'day-button-active' : ''}`}
-                    >{day}</button>
-                  ))}
-                </div>
-              </div>
-
               {/* TIME */}
               <div className="time-grid">
                 <div className="form-group">
@@ -318,7 +320,7 @@ const Admin = () => {
         ) : (
           <div className="list-card">
             <h2 className="form-title">รายการกิจกรรมทั้งหมด</h2>
-            
+
             <div className="list-content-grid">
               {/* ส่วนแสดงประเภทกิจกรรม - ซ้าย */}
               <div className="list-column-card">
@@ -345,7 +347,7 @@ const Admin = () => {
                                       if (e.key === 'Escape') handleCancelEditType();
                                     }}
                                     style={{
-                                      width: '100%',
+                                      width: '90px',
                                       padding: '8px 12px',
                                       border: '1px solid #3b82f6',
                                       borderRadius: '6px',
@@ -385,7 +387,9 @@ const Admin = () => {
                             )}
                           </div>
                         )) : (
-                          <div className="empty-state">ยังไม่มีประเภทกิจกรรม</div>
+                          <p className="text-center text-gray-500 py-4">
+                            ยังไม่มีกิจกรรมที่บันทึกไว้
+                          </p>
                         )}
                       </div>
 
@@ -417,23 +421,41 @@ const Admin = () => {
 
               {/* ส่วนแสดงตารางเวลา - ขวา */}
               <div className="list-column-card">
-                <h3 style={{ fontSize: '1rem', marginBottom: '1rem', marginTop: '0', color: '#333' }}>ตารางเวลากิจกรรม</h3>
-                
-                {/* คำนวณ pagination */}
+                <div className="list-row-card">
+                  <h3 className="text-base font-medium text-gray-900 whitespace-nowrap mr-4">ตารางเวลากิจกรรม</h3>
+                  <div className="w-36">
+                    <TimeDropdown
+                      value={activityFilter}
+                      onChange={(value) => {
+                        setActivityFilter(value);
+                        setCurrentSchedulePage(1);
+                      }}
+                      timeOptions={['แสดงทั้งหมด', ...new Set(schedules.map(item => item.type))]}
+                      placeholder="กรองกิจกรรม"
+                    />
+                  </div>
+                </div>
+
+                {/* Calculate pagination */}
                 {(() => {
-                  const totalPages = Math.ceil(schedules.length / itemsPerPage) || 1;
+                  // Filter schedules based on selected filter
+                  const filteredSchedules = activityFilter === 'แสดงทั้งหมด'
+                    ? schedules
+                    : schedules.filter(item => item.type === activityFilter);
+
+                  const totalPages = Math.ceil(filteredSchedules.length / itemsPerPage) || 1;
                   const startIndex = (currentSchedulePage - 1) * itemsPerPage;
                   const endIndex = startIndex + itemsPerPage;
-                  const currentSchedules = schedules.slice(startIndex, endIndex);
+                  const currentSchedules = filteredSchedules.slice(startIndex, endIndex);
 
                   return (
                     <>
                       <div className="schedule-list">
-                        {schedules.length > 0 ? currentSchedules.map(item => (
+                        {filteredSchedules.length > 0 ? currentSchedules.map(item => (
                           <div key={item.id} className="schedule-item">
-                            <div className="schedule-day-badge">{item.day}</div>
                             <div className="schedule-info">
                               <p className="schedule-type">{item.type}</p>
+                              <div className="schedule-day-badge">{item.day}</div>
                               <p className="schedule-time">{item.time}</p>
                             </div>
                             <div className="schedule-actions">

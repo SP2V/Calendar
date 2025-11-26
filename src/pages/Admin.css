@@ -185,7 +185,7 @@
   display: grid;
   /* แก้จาก repeat(2, 1fr) เป็นแบบด้านล่าง */
   grid-template-columns: 1fr 1fr auto;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: end;
   /* สำคัญ: จัดให้ปุ่มอยู่ชิดล่างเพื่อให้ตรงกับช่อง Input (ไม่ลอยขึ้นไปเสมอ Label) */
 }
@@ -214,15 +214,15 @@
   background: white;
   border-radius: 1rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 /* List Content Grid */
 .list-content-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.3fr 2fr;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .list-column {
@@ -231,7 +231,7 @@
 }
 
 .list-column-card {
-  background: #f9fafb;
+  background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 0.75rem;
   padding: 0.85rem;
@@ -239,6 +239,20 @@
   flex-direction: column;
   gap: 0.5rem;
   box-sizing: border-box;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.list-column-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.list-row-card {
+  display: flex;
+  flex-direction: row;
+  gap: 6.1rem;
+  /* align-items: start;
+  justify-self: self-end; */
 }
 
 @media (max-width: 768px) {
@@ -478,37 +492,27 @@
 /* Schedule Item */
 .schedule-item {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
   padding: 0.75rem;
-  background: #fdfefe;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.65rem;
+  border-radius: 0.5rem;
+  background: #f9fafb;
+  margin-bottom: 0.5rem;
   transition: all 0.2s;
+  border: 1px solid #e5e7eb;
 }
 
 .schedule-item:hover {
   background: #f3f4f6;
+  transform: translateX(2px);
 }
 
-/* Schedule Day Badge */
-.schedule-day-badge {
-  flex-shrink: 0;
-  width: 2.75rem;
-  height: 2.75rem;
-  background: #3b82f6;
-  border-radius: 0.65rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-/* Schedule Info */
 .schedule-info {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .schedule-type {
@@ -519,6 +523,15 @@
 }
 
 .schedule-time {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0.2rem 0 0 0;
+}
+
+.schedule-day-badge {
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -544,21 +557,25 @@
 }
 
 .action-edit {
-  background: #10b981;
-  color: white;
+  background: #ffffff;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
 }
 
 .action-edit:hover {
-  background: #059669;
+  background: #3b82f6;
+  color: white;
 }
 
 .action-delete {
-  background: #ef4444;
-  color: white;
+  background: #ffffff;
+  color: #ef4444;
+  border: 1px solid #ef4444;
 }
 
 .action-delete:hover {
   background: #dc2626;
+  color: #ffffff;
 }
 
 /* Toggle Time Input Button */

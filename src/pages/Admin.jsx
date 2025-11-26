@@ -6,7 +6,9 @@ import {
   addScheduleDoc,
   deleteScheduleById,
   subscribeActivityTypes,
-  addActivityType
+  addActivityType,
+  updateActivityType,
+  deleteActivityType
 } from '../firebase';
 
 // --------------------------- ICONS ---------------------------
@@ -30,10 +32,17 @@ const ChevronDown = ({ className = '' }) => (
 const Admin = () => {
   const [schedules, setSchedules] = useState([]);
   const [types, setTypes] = useState(['เลือกประเภทกิจกรรม']);
-  const [formData, setFormData] = useState({ type: '', days: [], startTime: '', endTime: '' });
+  const [activityTypes, setActivityTypes] = useState([]);
+  const [formData, setFormData] = useState({ type: '', days: [], startTime: '', endTime: '', duration: '' });
   const [newType, setNewType] = useState('');
   const [editItem, setEditItem] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
+  const [editingTypeId, setEditingTypeId] = useState(null);
+  const [editingTypeName, setEditingTypeName] = useState('');
+  const [customDuration, setCustomDuration] = useState('');
+  const [currentSchedulePage, setCurrentSchedulePage] = useState(1);
+  const [currentTypePage, setCurrentTypePage] = useState(1);
+  const itemsPerPage = 5;
 
   const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
@@ -48,17 +57,40 @@ const Admin = () => {
     return opts;
   })();
 
+  // ตัวเลือกระยะเวลา
+  const durationOptions = [
+    '30 นาที',
+    '45 นาที',
+    '1 ชั่วโมง',
+    '2 ชั่วโมง',
+    '3 ชั่วโมง',
+    '4 ชั่วโมง',
+    'Custom'
+  ];
+
+
   // --------------------------- FETCH DATA ---------------------------
   useEffect(() => {
     const unsubSchedules = subscribeSchedules(setSchedules);
     const unsubTypes = subscribeActivityTypes((fetchedTypes) => {
-      setTypes(['เลือกประเภทกิจกรรม', ...fetchedTypes]);
+      setActivityTypes(fetchedTypes);
+      setTypes(['เลือกประเภทกิจกรรม', ...fetchedTypes.map(t => t.name)]);
     });
     return () => {
       unsubSchedules();
       unsubTypes();
     };
   }, []);
+
+  // Reset page เมื่อ schedules เปลี่ยน
+  useEffect(() => {
+    setCurrentSchedulePage(1);
+  }, [schedules.length]);
+
+  // Reset page เมื่อ activity types เปลี่ยน
+  useEffect(() => {
+    setCurrentTypePage(1);
+  }, [activityTypes.length]);
 
   // --------------------------- SAVE ---------------------------
   const handleSave = async () => {
@@ -74,15 +106,23 @@ const Admin = () => {
         await deleteScheduleById(editItem.id);
       }
 
+      // เตรียม duration value
+      let durationValue = formData.duration || '';
+      if (formData.duration === 'Custom' && customDuration) {
+        durationValue = customDuration;
+      }
+
       const newSchedules = formData.days.map(day => ({
         day: shortDayMap[day] || day,
         type: formData.type,
         time: `${formData.startTime} - ${formData.endTime}`,
+        duration: durationValue,
         createdDate: new Date().toISOString(),
       }));
 
       await Promise.all(newSchedules.map(s => addScheduleDoc(s)));
-      setFormData({ type: '', days: [], startTime: '', endTime: '' });
+      setFormData({ type: '', days: [], startTime: '', endTime: '', duration: '' });
+      setCustomDuration('');
       setEditItem(null);
     } catch (err) {
       console.error(err);
@@ -111,6 +151,28 @@ const Admin = () => {
         ? prev.days.filter(d => d !== day)
         : [...prev.days, day]
     }));
+  };
+
+  // --------------------------- EDIT ACTIVITY TYPE ---------------------------
+  const handleEditType = (type) => {
+    setEditingTypeId(type.id);
+    setEditingTypeName(type.name);
+  };
+
+  const handleSaveType = async () => {
+    if (!editingTypeName.trim() || !editingTypeId) return;
+    try {
+      await updateActivityType(editingTypeId, editingTypeName.trim());
+      setEditingTypeId(null);
+      setEditingTypeName('');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCancelEditType = () => {
+    setEditingTypeId(null);
+    setEditingTypeName('');
   };
 
   // --------------------------- RENDER ---------------------------
@@ -149,17 +211,13 @@ const Admin = () => {
               <div className="form-group">
                 <label className="form-label">ประเภทกิจกรรม</label>
                 <div className="type-inline-row">
-                  <div className="select-wrapper type-select">
-                    <select
+                  <div className="select-wrapper type-select" style={{ flex: 1 }}>
+                    <TimeDropdown
                       value={formData.type}
-                      onChange={e => setFormData({ ...formData, type: e.target.value })}
-                      className={`form-select ${formData.type ? 'has-value' : ''}`}
-                    >
-                      {types.map(type => (
-                        <option key={type} value={type === 'เลือกประเภทกิจกรรม' ? '' : type}>{type}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="select-icon" />
+                      onChange={selectedType => setFormData({ ...formData, type: selectedType })}
+                      timeOptions={types.filter(t => t !== 'เลือกประเภทกิจกรรม')}
+                      placeholder="เลือกประเภทกิจกรรม"
+                    />
                   </div>
 
                   <input
@@ -173,6 +231,46 @@ const Admin = () => {
                   <button type="button" onClick={handleAddType} className="add-activity-btn">
                     <Plus className="button-icon" /> เพิ่ม
                   </button>
+                </div>
+              </div>
+
+              {/* DURATION */}
+              <div className="form-group">
+                <label className="form-label">ระยะเวลาการนัดหมาย</label>
+                <div className="duration-row">
+                  <div className="select-wrapper" style={{ flex: 1 }}>
+                    <TimeDropdown
+                      value={formData.duration}
+                      onChange={duration => {
+                        setFormData({ ...formData, duration });
+                        if (duration !== 'Custom') {
+                          setCustomDuration('');
+                        }
+                      }}
+                      timeOptions={durationOptions}
+                      placeholder="เลือกระยะเวลา"
+                    />
+                  </div>
+                  {formData.duration === 'Custom' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                      <input
+                        type="text"
+                        placeholder="เช่น 90, 1.5, 1h30m"
+                        value={customDuration}
+                        onChange={e => setCustomDuration(e.target.value)}
+                        className="custom-duration-input"
+                        style={{
+                          flex: 1,
+                          height: '38px',
+                          padding: '6px 10px',
+                          border: '1px solid #ccc',
+                          borderRadius: '6px',
+                          fontSize: '14px'
+                        }}
+                      />
+                      <span style={{ fontSize: '14px', color: '#666' }}>นาที</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -195,37 +293,19 @@ const Admin = () => {
               <div className="time-grid">
                 <div className="form-group">
                   <label className="form-label">เวลาเริ่ม</label>
-                  <div className="time-input-row">
-                    <input
-                      type="text"
-                      value={formData.startTime}
-                      onChange={e => setFormData({ ...formData, startTime: e.target.value })}
-                      className="time-text-input"
-                      placeholder="HH:MM"
-                    />
-                    <TimeDropdown
-                      value={formData.startTime}
-                      onChange={time => setFormData({ ...formData, startTime: time })}
-                      timeOptions={timeOptions}
-                    />
-                  </div>
+                  <TimeDropdown
+                    value={formData.startTime}
+                    onChange={time => setFormData({ ...formData, startTime: time })}
+                    timeOptions={timeOptions}
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">เวลาสิ้นสุด</label>
-                  <div className="time-input-row">
-                    <input
-                      type="text"
-                      value={formData.endTime}
-                      onChange={e => setFormData({ ...formData, endTime: e.target.value })}
-                      className="time-text-input"
-                      placeholder="HH:MM"
-                    />
-                    <TimeDropdown
-                      value={formData.endTime}
-                      onChange={time => setFormData({ ...formData, endTime: time })}
-                      timeOptions={timeOptions}
-                    />
-                  </div>
+                  <TimeDropdown
+                    value={formData.endTime}
+                    onChange={time => setFormData({ ...formData, endTime: time })}
+                    timeOptions={timeOptions}
+                  />
                 </div>
               </div>
 
@@ -238,40 +318,195 @@ const Admin = () => {
         ) : (
           <div className="list-card">
             <h2 className="form-title">รายการกิจกรรมทั้งหมด</h2>
-            <div className="schedule-list">
-              {schedules.length > 0 ? schedules.map(item => (
-                <div key={item.id} className="schedule-item">
-                  <div className="schedule-day-badge">{item.day}</div>
-                  <div className="schedule-info">
-                    <p className="schedule-type">{item.type}</p>
-                    <p className="schedule-time">{item.time}</p>
-                  </div>
-                  <div className="schedule-actions">
-                    <button
-                      className="action-button action-edit"
-                      onClick={() => {
-                        setEditItem(item);
-                        // แปลง shortDay เป็น full day ถ้าต้องการ mapping
-                        const fullDayMap = { 'อา.': 'อาทิตย์', 'จ.': 'จันทร์', 'อ.': 'อังคาร', 'พ.': 'พุธ', 'พฤ.': 'พฤหัสบดี', 'ศ.': 'ศุกร์', 'ส.': 'เสาร์' };
-                        const fullDay = fullDayMap[item.day] || item.day;
-                        setFormData({
-                          type: item.type,
-                          days: [fullDay],
-                          startTime: item.time.split(' - ')[0],
-                          endTime: item.time.split(' - ')[1],
-                        });
-                        setIsViewMode(false);
-                      }}
-                    >✏️ แก้ไข</button>
-                    <button
-                      className="action-button action-delete"
-                      onClick={() => deleteScheduleById(item.id)}
-                    >🗑️ ลบ</button>
-                  </div>
-                </div>
-              )) : (
-                <div className="empty-state">ยังไม่มีข้อมูลกิจกรรม</div>
-              )}
+            
+            <div className="list-content-grid">
+              {/* ส่วนแสดงประเภทกิจกรรม - ซ้าย */}
+              <div className="list-column-card">
+                <h3 style={{ fontSize: '1rem', marginBottom: '1rem', marginTop: '0', color: '#333' }}>กิจกรรม</h3>
+                {(() => {
+                  const typeTotalPages = Math.ceil(activityTypes.length / itemsPerPage) || 1;
+                  const typeStartIndex = (currentTypePage - 1) * itemsPerPage;
+                  const currentTypes = activityTypes.slice(typeStartIndex, typeStartIndex + itemsPerPage);
+
+                  return (
+                    <>
+                      <div className="schedule-list">
+                        {activityTypes.length > 0 ? currentTypes.map(type => (
+                          <div key={type.id} className="schedule-item">
+                            {editingTypeId === type.id ? (
+                              <>
+                                <div className="schedule-info" style={{ flex: 1 }}>
+                                  <input
+                                    type="text"
+                                    value={editingTypeName}
+                                    onChange={e => setEditingTypeName(e.target.value)}
+                                    onKeyPress={e => {
+                                      if (e.key === 'Enter') handleSaveType();
+                                      if (e.key === 'Escape') handleCancelEditType();
+                                    }}
+                                    style={{
+                                      width: '100%',
+                                      padding: '8px 12px',
+                                      border: '1px solid #3b82f6',
+                                      borderRadius: '6px',
+                                      fontSize: '14px',
+                                      outline: 'none'
+                                    }}
+                                    autoFocus
+                                  />
+                                </div>
+                                <div className="schedule-actions">
+                                  <button
+                                    className="action-button action-edit"
+                                    onClick={handleSaveType}
+                                  >บันทึก</button>
+                                  <button
+                                    className="action-button action-delete"
+                                    onClick={handleCancelEditType}
+                                  >ยกเลิก</button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="schedule-info">
+                                  <p className="schedule-type">{type.name}</p>
+                                </div>
+                                <div className="schedule-actions">
+                                  <button
+                                    className="action-button action-edit"
+                                    onClick={() => handleEditType(type)}
+                                  >แก้ไข</button>
+                                  <button
+                                    className="action-button action-delete"
+                                    onClick={() => deleteActivityType(type.id)}
+                                  >ลบ</button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )) : (
+                          <div className="empty-state">ยังไม่มีประเภทกิจกรรม</div>
+                        )}
+                      </div>
+
+                      {activityTypes.length > itemsPerPage && (
+                        <div className="pagination-controls">
+                          <button
+                            className="pagination-button"
+                            onClick={() => setCurrentTypePage(prev => Math.max(1, prev - 1))}
+                            disabled={currentTypePage === 1}
+                          >
+                            ← ก่อนหน้า
+                          </button>
+                          <span className="pagination-info">
+                            หน้า {currentTypePage} จาก {typeTotalPages} ({activityTypes.length} ประเภท)
+                          </span>
+                          <button
+                            className="pagination-button"
+                            onClick={() => setCurrentTypePage(prev => Math.min(typeTotalPages, prev + 1))}
+                            disabled={currentTypePage === typeTotalPages}
+                          >
+                            ถัดไป →
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* ส่วนแสดงตารางเวลา - ขวา */}
+              <div className="list-column-card">
+                <h3 style={{ fontSize: '1rem', marginBottom: '1rem', marginTop: '0', color: '#333' }}>ตารางเวลากิจกรรม</h3>
+                
+                {/* คำนวณ pagination */}
+                {(() => {
+                  const totalPages = Math.ceil(schedules.length / itemsPerPage) || 1;
+                  const startIndex = (currentSchedulePage - 1) * itemsPerPage;
+                  const endIndex = startIndex + itemsPerPage;
+                  const currentSchedules = schedules.slice(startIndex, endIndex);
+
+                  return (
+                    <>
+                      <div className="schedule-list">
+                        {schedules.length > 0 ? currentSchedules.map(item => (
+                          <div key={item.id} className="schedule-item">
+                            <div className="schedule-day-badge">{item.day}</div>
+                            <div className="schedule-info">
+                              <p className="schedule-type">{item.type}</p>
+                              <p className="schedule-time">{item.time}</p>
+                            </div>
+                            <div className="schedule-actions">
+                              <button
+                                className="action-button action-edit"
+                                onClick={() => {
+                                  setEditItem(item);
+                                  // แปลง shortDay เป็น full day ถ้าต้องการ mapping
+                                  const fullDayMap = { 'อา.': 'อาทิตย์', 'จ.': 'จันทร์', 'อ.': 'อังคาร', 'พ.': 'พุธ', 'พฤ.': 'พฤหัสบดี', 'ศ.': 'ศุกร์', 'ส.': 'เสาร์' };
+                                  const fullDay = fullDayMap[item.day] || item.day;
+                                  const [startTime, endTime] = item.time.split(' - ');
+                                  // ดึง duration จากข้อมูลที่บันทึกไว้
+                                  const duration = item.duration || '';
+                                  if (duration && !durationOptions.includes(duration)) {
+                                    // ถ้า duration ไม่ใช่ใน options แสดงว่าเป็น Custom
+                                    setCustomDuration(duration);
+                                    setFormData({
+                                      type: item.type,
+                                      days: [fullDay],
+                                      startTime,
+                                      endTime,
+                                      duration: 'Custom'
+                                    });
+                                  } else {
+                                    setCustomDuration('');
+                                    setFormData({
+                                      type: item.type,
+                                      days: [fullDay],
+                                      startTime,
+                                      endTime,
+                                      duration
+                                    });
+                                  }
+                                  setIsViewMode(false);
+                                }}
+                              >แก้ไข</button>
+                              <button
+                                className="action-button action-delete"
+                                onClick={() => deleteScheduleById(item.id)}
+                              >ลบ</button>
+                            </div>
+                          </div>
+                        )) : (
+                          <div className="empty-state">ยังไม่มีข้อมูลตารางเวลา</div>
+                        )}
+                      </div>
+
+                      {/* Pagination Controls */}
+                      {schedules.length > itemsPerPage && (
+                        <div className="pagination-controls">
+                          <button
+                            className="pagination-button"
+                            onClick={() => setCurrentSchedulePage(prev => Math.max(1, prev - 1))}
+                            disabled={currentSchedulePage === 1}
+                          >
+                            ← ก่อนหน้า
+                          </button>
+                          <span className="pagination-info">
+                            หน้า {currentSchedulePage} จาก {totalPages} ({schedules.length} รายการ)
+                          </span>
+                          <button
+                            className="pagination-button"
+                            onClick={() => setCurrentSchedulePage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentSchedulePage === totalPages}
+                          >
+                            ถัดไป →
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         )}

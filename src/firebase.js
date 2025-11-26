@@ -108,8 +108,8 @@ export const subscribeActivityTypes = (callback) => {
     const unsub = onSnapshot(
         q,
         snapshot => {
-            // return array of strings แทน object สำหรับ dropdown
-            const types = snapshot.docs.map(doc => doc.data().name);
+            // return array of objects with id and name
+            const types = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
             callback(types);
         },
         err => console.error('subscribeActivityTypes error:', err)
@@ -123,6 +123,14 @@ export const addActivityType = async (name) => {
     if (!name || !name.trim()) return;
     const typesRef = collection(db, 'activityTypes');
     await addDoc(typesRef, { name: name.trim() });
+};
+
+// ✅ UPDATE ACTIVITY TYPE
+export const updateActivityType = async (id, name) => {
+    if (!db) throw new Error('Firestore not initialized');
+    if (!name || !name.trim()) return;
+    const docRef = doc(db, 'activityTypes', id);
+    await updateDoc(docRef, { name: name.trim() });
 };
 
 // ✅ DELETE ACTIVITY TYPE (Optional)
@@ -141,5 +149,6 @@ export default {
     subscribeSchedules,
     subscribeActivityTypes,
     addActivityType,
+    updateActivityType,
     deleteActivityType,
 };

@@ -2,12 +2,13 @@
 .admin-schedule-container {
   min-height: 100vh;
   background: linear-gradient(to bottom right, #f0f9ff, #e0e7ff, #fce7f3);
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .admin-schedule-wrapper {
   max-width: 56rem;
   margin: 0 auto;
+  /* padding: 0.5rem; */
 }
 
 /* Header Card */
@@ -216,6 +217,87 @@
   padding: 1.5rem;
 }
 
+/* List Content Grid */
+.list-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.list-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-column-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .list-content-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* margin-top: 1.5rem; */
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  gap: 1rem;
+}
+
+.pagination-button {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.pagination-button:disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .pagination-controls {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .pagination-button {
+    width: 100%;
+  }
+}
+
 /* Filter Section */
 .filter-section {
   margin-bottom: 1.5rem;
@@ -232,6 +314,14 @@
   max-width: 20rem;
   flex: 1;
   min-width: 200px;
+}
+
+/* Duration Row */
+.duration-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 /* Add Activity Row */
@@ -335,7 +425,10 @@
 .schedule-list {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.3rem;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 /* Empty State */
@@ -386,10 +479,11 @@
 .schedule-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f9fafb;
-  border-radius: 0.75rem;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #fdfefe;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.65rem;
   transition: all 0.2s;
 }
 
@@ -400,16 +494,16 @@
 /* Schedule Day Badge */
 .schedule-day-badge {
   flex-shrink: 0;
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   background: #3b82f6;
-  border-radius: 0.75rem;
+  border-radius: 0.65rem;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 1.125rem;
+  font-size: 1rem;
 }
 
 /* Schedule Info */
@@ -418,7 +512,7 @@
 }
 
 .schedule-type {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #111827;
   margin: 0;
@@ -428,22 +522,22 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: #6b7280;
-  margin: 0.25rem 0 0 0;
+  margin: 0.2rem 0 0 0;
 }
 
 /* Schedule Actions */
 .schedule-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .action-button {
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.45rem;
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   border: none;
   cursor: pointer;
   transition: all 0.2s;

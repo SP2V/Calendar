@@ -97,6 +97,20 @@ const Admin = () => {
     setCurrentTypePage(1);
   }, [activityTypes.length]);
 
+  // --------------------------- AUTO CLOSE POPUP ---------------------------
+  // เพิ่มส่วนนี้: เมื่อ popupMessage เปลี่ยนแปลง ถ้ามีข้อความ ให้ตั้งเวลาปิดใน 3 วินาที
+  useEffect(() => {
+    if (popupMessage) {
+      const timer = setTimeout(() => {
+        setPopupMessage("");
+      }, 5000); // 3000 ms = 3 วินาที (ปรับเปลี่ยนเวลาได้ตรงนี้)
+
+      // Cleanup function: ถ้ามีการ set ข้อความใหม่ก่อนหมดเวลา ให้ล้าง timer เก่าทิ้ง
+      return () => clearTimeout(timer);
+    }
+  }, [popupMessage]);
+  // ----------------------------------------------------------------------
+
   // --------------------------- VALIDATION ---------------------------
   const validateForm = () => {
     if (formData.type === '' || formData.type === 'เลือกประเภทกิจกรรม') {

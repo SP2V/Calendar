@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Admin.css';
-import TimeDropdown from "./TimeDropdown";
+import TimeDropdown from "../components/TimeDropdown";
+import PopupModal from "../components/PopupModal";
 import {
   subscribeSchedules,
   addScheduleDoc,
@@ -10,6 +11,7 @@ import {
   updateActivityType,
   deleteActivityType
 } from '../firebase';
+
 
 // --------------------------- ICONS ---------------------------
 const CalendarIcon = ({ className = '' }) => (
@@ -44,6 +46,8 @@ const Admin = () => {
   const [currentTypePage, setCurrentTypePage] = useState(1);
   const [activityFilter, setActivityFilter] = useState('แสดงทั้งหมด');
   const itemsPerPage = 5;
+  const [popupMessage, setPopupMessage] = useState("");
+  // const [showPopup, setShowPopup] = useState(false); // ไม่จำเป็นต้องใช้ เพราะเช็คจาก popupMessage โดยตรง
 
   const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
@@ -93,8 +97,36 @@ const Admin = () => {
     setCurrentTypePage(1);
   }, [activityTypes.length]);
 
-  // --------------------------- SAVE ---------------------------
+  // --------------------------- VALIDATION ---------------------------
+  const validateForm = () => {
+    if (formData.type === '' || formData.type === 'เลือกประเภทกิจกรรม') {
+      setPopupMessage('กรุณาเลือกประเภทกิจกรรม');
+      return false;
+    }
+    if (formData.days.length === 0) {
+      setPopupMessage('กรุณาเลือกวันทำกิจกรรม');
+      return false;
+    }
+    if (!formData.startTime) {
+      setPopupMessage('กรุณาเลือกเวลาเริ่มต้น');
+      return false;
+    }
+    if (!formData.endTime) {
+      setPopupMessage('กรุณาเลือกเวลาสิ้นสุด');
+      return false;
+    }
+    if (!formData.duration) {
+      setPopupMessage('กรุณาเลือกระยะเวลา');
+      return false;
+    }
+    return true;
+  };
+
+  // --------------------------- SAVE (ADD & UPDATE) ---------------------------
   const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
     if (!formData.type || formData.days.length === 0 || !formData.startTime || !formData.endTime) return;
 
     const shortDayMap = {
@@ -124,9 +156,28 @@ const Admin = () => {
       await Promise.all(newSchedules.map(s => addScheduleDoc(s)));
       setFormData({ type: '', days: [], startTime: '', endTime: '', duration: '' });
       setCustomDuration('');
+      
+      // *** แสดง Popup แจ้งเตือน ***
+      setPopupMessage(editItem ? 'อัปเดตข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ');
+      
       setEditItem(null);
     } catch (err) {
       console.error(err);
+      setPopupMessage('เกิดข้อผิดพลาดในการบันทึก');
+    }
+  };
+
+  // --------------------------- DELETE SCHEDULE ---------------------------
+  // สร้างฟังก์ชัน Wrapper สำหรับลบตารางเวลาเพื่อให้แสดง Popup
+  const handleDeleteSchedule = async (id) => {
+    if (window.confirm("คุณต้องการลบรายการนี้ใช่หรือไม่?")) {
+      try {
+        await deleteScheduleById(id);
+        setPopupMessage("ลบข้อมูลตารางเวลาสำเร็จ");
+      } catch (err) {
+        console.error(err);
+        setPopupMessage("เกิดข้อผิดพลาดในการลบ");
+      }
     }
   };
 
@@ -138,8 +189,11 @@ const Admin = () => {
         await addActivityType(trimmed);
         setFormData({ ...formData, type: trimmed });
         setNewType('');
+        // *** แสดง Popup แจ้งเตือน ***
+        setPopupMessage('เพิ่มประเภทกิจกรรมสำเร็จ');
       } catch (err) {
         console.error(err);
+        setPopupMessage('เกิดข้อผิดพลาดในการเพิ่มประเภท');
       }
     }
   };
@@ -166,14 +220,31 @@ const Admin = () => {
       await updateActivityType(editingTypeId, editingTypeName.trim());
       setEditingTypeId(null);
       setEditingTypeName('');
+      // *** แสดง Popup แจ้งเตือน ***
+      setPopupMessage('แก้ไขประเภทกิจกรรมสำเร็จ');
     } catch (err) {
       console.error(err);
+      setPopupMessage('เกิดข้อผิดพลาดในการแก้ไข');
     }
   };
 
   const handleCancelEditType = () => {
     setEditingTypeId(null);
     setEditingTypeName('');
+  };
+
+  // --------------------------- DELETE ACTIVITY TYPE ---------------------------
+  // สร้างฟังก์ชัน Wrapper สำหรับลบประเภทกิจกรรมเพื่อให้แสดง Popup
+  const handleDeleteActivityType = async (id) => {
+    if (window.confirm("คุณต้องการลบประเภทกิจกรรมนี้ใช่หรือไม่?")) {
+        try {
+            await deleteActivityType(id);
+            setPopupMessage('ลบประเภทกิจกรรมสำเร็จ');
+        } catch (err) {
+            console.error(err);
+            setPopupMessage('เกิดข้อผิดพลาดในการลบ');
+        }
+    }
   };
 
   // --------------------------- RENDER ---------------------------
@@ -378,9 +449,10 @@ const Admin = () => {
                                     className="action-button action-edit"
                                     onClick={() => handleEditType(type)}
                                   >แก้ไข</button>
+                                  {/* แก้ไข onClick ให้เรียก wrapper function */}
                                   <button
                                     className="action-button action-delete"
-                                    onClick={() => deleteActivityType(type.id)}
+                                    onClick={() => handleDeleteActivityType(type.id)}
                                   >ลบ</button>
                                 </div>
                               </>
@@ -492,9 +564,10 @@ const Admin = () => {
                                   setIsViewMode(false);
                                 }}
                               >แก้ไข</button>
+                              {/* แก้ไข onClick ให้เรียก wrapper function */}
                               <button
                                 className="action-button action-delete"
-                                onClick={() => deleteScheduleById(item.id)}
+                                onClick={() => handleDeleteSchedule(item.id)}
                               >ลบ</button>
                             </div>
                           </div>
@@ -503,7 +576,6 @@ const Admin = () => {
                         )}
                       </div>
 
-                      {/* Pagination Controls */}
                       {schedules.length > itemsPerPage && (
                         <div className="pagination-controls">
                           <button
@@ -533,6 +605,13 @@ const Admin = () => {
           </div>
         )}
       </div>
+      {/* ส่วนแสดง Popup */}
+      {popupMessage && (
+        <PopupModal
+          message={popupMessage}
+          onClose={() => setPopupMessage("")}
+        />
+      )}
     </div>
   );
 };

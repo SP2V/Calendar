@@ -13,30 +13,16 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
         setInputValue(value || "");
     }, [value]);
 
-    // เมื่อเปิด dropdown ให้แสดงรายการทั้งหมด
+    // แก้ไข 1: useEffect นี้เอาไว้แค่ซิงค์ข้อมูลเริ่มต้น ไม่ต้องกรองที่นี่
     useEffect(() => {
-        if (open && timeOptions && timeOptions.length > 0) {
-            // ถ้าเปิด dropdown และมีการพิมพ์ ให้กรอง
-            if (inputValue.trim() !== "") {
-                const filtered = timeOptions.filter(option => {
-                    const optionStr = typeof option === 'string' ? option : option.toString();
-                    return optionStr.toLowerCase().includes(inputValue.toLowerCase()) || 
-                           optionStr.toLowerCase().startsWith(inputValue.toLowerCase());
-                });
-                setFilteredOptions(filtered);
-            } else {
-                // ถ้าเปิด dropdown แต่ยังไม่พิมพ์ ให้แสดงทั้งหมด
-                setFilteredOptions(timeOptions);
-            }
-        }
-    }, [open, inputValue, timeOptions]);
+        setFilteredOptions(timeOptions || []);
+    }, [timeOptions]);
 
     // ปิด dropdown เมื่อคลิกข้างนอก
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setOpen(false);
-                // ถ้า inputValue ไม่ตรงกับ value ที่ถูกต้อง ให้ใช้ค่าเดิม
                 if (inputValue !== value) {
                     setInputValue(value || "");
                 }
@@ -52,20 +38,36 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
         };
     }, [open, inputValue, value]);
 
+    // แก้ไข 2: ย้ายการกรองมาทำตอนพิมพ์ (User Typing) เท่านั้น
     const handleInputChange = (e) => {
         const newValue = e.target.value;
         setInputValue(newValue);
+        
         if (!open) {
             setOpen(true);
         }
+
+        // Logic การกรองอยู่ที่นี่
+        if (timeOptions) {
+            if (newValue.trim() !== "") {
+                const filtered = timeOptions.filter(option => {
+                    const optionStr = typeof option === 'string' ? option : option.toString();
+                    return optionStr.toLowerCase().includes(newValue.toLowerCase()) ||
+                           optionStr.toLowerCase().startsWith(newValue.toLowerCase());
+                });
+                setFilteredOptions(filtered);
+            } else {
+                setFilteredOptions(timeOptions);
+            }
+        }
+
         onChange(newValue);
     };
 
+    // แก้ไข 3: เมื่อคลิกเมาส์ที่ Input ให้แสดงทั้งหมด (Reset Filter)
     const handleInputFocus = (e) => {
         setOpen(true);
-        // เมื่อ focus ให้แสดงรายการทั้งหมด (ไม่กรองตาม inputValue)
-        setFilteredOptions(timeOptions || []);
-        // Select all text เพื่อให้สามารถพิมพ์ใหม่ได้
+        setFilteredOptions(timeOptions || []); // แสดงทั้งหมดเสมอเมื่อเริ่มคลิก
         setTimeout(() => {
             e.target.select();
         }, 0);
@@ -75,7 +77,7 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
         setInputValue(option);
         onChange(option);
         setOpen(false);
-        // ไม่ blur input เพื่อให้สามารถเลือกใหม่ได้ทันที
+        inputRef.current?.blur();
     };
 
     const handleInputKeyDown = (e) => {
@@ -103,11 +105,10 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
                 className="dropdown-arrow"
                 onClick={() => {
                     if (!open) {
-                        // เมื่อเปิด dropdown ให้แสดงรายการทั้งหมด
-                        setFilteredOptions(timeOptions || []);
+                        // แก้ไข 4: กดลูกศรก็ต้องแสดงทั้งหมด
+                        setFilteredOptions(timeOptions || []); 
                         setOpen(true);
                         inputRef.current?.focus();
-                        // Select all text เพื่อให้สามารถพิมพ์ใหม่ได้
                         setTimeout(() => {
                             inputRef.current?.select();
                         }, 0);
@@ -117,7 +118,7 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
                 }}
             >
                 <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
-                    <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
             </div>
 
@@ -130,7 +131,7 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
                             <div
                                 key={optionKey}
                                 className="dropdown-item"
-                                onClick={() => handleSelectOption(optionValue)}
+                                onMouseDown={() => handleSelectOption(optionValue)}
                             >
                                 {optionValue}
                             </div>

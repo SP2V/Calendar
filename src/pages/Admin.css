@@ -445,6 +445,42 @@
   overflow: visible;
 }
 
+.schedule-list-add-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 10px;
+  margin-top: -10px;
+}
+
+.input-with-icon-wrapper .add-activity-input {
+  flex: 1;
+  height: 40px;
+  /* width: 120px; */
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.input-with-icon-wrapper .add-activity-btn {
+  flex: 1;
+  height: 40px;
+  /* width: 70px; */
+  padding: 0.75rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+  white-space: nowrap;
+}
+
+
 /* Empty State */
 .empty-state {
   text-align: center;
@@ -776,6 +812,46 @@
   transform: scale(0.97);
 }
 
+/* Container ที่ครอบ Input กับ Icon */
+.input-with-icon-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* ซ่อน input type color ตัวจริง */
+.hidden-color-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* จัดตำแหน่ง Icon ให้ลอยอยู่ขวาสุดของช่อง Input */
+.color-picker-container {
+  position: absolute;
+  right: 10px; /* ระยะห่างจากขอบขวา */
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.color-icon-label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.color-icon-label:hover {
+  transform: scale(1.1);
+}
+
 @media (max-width: 768px) {
   .header-top-row {
     flex-direction: column;
@@ -787,3 +863,5 @@
     align-self: stretch;
   }
 }
+
+

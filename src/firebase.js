@@ -1,4 +1,3 @@
-// firebase.js
 import { initializeApp } from 'firebase/app';
 import {
     getFirestore,
@@ -85,7 +84,7 @@ export async function deleteScheduleById(id) {
 
 // ✅ SUBSCRIBE SCHEDULES (Realtime)
 export function subscribeSchedules(onUpdate) {
-    if (!db) return () => {};
+    if (!db) return () => { };
     const q = query(collection(db, 'schedules'), orderBy('createdDate', 'desc'));
     const unsub = onSnapshot(
         q,
@@ -102,14 +101,17 @@ export function subscribeSchedules(onUpdate) {
 
 // ✅ SUBSCRIBE ACTIVITY TYPES (Realtime)
 export const subscribeActivityTypes = (callback) => {
-    if (!db) return () => {};
+    if (!db) return () => { };
     const typesRef = collection(db, 'activityTypes');
     const q = query(typesRef, orderBy('name'));
     const unsub = onSnapshot(
         q,
         snapshot => {
-            // return array of objects with id and name
-            const types = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+            // แก้ไข: ดึงข้อมูลทั้งหมดรวมถึง color ด้วย (...doc.data())
+            const types = snapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data() 
+            }));
             callback(types);
         },
         err => console.error('subscribeActivityTypes error:', err)
@@ -118,11 +120,17 @@ export const subscribeActivityTypes = (callback) => {
 };
 
 // ✅ ADD ACTIVITY TYPE
-export const addActivityType = async (name) => {
+// แก้ไข: รับ parameter color เพิ่มเข้ามา
+export const addActivityType = async (name, color) => {
     if (!db) throw new Error('Firestore not initialized');
     if (!name || !name.trim()) return;
+    
     const typesRef = collection(db, 'activityTypes');
-    await addDoc(typesRef, { name: name.trim() });
+    await addDoc(typesRef, { 
+        name: name.trim(),
+        // บันทึกสีลงไป ถ้าไม่มีให้ใช้สี Default เป็นสีฟ้า
+        color: color || '#3B82F6' 
+    });
 };
 
 // ✅ UPDATE ACTIVITY TYPE

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import './Admin.css';
 import TimeDropdown from "../components/TimeDropdown";
 import PopupModal from "../components/PopupModal";
+import ErrorPopup from "../components/ErrorPopup";
 import {
   subscribeSchedules,
   addScheduleDoc,
   deleteScheduleById,
+  updateScheduleDoc,
   subscribeActivityTypes,
   addActivityType,
   updateActivityType,
@@ -59,17 +61,22 @@ const Admin = () => {
 
   const [editItem, setEditItem] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
+
+  // Edit Activity Type States
   const [editingTypeId, setEditingTypeId] = useState(null);
   const [editingTypeName, setEditingTypeName] = useState('');
+  const [editingTypeColor, setEditingTypeColor] = useState('#3B82F6'); // เพิ่ม state สำหรับสีที่กำลังแก้ไข
+
   const [customDuration, setCustomDuration] = useState('');
   const [currentSchedulePage, setCurrentSchedulePage] = useState(1);
   const [currentTypePage, setCurrentTypePage] = useState(1);
   const [activityFilter, setActivityFilter] = useState('แสดงทั้งหมด');
   const itemsPerPageLeft = 4;
   const itemsPerPageRight = 5;
-  const [popupMessage, setPopupMessage] = useState("");
+  const [popupMessage, setPopupMessage] = useState({ type: '', message: '' });
 
   const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+  const durationOptions = ['30 นาที', '45 นาที', '1 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง', '4 ชั่วโมง', 'Custom'];
 
   const timeOptions = (() => {
     const opts = [];
@@ -80,10 +87,6 @@ const Admin = () => {
     }
     return opts;
   })();
-
-  // const durationOptions = [
-  //   '30 นาที', '45 นาที', '1 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง', '4 ชั่วโมง', 'Custom'
-  // ];
 
   // --------------------------- FETCH DATA ---------------------------
   useEffect(() => {
@@ -103,10 +106,10 @@ const Admin = () => {
 
   // --------------------------- AUTO CLOSE POPUP ---------------------------
   useEffect(() => {
-    if (popupMessage) {
+    if (popupMessage.type === 'success') {
       const timer = setTimeout(() => {
-        setPopupMessage("");
-      }, 1000); // เพิ่มเวลาเป็น 2 วินาทีเพื่อให้คนอ่านทัน
+        setPopupMessage({ type: '', message: '' });
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [popupMessage]);
@@ -114,19 +117,19 @@ const Admin = () => {
   // --------------------------- VALIDATION ---------------------------
   const validateForm = () => {
     if (formData.type === '' || formData.type === 'เลือกประเภทกิจกรรม') {
-      setPopupMessage('กรุณาเลือกประเภทกิจกรรม');
+      setPopupMessage({ type: 'error', message: 'กรุณาเลือกประเภทกิจกรรม' });
       return false;
     }
     if (formData.days.length === 0) {
-      setPopupMessage('กรุณาเลือกวันทำกิจกรรม');
+      setPopupMessage({ type: 'error', message: 'กรุณาเลือกวันทำกิจกรรม' });
       return false;
     }
     if (!formData.startTime) {
-      setPopupMessage('กรุณาเลือกเวลาเริ่มต้น');
+      setPopupMessage({ type: 'error', message: 'กรุณาเลือกเวลาเริ่มต้น' });
       return false;
     }
     if (!formData.endTime) {
-      setPopupMessage('กรุณาเลือกเวลาสิ้นสุด');
+      setPopupMessage({ type: 'error', message: 'กรุณาเลือกเวลาสิ้นสุด' });
       return false;
     }
     return true;
@@ -141,7 +144,7 @@ const Admin = () => {
     const newEndMin = timeToMinutes(formData.endTime);
 
     if (newStartMin >= newEndMin) {
-      setPopupMessage('เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น');
+      setPopupMessage({ type: 'error', message: 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น' });
       return;
     }
 
@@ -151,13 +154,10 @@ const Admin = () => {
     };
 
     // 2. ตรวจสอบการจองเวลาซ้ำ (Overlap Check)
-    // หา IDs ที่ต้องยกเว้นการเช็ค (กรณีแก้ไข Group)
     const excludeIds = editItem ? (editItem.ids || [editItem.id]) : [];
 
     for (const day of formData.days) {
       const shortDay = shortDayMap[day] || day;
-      
-      // หาตารางที่มีอยู่ในวันนั้นๆ (ไม่รวมรายการที่กำลังแก้ไข)
       const existingInDay = schedules.filter(s => s.day === shortDay && !excludeIds.includes(s.id));
 
       for (const schedule of existingInDay) {
@@ -165,10 +165,9 @@ const Admin = () => {
         const existStartMin = timeToMinutes(existStart);
         const existEndMin = timeToMinutes(existEnd);
 
-        // สูตรเช็ค Overlap: (StartA < EndB) && (EndA > StartB)
         if (newStartMin < existEndMin && newEndMin > existStartMin) {
-          setPopupMessage(`วัน${day} มีตารางซ้ำกับช่วงเวลา ${schedule.time} (${schedule.type})`);
-          return; // หยุดการทำงาน ไม่บันทึก
+          setPopupMessage({ type: 'error', message: `วัน${day} มีตารางซ้ำกับช่วงเวลา ${schedule.time} (${schedule.type})` });
+          return;
         }
       }
     }
@@ -200,11 +199,11 @@ const Admin = () => {
       setFormData({ type: '', days: [], startTime: '', endTime: '', duration: '' });
       setCustomDuration('');
 
-      setPopupMessage(editItem ? 'อัปเดตข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ');
+      setPopupMessage({ type: 'success', message: editItem ? 'อัปเดตข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ' });
       setEditItem(null);
     } catch (err) {
       console.error(err);
-      setPopupMessage('เกิดข้อผิดพลาดในการบันทึก');
+      setPopupMessage({ type: 'error', message: 'เกิดข้อผิดพลาดในการบันทึก' });
     }
   };
 
@@ -212,10 +211,10 @@ const Admin = () => {
     if (window.confirm(`คุณต้องการลบรายการกิจกรรมทั้งหมด ${ids.length} วันนี้ใช่หรือไม่?`)) {
       try {
         await Promise.all(ids.map(id => deleteScheduleById(id)));
-        setPopupMessage("ลบข้อมูลตารางเวลาสำเร็จ");
+        setPopupMessage({ type: 'success', message: 'ลบข้อมูลตารางเวลาสำเร็จ' });
       } catch (err) {
         console.error(err);
-        setPopupMessage("เกิดข้อผิดพลาดในการลบ");
+        setPopupMessage({ type: 'error', message: 'เกิดข้อผิดพลาดในการลบ' });
       }
     }
   };
@@ -229,10 +228,10 @@ const Admin = () => {
         setFormData({ ...formData, type: trimmed });
         setNewType('');
         setNewColor('#3B82F6');
-        setPopupMessage('เพิ่มประเภทกิจกรรมสำเร็จ');
+        setPopupMessage({ type: 'success', message: 'เพิ่มประเภทกิจกรรมสำเร็จ' });
       } catch (err) {
         console.error(err);
-        setPopupMessage('เกิดข้อผิดพลาดในการเพิ่มประเภท');
+        setPopupMessage({ type: 'error', message: 'เกิดข้อผิดพลาดในการเพิ่มประเภท' });
       }
     }
   };
@@ -251,37 +250,99 @@ const Admin = () => {
   const handleEditType = (type) => {
     setEditingTypeId(type.id);
     setEditingTypeName(type.name);
+    setEditingTypeColor(type.color || '#3B82F6'); // กำหนดค่าสีเริ่มต้นเมื่อกดแก้ไข
   };
 
   const handleSaveType = async () => {
     if (!editingTypeName.trim() || !editingTypeId) return;
+
+    // 1. หาข้อมูลเดิมก่อน เพื่อเอาชื่อเก่ามาเทียบ
+    const oldTypeObj = activityTypes.find(t => t.id === editingTypeId);
+    const oldName = oldTypeObj ? oldTypeObj.name : '';
+    const newName = editingTypeName.trim();
+    // สีใหม่มาจาก editingTypeColor
+
     try {
-      await updateActivityType(editingTypeId, editingTypeName.trim());
+      // 2. อัปเดตชื่อและสีใน Master List (Activity Types)
+      // ส่ง editingTypeColor ไปด้วย
+      await updateActivityType(editingTypeId, newName, editingTypeColor);
+
+      // 3. (สำคัญ) ถ้าชื่อเปลี่ยน ให้ไปอัปเดตใน Schedules ทั้งหมดที่ใช้ชื่อเก่า
+      // (สีไม่ต้อง cascade เพราะ schedules ไม่ได้เก็บสีโดยตรง มัน lookup จากชื่อ/type)
+      if (oldName && oldName !== newName) {
+        const schedulesToUpdate = schedules.filter(s => s.type === oldName);
+
+        // สั่งอัปเดตทั้งหมดพร้อมกัน
+        if (schedulesToUpdate.length > 0) {
+          await Promise.all(schedulesToUpdate.map(schedule =>
+            updateScheduleDoc(schedule.id, { type: newName })
+          ));
+        }
+      }
+
       setEditingTypeId(null);
       setEditingTypeName('');
-      setPopupMessage('แก้ไขประเภทกิจกรรมสำเร็จ');
+      setEditingTypeColor('#3B82F6');
+      setPopupMessage({ type: 'success', message: 'แก้ไขข้อมูลสำเร็จ' });
     } catch (err) {
       console.error(err);
-      setPopupMessage('เกิดข้อผิดพลาดในการแก้ไข');
+      setPopupMessage({ type: 'error', message: 'เกิดข้อผิดพลาดในการแก้ไข' });
     }
   };
 
   const handleCancelEditType = () => {
     setEditingTypeId(null);
     setEditingTypeName('');
+    setEditingTypeColor('#3B82F6');
   };
 
   const handleDeleteActivityType = async (id) => {
     if (window.confirm("คุณต้องการลบประเภทกิจกรรมนี้ใช่หรือไม่?")) {
       try {
         await deleteActivityType(id);
-        setPopupMessage('ลบประเภทกิจกรรมสำเร็จ');
+        setPopupMessage({ type: 'success', message: 'ลบประเภทกิจกรรมสำเร็จ' });
       } catch (err) {
         console.error(err);
-        setPopupMessage('เกิดข้อผิดพลาดในการลบ');
+        setPopupMessage({ type: 'error', message: 'เกิดข้อผิดพลาดในการลบ' });
       }
     }
   };
+
+  // --------------------------- HELPER FUNCTIONS ---------------------------
+  const getBookedTimeSlots = (selectedDay) => {
+    if (!selectedDay) return [];
+
+    const shortDayMap = {
+      'อาทิตย์': 'อา.', 'จันทร์': 'จ.', 'อังคาร': 'อ.', 'พุธ': 'พ.',
+      'พฤหัสบดี': 'พฤ.', 'ศุกร์': 'ศ.', 'เสาร์': 'ส.'
+    };
+
+    const shortDay = shortDayMap[selectedDay] || selectedDay;
+    const daySchedules = schedules.filter(s => s.day === shortDay);
+
+    const bookedSlots = new Set();
+
+    daySchedules.forEach(schedule => {
+      if (schedule.time && schedule.time.includes(' - ')) {
+        const [start, end] = schedule.time.split(' - ');
+        let current = timeToMinutes(start);
+        const endTime = timeToMinutes(end);
+
+        while (current < endTime) {
+          const hours = Math.floor(current / 60).toString().padStart(2, '0');
+          const minutes = (current % 60).toString().padStart(2, '0');
+          bookedSlots.add(`${hours}:${minutes}`);
+          current += 15; // Add 15 minutes
+        }
+      }
+    });
+
+    return Array.from(bookedSlots);
+  };
+
+  // Get the first selected day (if any) for the time dropdowns
+  const selectedDay = formData.days.length > 0 ? formData.days[0] : null;
+  const bookedTimeSlots = selectedDay ? getBookedTimeSlots(selectedDay) : [];
 
   // --------------------------- RENDER ---------------------------
   return (
@@ -385,6 +446,7 @@ const Admin = () => {
                     value={formData.startTime}
                     onChange={time => setFormData({ ...formData, startTime: time })}
                     timeOptions={timeOptions}
+                    bookedSlots={bookedTimeSlots}
                   />
                 </div>
                 <div className="form-group">
@@ -393,6 +455,7 @@ const Admin = () => {
                     value={formData.endTime}
                     onChange={time => setFormData({ ...formData, endTime: time })}
                     timeOptions={timeOptions}
+                    bookedSlots={bookedTimeSlots}
                   />
                 </div>
               </div>
@@ -451,30 +514,53 @@ const Admin = () => {
                           </button>
                         </div>
 
+                        {/* ... ส่วน loop activityTypes ... */}
                         {activityTypes.length > 0 ? currentTypes.map(type => (
                           <div key={type.id} className="schedule-item">
                             {editingTypeId === type.id ? (
                               <>
-                                <div className="schedule-info" style={{ flex: 1 }}>
-                                  <input
-                                    type="text"
-                                    value={editingTypeName}
-                                    onChange={e => setEditingTypeName(e.target.value)}
-                                    onKeyPress={e => {
-                                      if (e.key === 'Enter') handleSaveType();
-                                      if (e.key === 'Escape') handleCancelEditType();
-                                    }}
-                                    style={{
-                                      width: '90px',
-                                      padding: '8px 12px',
-                                      border: '1px solid #3b82f6',
-                                      borderRadius: '6px',
-                                      fontSize: '14px',
-                                      outline: 'none'
-                                    }}
-                                    autoFocus
-                                  />
+                                {/* --- ส่วนที่แก้ไข: ปรับ UI ให้เหมือนช่อง Add New --- */}
+                                <div className="schedule-info" style={{ flex: 1, paddingRight: '10px' }}>
+                                  <div className="input-with-icon-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}>
+                                    <input
+                                      type="text"
+                                      value={editingTypeName}
+                                      onChange={e => setEditingTypeName(e.target.value)}
+                                      onKeyPress={e => {
+                                        if (e.key === 'Enter') handleSaveType();
+                                        if (e.key === 'Escape') handleCancelEditType();
+                                      }}
+                                      className="add-activity-input" // ใช้ class เดียวกับช่อง Add
+                                      style={{ paddingRight: '40px', width: '100%' }}
+                                      autoFocus
+                                    />
+
+                                    {/* Color Picker Icon แบบเดียวกับช่อง Add */}
+                                    <div className="color-picker-container" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                      <input
+                                        type="color"
+                                        id={`editColor-${type.id}`}
+                                        value={editingTypeColor}
+                                        onChange={(e) => setEditingTypeColor(e.target.value)}
+                                        className="hidden-color-input"
+                                      />
+                                      <label htmlFor={`editColor-${type.id}`} className="color-icon-label" title="เลือกสี" style={{ cursor: 'pointer', display: 'flex' }}>
+                                        <Palette
+                                          className="w-5 h-5"
+                                          style={{
+                                            color: editingTypeColor,
+                                            fill: editingTypeColor,
+                                            opacity: 0.8,
+                                            width: '20px',
+                                            height: '20px'
+                                          }}
+                                        />
+                                      </label>
+                                    </div>
+                                  </div>
                                 </div>
+                                {/* ----------------------------------------------- */}
+
                                 <div className="schedule-actions">
                                   <button className="action-button action-edit" onClick={handleSaveType}>บันทึก</button>
                                   <button className="action-button action-delete" onClick={handleCancelEditType}>ยกเลิก</button>
@@ -483,17 +569,7 @@ const Admin = () => {
                             ) : (
                               <>
                                 <div className="schedule-info" style={{ display: 'flex', alignItems: 'center' }}>
-                                  <div
-                                    style={{
-                                      width: '14px',
-                                      height: '14px',
-                                      borderRadius: '50%',
-                                      backgroundColor: type.color || '#e5e7eb',
-                                      marginRight: '10px',
-                                      border: '1px solid rgba(0,0,0,0.1)',
-                                      flexShrink: 0
-                                    }}
-                                  />
+                                  <div style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: type.color || '#e5e7eb', marginRight: '10px', border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }} />
                                   <p className="schedule-type" style={{ margin: 0 }}>{type.name}</p>
                                 </div>
                                 <div className="schedule-actions">
@@ -620,9 +696,9 @@ const Admin = () => {
                                   />
                                   <p className="schedule-type" style={{ margin: 0 }}>{item.type}</p>
                                 </div>
-                                <div style={{display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '4px'}}>
+                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '4px' }}>
                                   {item.days.map(d => (
-                                      <div key={d} className="schedule-day-badge">{d}</div>
+                                    <div key={d} className="schedule-day-badge">{d}</div>
                                   ))}
                                 </div>
                                 <p className="schedule-time">{item.time}</p>
@@ -635,7 +711,7 @@ const Admin = () => {
                                     setEditItem(item);
                                     const fullDayMap = { 'อา.': 'อาทิตย์', 'จ.': 'จันทร์', 'อ.': 'อังคาร', 'พ.': 'พุธ', 'พฤ.': 'พฤหัสบดี', 'ศ.': 'ศุกร์', 'ส.': 'เสาร์' };
                                     const fullDays = item.days.map(d => fullDayMap[d] || d);
-                                    
+
                                     const [startTime, endTime] = item.time.split(' - ');
                                     const duration = item.duration || '';
 
@@ -681,10 +757,16 @@ const Admin = () => {
           </div>
         )}
       </div>
-      {popupMessage && (
+      {popupMessage.type === 'success' && (
         <PopupModal
-          message={popupMessage}
-          onClose={() => setPopupMessage("")}
+          message={popupMessage.message}
+          onClose={() => setPopupMessage({ type: '', message: '' })}
+        />
+      )}
+      {popupMessage.type === 'error' && (
+        <ErrorPopup
+          message={popupMessage.message}
+          onClose={() => setPopupMessage({ type: '', message: '' })}
         />
       )}
     </div>

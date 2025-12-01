@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./TimeDropdown.css";
 
-const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลือกเวลา" }) => {
+const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลือกเวลา", bookedSlots = [] }) => {
     const [open, setOpen] = useState(false);
     const [inputValue, setInputValue] = useState(value || "");
     const [filteredOptions, setFilteredOptions] = useState(timeOptions || []);
@@ -130,10 +130,12 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
                         return (
                             <div
                                 key={optionKey}
-                                className="dropdown-item"
-                                onMouseDown={() => handleSelectOption(optionValue)}
+                                className={`dropdown-item ${bookedSlots.includes(optionValue) ? 'booked-slot' : ''}`}
+                                onMouseDown={() => !bookedSlots.includes(optionValue) && handleSelectOption(optionValue)}
+                                title={bookedSlots.includes(optionValue) ? 'เวลานี้ถูกจองแล้ว' : ''}
                             >
                                 {optionValue}
+                                {bookedSlots.includes(optionValue) && <span style={{marginLeft: '5px', color: '#666'}}>(จองแล้ว)</span>}
                             </div>
                         );
                     })}

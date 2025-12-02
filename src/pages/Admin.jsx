@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Admin.css';
-import TimeDropdown from "../components/TimeDropdown";
+import TimeDropdown from "../components/AdminDropdown";
 import PopupModal from "../components/PopupModal";
 import ErrorPopup from "../components/ErrorPopup";
 import {
@@ -76,12 +76,11 @@ const Admin = () => {
   const [popupMessage, setPopupMessage] = useState({ type: '', message: '' });
 
   const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-  const durationOptions = ['30 นาที', '45 นาที', '1 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง', '4 ชั่วโมง', 'Custom'];
 
   const timeOptions = (() => {
     const opts = [];
     for (let h = 0; h < 24; h++) {
-      for (let m = 0; m < 60; m += 15) {
+      for (let m = 0; m < 60; m += 5) {
         opts.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
       }
     }
@@ -153,26 +152,9 @@ const Admin = () => {
       'พฤหัสบดี': 'พฤ.', 'ศุกร์': 'ศ.', 'เสาร์': 'ส.'
     };
 
-    // 2. ตรวจสอบการจองเวลาซ้ำ (Overlap Check)
-    const excludeIds = editItem ? (editItem.ids || [editItem.id]) : [];
+    // --- ส่วน Overlap Check ถูกลบออกเพื่อให้สามารถจองซ้ำได้ ---
 
-    for (const day of formData.days) {
-      const shortDay = shortDayMap[day] || day;
-      const existingInDay = schedules.filter(s => s.day === shortDay && !excludeIds.includes(s.id));
-
-      for (const schedule of existingInDay) {
-        const [existStart, existEnd] = schedule.time.split(' - ');
-        const existStartMin = timeToMinutes(existStart);
-        const existEndMin = timeToMinutes(existEnd);
-
-        if (newStartMin < existEndMin && newEndMin > existStartMin) {
-          setPopupMessage({ type: 'error', message: `วัน${day} มีตารางซ้ำกับช่วงเวลา ${schedule.time} (${schedule.type})` });
-          return;
-        }
-      }
-    }
-
-    // 3. ถ้าผ่านการตรวจสอบ ให้บันทึกข้อมูล
+    // 3. บันทึกข้อมูล
     try {
       if (editItem) {
         if (editItem.ids && Array.isArray(editItem.ids)) {
@@ -308,42 +290,6 @@ const Admin = () => {
     }
   };
 
-  // --------------------------- HELPER FUNCTIONS ---------------------------
-  const getBookedTimeSlots = (selectedDay) => {
-    if (!selectedDay) return [];
-
-    const shortDayMap = {
-      'อาทิตย์': 'อา.', 'จันทร์': 'จ.', 'อังคาร': 'อ.', 'พุธ': 'พ.',
-      'พฤหัสบดี': 'พฤ.', 'ศุกร์': 'ศ.', 'เสาร์': 'ส.'
-    };
-
-    const shortDay = shortDayMap[selectedDay] || selectedDay;
-    const daySchedules = schedules.filter(s => s.day === shortDay);
-
-    const bookedSlots = new Set();
-
-    daySchedules.forEach(schedule => {
-      if (schedule.time && schedule.time.includes(' - ')) {
-        const [start, end] = schedule.time.split(' - ');
-        let current = timeToMinutes(start);
-        const endTime = timeToMinutes(end);
-
-        while (current < endTime) {
-          const hours = Math.floor(current / 60).toString().padStart(2, '0');
-          const minutes = (current % 60).toString().padStart(2, '0');
-          bookedSlots.add(`${hours}:${minutes}`);
-          current += 15; // Add 15 minutes
-        }
-      }
-    });
-
-    return Array.from(bookedSlots);
-  };
-
-  // Get the first selected day (if any) for the time dropdowns
-  const selectedDay = formData.days.length > 0 ? formData.days[0] : null;
-  const bookedTimeSlots = selectedDay ? getBookedTimeSlots(selectedDay) : [];
-
   // --------------------------- RENDER ---------------------------
   return (
     <div className="admin-schedule-container">
@@ -442,20 +388,20 @@ const Admin = () => {
               <div className="time-grid">
                 <div className="form-group">
                   <label className="form-label">เวลาเริ่ม</label>
+                  {/* ไม่ส่ง prop bookedSlots เพื่อปลดล็อกการแสดงผลสีเทา */}
                   <TimeDropdown
                     value={formData.startTime}
                     onChange={time => setFormData({ ...formData, startTime: time })}
                     timeOptions={timeOptions}
-                    bookedSlots={bookedTimeSlots}
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label">เวลาสิ้นสุด</label>
+                  {/* ไม่ส่ง prop bookedSlots เพื่อปลดล็อกการแสดงผลสีเทา */}
                   <TimeDropdown
                     value={formData.endTime}
                     onChange={time => setFormData({ ...formData, endTime: time })}
                     timeOptions={timeOptions}
-                    bookedSlots={bookedTimeSlots}
                   />
                 </div>
               </div>

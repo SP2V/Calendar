@@ -230,17 +230,48 @@
   flex-direction: column;
 }
 
+/* 1. แก้ไขที่ตัว Card (Container หลัก) */
 .list-column-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 0.75rem;
   padding: 0.85rem;
+  gap: 0.75rem;
+  /* Flexbox Settings */
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  
+  /* กำหนดความสูงตายตัวเพื่อให้กล่องมีขนาดเท่าเดิมตลอด */
+  min-height: 460px; 
+  /* (ปรับตัวเลข 600px ได้ตามความสูงหน้าจอที่ต้องการ) */
+
+  /* justify-content: space-between;  <-- ลบบรรทัดนี้ออกครับ! (เพราะจะทำให้เนื้อหาลอยตรงกลางถ้ามี items น้อย) */
+}
+
+/* 2. แก้ไขที่ตัว List (เนื้อหาตรงกลาง) */
+.schedule-list {
+  /* --- ส่วนสำคัญที่เพิ่มเข้ามา --- */
+  flex: 1; /* สั่งให้ขยายกินพื้นที่ว่างทั้งหมด เพื่อดัน Pagination ลงไปล่างสุด */
+  /* ------------------------- */
+  display: flex;
+  flex-direction: column;
+  gap: 0rem;
+  width: 100%;
   box-sizing: border-box;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  transition: box-shadow 0.2s ease-in-out;
+  overflow: visible;
+  margin-bottom: 0; /* เว้นระยะห่างจาก Pagination เล็กน้อย */
+}
+
+/* 3. แก้ไขที่ตัว Pagination (ส่วนล่างสุด) */
+.pagination-controls {
+  margin-top: auto; /* เสริมความชัวร์ ให้มันดีดตัวลงไปติดขอบล่างสุดเสมอ */
+  
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  gap: 1rem;
 }
 
 .list-column-card:hover {
@@ -439,7 +470,7 @@
 .schedule-list {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  /* gap: 0.3rem; */
   width: 100%;
   box-sizing: border-box;
   overflow: visible;

@@ -1,7 +1,7 @@
 // นำเข้า React Router DOM สำหรับจัดการ routing
 import { Routes, Route, Navigate } from 'react-router-dom'
 // นำเข้า Navigation component สำหรับแสดงเมนูนำทาง
-import Navigation from './components/Navigation'
+// import Navigation from './components/Navigation' from './components/Navigation'
 // นำเข้า Admin component สำหรับหน้า Admin
 import Admin from './pages/Admin'
 // นำเข้า User component สำหรับหน้า User

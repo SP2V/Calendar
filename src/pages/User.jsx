@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
+import { collection, getDocs, getFirestore } from 'firebase/firestore';
+import { app, db } from '../firebase';
 import './User.css';
+
+// Check if Firebase is properly initialized
+if (!db) {
+  console.error('Firebase is not properly initialized');
+}
 
 // Icons
 const ChevronDown = ({ className = '' }) => (
@@ -36,6 +41,12 @@ const UserPage = () => {
 
   // Fetch activities from Firestore
   useEffect(() => {
+    if (!db) {
+      setError('ไม่สามารถเชื่อมต่อกับระบบได้ กรุณารีเฟรชหน้าเว็บ');
+      setLoading(false);
+      return;
+    }
+
     const fetchActivities = async () => {
       try {
         const activitiesRef = collection(db, 'activities');
@@ -96,6 +107,17 @@ const UserPage = () => {
   const days = getDaysInMonth();
   const dayNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
   const currentMonth = new Date().toLocaleString('th-TH', { month: 'long', year: 'numeric' });
+
+  if (!db) {
+    return (
+      <div className="user-error-container">
+        <h2>เกิดข้อผิดพลาดในการเชื่อมต่อ</h2>
+        <p className="user-error-message">
+          ไม่สามารถเชื่อมต่อกับระบบได้ กรุณารีเฟรชหน้าเว็บหรือติดต่อผู้ดูแลระบบ
+        </p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -258,9 +280,6 @@ const UserPage = () => {
           </div>
           
           <div className="user-form-actions">
-            <button type="button" className="user-cancel-button">
-              ยกเลิก
-            </button>
             <button type="submit" className="user-submit-button">
               ยืนยันการจอง
             </button>

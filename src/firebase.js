@@ -35,7 +35,10 @@ try {
   }
 } catch (err) {
   console.error('Error initializing Firebase:', err);
+  throw err;
 }
+
+export { app, db };
 
 // ================= SCHEDULES =================
 

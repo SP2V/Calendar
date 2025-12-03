@@ -41,8 +41,8 @@ const User = () => {
   const calendarDays = Array.from({ length: 30 }, (_, i) => i + 1);
 
   // สร้างเลขระยะเวลาที่ User อยากจอง
-  const duration = ['30 นาที', '1 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง', 'กำหนดเอง']
-  
+  const duration = ['30 นาที', '1 ชั่วโมง', '1.5 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง', 'กำหนดเอง']
+
   // Time Slots ตัวอย่าง (ในใช้งานจริงอาจจะ generate จาก logic เดิม)
   const timeSlotsMock = [
     "09:00-09:30", "09:30-10:00",
@@ -153,11 +153,26 @@ const User = () => {
                   <label style={{ fontSize: '0.9rem', marginBottom: '4px', display: 'block', color: '#4b5563' }}>
                     ระยะเวลา (Duration) <span className="text-red">*</span>
                   </label>
-                  <TimeDropdown
-                    className="user-custom-input"
-                    value={formData.duration}
-                    onChange={e => setFormData({ ...formData, duration: value })}
-                  />
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {formData.duration === 'กำหนดเอง' && (
+                      <input
+                        type="text"
+                        placeholder="เช่น 45 นาที"
+                        className="user-custom-input"
+                        value={customDuration}
+                        onChange={e => setCustomDuration(e.target.value)}
+                        style={{ flex: 1 }}
+                      />
+                    )}
+                    <TimeDropdown
+                      className="user-custom-input"
+                      value={formData.duration}
+                      onChange={val => setFormData({ ...formData, duration: val })}
+                      timeOptions={duration}
+                      placeholder="เลือกระยะเวลา"
+                      style={{ flex: formData.duration === 'กำหนดเอง' ? 1 : 'auto', minWidth: '150px' }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

@@ -18,7 +18,7 @@
 body {
   font-family: 'Kanit', sans-serif;
   margin: 0;
-  background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%); /* พื้นหลังโทนสว่างสบายตา */
+  background: linear-gradient(to bottom right, #f0f9ff, #e0e7ff, #fce7f3); /* พื้นหลังโทนสว่างสบายตา */
   color: var(--text-main);
   min-height: 100vh;
 }
@@ -71,7 +71,7 @@ body {
 
 .user-header-info h1 {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: bold;
   margin: 0;
   color: var(--text-main);
   line-height: 1.2;
@@ -104,7 +104,7 @@ body {
   background: var(--card-bg);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
-  padding: 2.5rem;
+  padding: 1.5rem;
   position: relative;
   border: 1px solid white;
 }
@@ -267,8 +267,7 @@ select:focus,
 .btn-cancel:hover { background: #e5e7eb; }
 
 .btn-confirm {
-  background: #6366f1; /* ม่วงอ่อนๆแบบในรูป */
-  background: linear-gradient(90deg, #6366f1 0%, #3b82f6 100%);
+  background: #3b82f6; /* ม่วงอ่อนๆแบบในรูป */
   color: white;
   border: none;
   padding: 0.8rem 2rem;
@@ -280,7 +279,9 @@ select:focus,
   box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
   transition: transform 0.2s;
 }
-.btn-confirm:hover { transform: translateY(-2px); }
+.btn-confirm:hover { 
+  background: var(--primary-hover); 
+}
 
 /* Helpers */
 .w-full { width: 100%; }

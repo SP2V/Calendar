@@ -5,10 +5,7 @@ import PopupModal from "../components/PopupModal";
 import ErrorPopup from "../components/ErrorPopup";
 import {
   subscribeSchedules,
-  addScheduleDoc,
-  deleteScheduleById,
   subscribeActivityTypes,
-  addActivityType,
 } from '../firebase';
 
 // --- ICONS ---
@@ -27,7 +24,7 @@ const User = () => {
   const [types, setTypes] = useState(['เลือกกิจกรรม']);
   const [activityTypes, setActivityTypes] = useState([]);
 
-  // Form State
+  // Form State: days เก็บเป็น ['2025-12-05']
   const [formData, setFormData] = useState({ type: '', days: [], startTime: '', endTime: '', duration: '', subject: '' });
   const [customDuration, setCustomDuration] = useState('');
 
@@ -35,21 +32,83 @@ const User = () => {
   const [isViewMode, setIsViewMode] = useState(false);
   const [popupMessage, setPopupMessage] = useState({ type: '', message: '' });
 
-  // Mock Data for Calendar UI
+  // --- CALENDAR STATE ---
+  const [currentDate, setCurrentDate] = useState(new Date());
+
   const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
-  // สร้างเลขวันที่จำลอง (1-30) เพื่อความสวยงามเหมือนในรูป
-  const calendarDays = Array.from({ length: 30 }, (_, i) => i + 1);
-
-  // สร้างเลขระยะเวลาที่ User อยากจอง
-  const duration = ['30 นาที', '1 ชั่วโมง', '1.5 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง', 'กำหนดเอง']
-
-  // Time Slots ตัวอย่าง (ในใช้งานจริงอาจจะ generate จาก logic เดิม)
-  const timeSlotsMock = [
-    "09:00-09:30", "09:30-10:00",
-    "10:00-10:30", "10:30-11:00",
-    "11:00-11:30", "11:30-12:00",
-    "13:00-13:30", "13:30-14:00"
+  // *สำคัญ* ชื่อวันต้องตรงกับที่บันทึกใน Database (schedules)
+  const fullDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+  
+  const thaiMonths = [
+    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
   ];
+
+  // Helper: หาวันแรกของเดือน
+  const getFirstDayOfMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
+  // Helper: หาจำนวนวันทั้งหมดในเดือน
+  const getDaysInMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  // Helper: เปลี่ยนเดือน
+  const changeMonth = (offset) => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1));
+  };
+
+  // Helper: แปลง Date -> ID (YYYY-MM-DD)
+  const formatDateId = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  // Helper: แปลง ID (YYYY-MM-DD) -> ชื่อวันไทย (เช่น 'ศุกร์')
+  const getThaiDayNameFromDateStr = (dateStr) => {
+    if (!dateStr) return '';
+    // แยก string เพื่อสร้าง Date แบบ Local (ป้องกัน timezone เพี้ยน)
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    return fullDays[date.getDay()];
+  };
+
+  const duration = ['30 นาที', '1 ชั่วโมง', '1.5 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง', 'กำหนดเอง'];
+
+  // --- CORE LOGIC: ดึงเวลาว่างตาม กิจกรรม + วันที่เลือก ---
+  const getAvailableTimeSlots = () => {
+    // 1. ถ้ายังไม่เลือกกิจกรรม ให้คืนค่าว่าง
+    if (!formData.type || formData.type === 'เลือกกิจกรรม') return [];
+    
+    // 2. ดึง Schedule ทั้งหมดของกิจกรรมนั้น
+    const activitySchedules = schedules.filter(s => s.type === formData.type);
+
+    // 3. ถ้ายังไม่เลือกวันที่ ให้คืนค่าว่าง (หรือจะคืนทั้งหมดก็ได้ แต่ UI จะดูยาก)
+    if (formData.days.length === 0) return [];
+
+    // 4. แปลงวันที่ที่เลือก (เช่น '2025-12-05') เป็นวันในสัปดาห์ (เช่น 'ศุกร์')
+    const selectedDateStr = formData.days[0];
+    const targetDayName = getThaiDayNameFromDateStr(selectedDateStr);
+
+    // 5. กรอง Schedule ให้เหลือเฉพาะวันนั้น
+    const dailySchedules = activitySchedules.filter(s => s.day === targetDayName);
+
+    // 6. ดึงเฉพาะเวลาออกมาแล้วเรียงลำดับ
+    const timeSlots = new Set();
+    dailySchedules.forEach(schedule => {
+      if (schedule.time) timeSlots.add(schedule.time);
+    });
+    
+    // เรียงเวลาจากน้อยไปมาก
+    return Array.from(timeSlots).sort((a, b) => {
+        return a.localeCompare(b);
+    });
+  };
+  
+  const availableTimeSlots = getAvailableTimeSlots();
 
   // --- EFFECTS ---
   useEffect(() => {
@@ -68,38 +127,79 @@ const User = () => {
     }
   }, [popupMessage]);
 
-  // --- HANDLERS (Minimal Logic for UI Demo) ---
+  // --- HANDLERS ---
   const handleDaySelect = (dayNum) => {
-    // แปลงเลขวันที่เป็นวันในสัปดาห์ (Mockup logic)
-    // ในที่นี้เราจะใช้ logic เดิมคือเก็บเป็น 'อาทิตย์', 'จันทร์' แต่ UI จะโชว์เป็นปฏิทิน
-    const dayIndex = (dayNum % 7);
-    const fullDays = ['เสาร์', 'อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์'];
-    const selectedDay = fullDays[dayIndex];
+    const selectedDateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNum);
+    const dateId = formatDateId(selectedDateObj);
 
     setFormData(prev => {
-      const exists = prev.days.includes(selectedDay);
+      const isSameDate = prev.days.includes(dateId);
       return {
         ...prev,
-        days: exists ? prev.days.filter(d => d !== selectedDay) : [...prev.days, selectedDay]
+        days: isSameDate ? [] : [dateId],
+        startTime: '' // **สำคัญ** รีเซ็ตเวลาทุกครั้งที่เปลี่ยนวัน
       };
     });
   };
 
   const handleSave = async () => {
-    // (Logic บันทึกเดิมของคุณ)
     if (!formData.type || formData.type === 'เลือกกิจกรรม') {
       setPopupMessage({ type: 'error', message: 'กรุณาเลือกกิจกรรม' });
       return;
     }
-    // ... validation ...
+    if (formData.days.length === 0) {
+        setPopupMessage({ type: 'error', message: 'กรุณาเลือกวันที่' });
+        return;
+    }
+    if (!formData.startTime) {
+        setPopupMessage({ type: 'error', message: 'กรุณาเลือกเวลา' });
+        return;
+    }
     setPopupMessage({ type: 'success', message: 'บันทึกข้อมูลสำเร็จ (Mockup)' });
+  };
+
+  // --- RENDER HELPERS ---
+  const renderCalendarGrid = () => {
+    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDayIndex = getFirstDayOfMonth(currentDate);
+    const gridItems = [];
+
+    for (let i = 0; i < firstDayIndex; i++) {
+      gridItems.push(<div key={`empty-${i}`} className="user-day-empty"></div>);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const dateId = formatDateId(currentDayDate);
+      const isSelected = formData.days.includes(dateId);
+      
+      const today = new Date();
+      const isToday = day === today.getDate() && 
+                      currentDate.getMonth() === today.getMonth() && 
+                      currentDate.getFullYear() === today.getFullYear();
+
+      gridItems.push(
+        <button
+          key={day}
+          className={`user-day-btn ${isSelected ? 'active' : ''}`}
+          style={{ 
+            border: isToday ? '1px solid #f59e0b' : undefined,
+            fontWeight: isToday ? 'bold' : undefined 
+          }}
+          onClick={() => handleDaySelect(day)}
+        >
+          {day}
+        </button>
+      );
+    }
+    return gridItems;
   };
 
   return (
     <div className="user-schedule-container">
       <div className="user-schedule-wrapper">
 
-        {/* --- 1. HEADER CARD (เหมือนรูปแรก) --- */}
+        {/* --- HEADER --- */}
         <div className="user-header-card">
           <div className="user-header-left">
             <div className="user-header-icon-box">
@@ -118,7 +218,7 @@ const User = () => {
           </button>
         </div>
 
-        {/* --- 2. CONTENT AREA --- */}
+        {/* --- CONTENT --- */}
         {!isViewMode ? (
           <div className="user-form-card">
 
@@ -127,7 +227,8 @@ const User = () => {
               <label className="user-section-title" style={{ display: 'block' }}>เลือกกิจกรรม</label>
               <TimeDropdown
                 value={formData.type}
-                onChange={val => setFormData({ ...formData, type: val })}
+                onChange={val => setFormData({ ...formData, type: val, startTime: '', days: [] })} 
+                // Reset วันและเวลาเมื่อเปลี่ยนกิจกรรม
                 timeOptions={types.filter(t => t !== 'เลือกกิจกรรม')}
                 placeholder="เลือกประเภทกิจกรรม (เช่น ประชุม)"
               />
@@ -184,77 +285,90 @@ const User = () => {
               <div className="user-gray-panel">
                 <div className="user-calendar-header">
                   <span className="user-section-title" style={{ margin: 0 }}>เลือกวันที่</span>
-                  <div style={{ display: 'flex', gap: '10px', fontSize: '0.9rem', color: '#4b5563', cursor: 'pointer' }}>
-                    <span>&lt;</span>
-                    <span>พฤศจิกายน 2025</span>
-                    <span>&gt;</span>
+                  <div style={{ display: 'flex', gap: '15px', fontSize: '0.9rem', color: '#4b5563', alignItems: 'center', userSelect: 'none' }}>
+                    <span onClick={() => changeMonth(-1)} style={{ cursor: 'pointer', padding: '0 5px', fontWeight: 'bold' }}>&lt;</span>
+                    <span style={{ minWidth: '100px', textAlign: 'center' }}>
+                      {thaiMonths[currentDate.getMonth()]} {currentDate.getFullYear() + 543}
+                    </span>
+                    <span onClick={() => changeMonth(1)} style={{ cursor: 'pointer', padding: '0 5px', fontWeight: 'bold' }}>&gt;</span>
                   </div>
                 </div>
-
                 <div className="user-calendar-grid">
-                  {daysOfWeek.map(d => (
-                    <div key={d} className="user-calendar-day-label">{d}</div>
-                  ))}
-                  {/* Mock Days */}
-                  {calendarDays.map(day => {
-                    // Mock logic: Highlight day 26
-                    const isSelected = day === 26 || formData.days.length > 0 && day === 26;
-                    return (
-                      <button
-                        key={day}
-                        className={`user-day-btn ${isSelected ? 'active' : ''}`}
-                        onClick={() => handleDaySelect(day)}
-                      >
-                        {day}
-                      </button>
-                    );
-                  })}
+                  {daysOfWeek.map(d => (<div key={d} className="user-calendar-day-label">{d}</div>))}
+                  {renderCalendarGrid()}
                 </div>
               </div>
 
-              {/* RIGHT: Time Panel */}
+              {/* RIGHT: Time Panel (ส่วนที่แสดงเวลาตามวันที่เลือก) */}
               <div className="user-gray-panel">
-                <div className="user-section-title">เลือกเวลา</div>
-                <div className="user-time-slots-grid">
-                  {/* ใช้วิธี map เพื่อแสดง Time Chips */}
-                  {timeSlotsMock.map((slot, idx) => (
-                    <div
-                      key={idx}
-                      className={`user-time-chip ${formData.startTime + '-' + formData.endTime === slot ? 'active' : ''}`}
-                      onClick={() => {
-                        const [start, end] = slot.split('-');
-                        setFormData({ ...formData, startTime: start, endTime: end });
-                      }}
-                    >
-                      {slot}
+                <div className="user-section-title" style={{ marginBottom: '10px' }}>
+                    เลือกเวลา {formData.days.length > 0 && `(${getThaiDayNameFromDateStr(formData.days[0])})`}
+                </div>
+                
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                  {/* Case 1: ยังไม่ได้เลือกกิจกรรม */}
+                  {(!formData.type || formData.type === 'เลือกกิจกรรม') ? (
+                     <div style={{ color: '#9ca3af', fontSize: '0.9rem', width: '100%', textAlign: 'center', padding: '20px' }}>
+                        กรุณาเลือกประเภทกิจกรรมด้านบนก่อน
+                     </div>
+                  ) : 
+                  /* Case 2: เลือกกิจกรรมแล้ว แต่ยังไม่เลือกวันที่ */
+                  formData.days.length === 0 ? (
+                    <div style={{ color: '#9ca3af', fontSize: '0.9rem', width: '100%', textAlign: 'center', padding: '20px' }}>
+                        <p>กรุณาเลือกวันที่จากปฏิทิน</p>
+                        <p style={{fontSize: '0.8em'}}>เพื่อดูเวลาว่างของวันนั้นๆ</p>
                     </div>
-                  ))}
+                  ) : 
+                  /* Case 3: เลือกครบแล้ว มีเวลาแสดง */
+                  availableTimeSlots.length > 0 ? (
+                    availableTimeSlots.map((slot, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setFormData(prev => ({ ...prev, startTime: slot, endTime: '' }))}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: '1px solid #3b82f6',
+                          backgroundColor: formData.startTime === slot ? '#3b82f6' : 'white',
+                          color: formData.startTime === slot ? 'white' : '#3b82f6',
+                          cursor: 'pointer',
+                          fontSize: '0.9rem',
+                          fontWeight: '500',
+                          transition: 'all 0.2s',
+                          minWidth: '80px',
+                          textAlign: 'center'
+                        }}
+                        onMouseOver={(e) => { e.target.style.backgroundColor = formData.startTime === slot ? '#2563eb' : '#eff6ff'; }}
+                        onMouseOut={(e) => { e.target.style.backgroundColor = formData.startTime === slot ? '#3b82f6' : 'white'; }}
+                      >
+                        {slot}
+                      </button>
+                    ))
+                  ) : (
+                    /* Case 4: เลือกครบแล้ว แต่ไม่มีเวลาว่างในวันนั้น */
+                    <div style={{ color: '#ef4444', fontSize: '0.9rem', width: '100%', textAlign: 'center', padding: '20px', backgroundColor: '#fee2e2', borderRadius: '8px' }}>
+                      ไม่มีรอบเวลาว่างสำหรับวัน{getThaiDayNameFromDateStr(formData.days[0])}
+                    </div>
+                  )}
                 </div>
               </div>
 
             </div>
 
-            {/* FOOTER ACTIONS */}
+            {/* FOOTER */}
             <div className="user-action-footer">
-              <button className="btn-confirm" onClick={handleSave}>
-                ยืนยันการจอง
-              </button>
+              <button className="btn-confirm" onClick={handleSave}>ยืนยันการจอง</button>
             </div>
 
           </div>
         ) : (
-          /* View Mode (List) */
           <div className="user-form-card">
             <h2 className="user-section-title">รายการนัดหมายทั้งหมด</h2>
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-              ส่วนแสดงผลรายการ (List View)
-            </div>
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>ส่วนแสดงผลรายการ (List View)</div>
           </div>
         )}
 
       </div>
-
-      {/* Popups */}
       {popupMessage.type === 'success' && <PopupModal message={popupMessage.message} onClose={() => setPopupMessage({ type: '', message: '' })} />}
       {popupMessage.type === 'error' && <ErrorPopup message={popupMessage.message} onClose={() => setPopupMessage({ type: '', message: '' })} />}
     </div>

@@ -105,7 +105,6 @@ const User = () => {
   const handleDaySelect = (dayNum) => {
     const selectedDateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNum);
     
-    // ป้องกัน (Double check) เผื่อ HTML disabled ถูก bypass
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (selectedDateObj < today) return; 
@@ -122,19 +121,41 @@ const User = () => {
     });
   };
 
+  // --- ส่วนที่แก้ไข: เพิ่ม Validation เช็คความครบถ้วน ---
   const handleSave = async () => {
+    // 1. เช็คกิจกรรม
     if (!formData.type || formData.type === 'เลือกกิจกรรม') {
-      setPopupMessage({ type: 'error', message: 'กรุณาเลือกกิจกรรม' });
+      setPopupMessage({ type: 'error', message: 'กรุณาเลือกประเภทกิจกรรม' });
       return;
     }
+
+    // 2. เช็คหัวข้อการประชุม (Subject)
+    if (!formData.subject || formData.subject.trim() === '') {
+        setPopupMessage({ type: 'error', message: 'กรุณากรอกหัวข้อการประชุม' });
+        return;
+    }
+
+    // 3. เช็คระยะเวลา (Duration)
+    const finalDuration = formData.duration === 'กำหนดเอง' ? customDuration : formData.duration;
+    if (!finalDuration || finalDuration.trim() === '') {
+        setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลา' });
+        return;
+    }
+
+    // 4. เช็ควันที่ (Date)
     if (formData.days.length === 0) {
-        setPopupMessage({ type: 'error', message: 'กรุณาเลือกวันที่' });
+        setPopupMessage({ type: 'error', message: 'กรุณาเลือกวันที่จากปฏิทิน' });
         return;
     }
+
+    // 5. เช็คเวลา (Time)
     if (!formData.startTime) {
-        setPopupMessage({ type: 'error', message: 'กรุณาเลือกเวลา' });
+        setPopupMessage({ type: 'error', message: 'กรุณาเลือกเวลาที่ต้องการจอง' });
         return;
     }
+
+    // ผ่านทุกเงื่อนไข -> บันทึก
+    // (ตรงนี้คุณสามารถใส่โค้ดบันทึกลง Firebase จริงๆ ได้เลย)
     setPopupMessage({ type: 'success', message: 'บันทึกข้อมูลสำเร็จ (Mockup)' });
   };
 
@@ -143,8 +164,6 @@ const User = () => {
     const daysInMonth = getDaysInMonth(currentDate);
     const firstDayIndex = getFirstDayOfMonth(currentDate);
     const gridItems = [];
-
-    // สร้างตัวแปร "วันนี้" ที่เวลาเป็น 00:00:00 เพื่อใช้เปรียบเทียบ
     const todayObj = new Date();
     todayObj.setHours(0, 0, 0, 0);
 
@@ -156,22 +175,17 @@ const User = () => {
       const currentDayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
       const dateId = formatDateId(currentDayDate);
       const isSelected = formData.days.includes(dateId);
-      
-      // ตรวจสอบว่าเป็นวันที่ผ่านมาแล้วหรือไม่
       const isPast = currentDayDate < todayObj;
-
-      // ตรวจสอบว่าเป็น "วันนี้" หรือไม่ (สำหรับไฮไลท์กรอบ)
       const isToday = currentDayDate.getTime() === todayObj.getTime();
 
       gridItems.push(
         <button
           key={day}
-          disabled={isPast} // ปิดการใช้งานปุ่มถ้าเป็นอดีต
+          disabled={isPast}
           className={`user-day-btn ${isSelected ? 'active' : ''}`}
           style={{ 
             border: isToday ? '1px solid #f59e0b' : undefined,
             fontWeight: isToday ? 'bold' : undefined,
-            // เพิ่ม Style สำหรับวันที่ผ่านมาแล้ว (สีจาง + เมาส์ไม่เปลี่ยนรูป)
             opacity: isPast ? 0.3 : 1,
             cursor: isPast ? 'not-allowed' : 'pointer',
             backgroundColor: isPast ? '#f3f4f6' : undefined,
@@ -214,13 +228,15 @@ const User = () => {
           <div className="user-form-card">
 
             {/* Row 1: Activity Select */}
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div className="user-section-title-Activity" style={{ marginBottom: '1.5rem' }}>
               <label className="user-section-title" style={{ display: 'block' }}>เลือกกิจกรรม</label>
               <TimeDropdown
+                className="user-custom-input"
                 value={formData.type}
                 onChange={val => setFormData({ ...formData, type: val, startTime: '', days: [] })} 
                 timeOptions={types.filter(t => t !== 'เลือกกิจกรรม')}
-                placeholder="เลือกประเภทกิจกรรม (เช่น ประชุม)"
+                placeholder="เลือกกิจกรรม"
+                style={{ width: '100%', maxWidth: '350px!important' }} 
               />
             </div>
 
@@ -261,7 +277,11 @@ const User = () => {
                       onChange={val => setFormData({ ...formData, duration: val })}
                       timeOptions={duration}
                       placeholder="เลือกระยะเวลา"
-                      style={{ flex: formData.duration === 'กำหนดเอง' ? 1 : 'auto', minWidth: '150px' }}
+                      style={{ 
+                        flex: formData.duration === 'กำหนดเอง' ? 1 : 'auto', 
+                        width: '140px', 
+                        minWidth: 'auto' 
+                      }}
                     />
                   </div>
                 </div>

@@ -24,7 +24,7 @@ const User = () => {
   const [types, setTypes] = useState(['เลือกกิจกรรม']);
   const [activityTypes, setActivityTypes] = useState([]);
 
-  // Form State: days เก็บเป็น ['2025-12-05']
+  // Form State
   const [formData, setFormData] = useState({ type: '', days: [], startTime: '', endTime: '', duration: '', subject: '' });
   const [customDuration, setCustomDuration] = useState('');
 
@@ -36,7 +36,6 @@ const User = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
-  // *สำคัญ* ชื่อวันต้องตรงกับที่บันทึกใน Database (schedules)
   const fullDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
   
   const thaiMonths = [
@@ -44,22 +43,11 @@ const User = () => {
     'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
   ];
 
-  // Helper: หาวันแรกของเดือน
-  const getFirstDayOfMonth = (date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  };
-
-  // Helper: หาจำนวนวันทั้งหมดในเดือน
-  const getDaysInMonth = (date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  };
-
-  // Helper: เปลี่ยนเดือน
-  const changeMonth = (offset) => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1));
-  };
-
-  // Helper: แปลง Date -> ID (YYYY-MM-DD)
+  // Helper Functions
+  const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const changeMonth = (offset) => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1));
+  
   const formatDateId = (date) => {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -67,10 +55,8 @@ const User = () => {
     return `${y}-${m}-${d}`;
   };
 
-  // Helper: แปลง ID (YYYY-MM-DD) -> ชื่อวันไทย (เช่น 'ศุกร์')
   const getThaiDayNameFromDateStr = (dateStr) => {
     if (!dateStr) return '';
-    // แยก string เพื่อสร้าง Date แบบ Local (ป้องกัน timezone เพี้ยน)
     const [y, m, d] = dateStr.split('-').map(Number);
     const date = new Date(y, m - 1, d);
     return fullDays[date.getDay()];
@@ -78,34 +64,22 @@ const User = () => {
 
   const duration = ['30 นาที', '1 ชั่วโมง', '1.5 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง', 'กำหนดเอง'];
 
-  // --- CORE LOGIC: ดึงเวลาว่างตาม กิจกรรม + วันที่เลือก ---
+  // --- CORE LOGIC ---
   const getAvailableTimeSlots = () => {
-    // 1. ถ้ายังไม่เลือกกิจกรรม ให้คืนค่าว่าง
     if (!formData.type || formData.type === 'เลือกกิจกรรม') return [];
-    
-    // 2. ดึง Schedule ทั้งหมดของกิจกรรมนั้น
     const activitySchedules = schedules.filter(s => s.type === formData.type);
-
-    // 3. ถ้ายังไม่เลือกวันที่ ให้คืนค่าว่าง (หรือจะคืนทั้งหมดก็ได้ แต่ UI จะดูยาก)
     if (formData.days.length === 0) return [];
 
-    // 4. แปลงวันที่ที่เลือก (เช่น '2025-12-05') เป็นวันในสัปดาห์ (เช่น 'ศุกร์')
     const selectedDateStr = formData.days[0];
     const targetDayName = getThaiDayNameFromDateStr(selectedDateStr);
-
-    // 5. กรอง Schedule ให้เหลือเฉพาะวันนั้น
     const dailySchedules = activitySchedules.filter(s => s.day === targetDayName);
 
-    // 6. ดึงเฉพาะเวลาออกมาแล้วเรียงลำดับ
     const timeSlots = new Set();
     dailySchedules.forEach(schedule => {
       if (schedule.time) timeSlots.add(schedule.time);
     });
     
-    // เรียงเวลาจากน้อยไปมาก
-    return Array.from(timeSlots).sort((a, b) => {
-        return a.localeCompare(b);
-    });
+    return Array.from(timeSlots).sort((a, b) => a.localeCompare(b));
   };
   
   const availableTimeSlots = getAvailableTimeSlots();
@@ -130,6 +104,12 @@ const User = () => {
   // --- HANDLERS ---
   const handleDaySelect = (dayNum) => {
     const selectedDateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNum);
+    
+    // ป้องกัน (Double check) เผื่อ HTML disabled ถูก bypass
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDateObj < today) return; 
+
     const dateId = formatDateId(selectedDateObj);
 
     setFormData(prev => {
@@ -137,7 +117,7 @@ const User = () => {
       return {
         ...prev,
         days: isSameDate ? [] : [dateId],
-        startTime: '' // **สำคัญ** รีเซ็ตเวลาทุกครั้งที่เปลี่ยนวัน
+        startTime: '' 
       };
     });
   };
@@ -164,6 +144,10 @@ const User = () => {
     const firstDayIndex = getFirstDayOfMonth(currentDate);
     const gridItems = [];
 
+    // สร้างตัวแปร "วันนี้" ที่เวลาเป็น 00:00:00 เพื่อใช้เปรียบเทียบ
+    const todayObj = new Date();
+    todayObj.setHours(0, 0, 0, 0);
+
     for (let i = 0; i < firstDayIndex; i++) {
       gridItems.push(<div key={`empty-${i}`} className="user-day-empty"></div>);
     }
@@ -173,18 +157,25 @@ const User = () => {
       const dateId = formatDateId(currentDayDate);
       const isSelected = formData.days.includes(dateId);
       
-      const today = new Date();
-      const isToday = day === today.getDate() && 
-                      currentDate.getMonth() === today.getMonth() && 
-                      currentDate.getFullYear() === today.getFullYear();
+      // ตรวจสอบว่าเป็นวันที่ผ่านมาแล้วหรือไม่
+      const isPast = currentDayDate < todayObj;
+
+      // ตรวจสอบว่าเป็น "วันนี้" หรือไม่ (สำหรับไฮไลท์กรอบ)
+      const isToday = currentDayDate.getTime() === todayObj.getTime();
 
       gridItems.push(
         <button
           key={day}
+          disabled={isPast} // ปิดการใช้งานปุ่มถ้าเป็นอดีต
           className={`user-day-btn ${isSelected ? 'active' : ''}`}
           style={{ 
             border: isToday ? '1px solid #f59e0b' : undefined,
-            fontWeight: isToday ? 'bold' : undefined 
+            fontWeight: isToday ? 'bold' : undefined,
+            // เพิ่ม Style สำหรับวันที่ผ่านมาแล้ว (สีจาง + เมาส์ไม่เปลี่ยนรูป)
+            opacity: isPast ? 0.3 : 1,
+            cursor: isPast ? 'not-allowed' : 'pointer',
+            backgroundColor: isPast ? '#f3f4f6' : undefined,
+            color: isPast ? '#9ca3af' : undefined
           }}
           onClick={() => handleDaySelect(day)}
         >
@@ -228,7 +219,6 @@ const User = () => {
               <TimeDropdown
                 value={formData.type}
                 onChange={val => setFormData({ ...formData, type: val, startTime: '', days: [] })} 
-                // Reset วันและเวลาเมื่อเปลี่ยนกิจกรรม
                 timeOptions={types.filter(t => t !== 'เลือกกิจกรรม')}
                 placeholder="เลือกประเภทกิจกรรม (เช่น ประชุม)"
               />
@@ -299,28 +289,23 @@ const User = () => {
                 </div>
               </div>
 
-              {/* RIGHT: Time Panel (ส่วนที่แสดงเวลาตามวันที่เลือก) */}
+              {/* RIGHT: Time Panel */}
               <div className="user-gray-panel">
                 <div className="user-section-title" style={{ marginBottom: '10px' }}>
                     เลือกเวลา {formData.days.length > 0 && `(${getThaiDayNameFromDateStr(formData.days[0])})`}
                 </div>
                 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                  {/* Case 1: ยังไม่ได้เลือกกิจกรรม */}
                   {(!formData.type || formData.type === 'เลือกกิจกรรม') ? (
                      <div style={{ color: '#9ca3af', fontSize: '0.9rem', width: '100%', textAlign: 'center', padding: '20px' }}>
                         กรุณาเลือกประเภทกิจกรรมด้านบนก่อน
                      </div>
-                  ) : 
-                  /* Case 2: เลือกกิจกรรมแล้ว แต่ยังไม่เลือกวันที่ */
-                  formData.days.length === 0 ? (
+                  ) : formData.days.length === 0 ? (
                     <div style={{ color: '#9ca3af', fontSize: '0.9rem', width: '100%', textAlign: 'center', padding: '20px' }}>
                         <p>กรุณาเลือกวันที่จากปฏิทิน</p>
                         <p style={{fontSize: '0.8em'}}>เพื่อดูเวลาว่างของวันนั้นๆ</p>
                     </div>
-                  ) : 
-                  /* Case 3: เลือกครบแล้ว มีเวลาแสดง */
-                  availableTimeSlots.length > 0 ? (
+                  ) : availableTimeSlots.length > 0 ? (
                     availableTimeSlots.map((slot, idx) => (
                       <button
                         key={idx}
@@ -345,7 +330,6 @@ const User = () => {
                       </button>
                     ))
                   ) : (
-                    /* Case 4: เลือกครบแล้ว แต่ไม่มีเวลาว่างในวันนั้น */
                     <div style={{ color: '#ef4444', fontSize: '0.9rem', width: '100%', textAlign: 'center', padding: '20px', backgroundColor: '#fee2e2', borderRadius: '8px' }}>
                       ไม่มีรอบเวลาว่างสำหรับวัน{getThaiDayNameFromDateStr(formData.days[0])}
                     </div>

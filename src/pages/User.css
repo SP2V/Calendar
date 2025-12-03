@@ -117,11 +117,8 @@ body {
 }
 
 .user-section-title-Activity {
-   /* font-size: 1.1rem;
-  font-weight: 600; 
-  margin-bottom: 1rem;
-  color: var(--text-main); */
-  width: 200px;
+  width: 100%;
+  max-width: 256px;
 }
 
 /* Inputs & Selects */

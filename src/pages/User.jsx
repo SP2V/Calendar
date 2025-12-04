@@ -65,7 +65,7 @@ const User = () => {
   const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   const changeMonth = (offset) => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1));
-  
+
   const formatDateId = (date) => {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -207,7 +207,7 @@ const User = () => {
             </div>
           </div>
           <button className="user-header-btn-back" onClick={() => setIsViewMode(!isViewMode)}>
-            {isViewMode ? '+ จองเพิ่ม' : 'ดูรายการจองนัดหมาย'}
+            {isViewMode ? '+ จองเพิ่ม' : 'รายการจองนัดหมายของฉัน'}
           </button>
         </div>
 
@@ -220,11 +220,11 @@ const User = () => {
               <label className="user-section-title">เลือกกิจกรรม</label>
               {/* ใช้ className จาก CSS แทน style */}
               <TimeDropdown
-                className="dropdown-full" 
+                className="dropdown-full"
                 value={formData.type}
                 onChange={val => setFormData({ ...formData, type: val, startTime: '', days: [] })}
-                timeOptions={types.filter(t => t !== 'เลือกกิจกรรม')} 
-                placeholder="เลือกกิจกรรม" 
+                timeOptions={types.filter(t => t !== 'เลือกกิจกรรม')}
+                placeholder="เลือกกิจกรรม"
               />
             </div>
 
@@ -234,20 +234,20 @@ const User = () => {
               <div className="flex-row-wrap">
                 <div className="col-2">
                   <label className="input-label">หัวข้อการประชุม (Subject) <span className="required">*</span></label>
-                  <input type="text" placeholder="เช่น ประชุมสรุปงานออกแบบ UX" className="user-custom-input" 
+                  <input type="text" placeholder="เช่น ประชุมสรุปงานออกแบบ UX" className="user-custom-input"
                     value={formData.subject} onChange={e => setFormData({ ...formData, subject: e.target.value })} />
                 </div>
                 <div className="col-1">
                   <label className="input-label">ระยะเวลา (Duration) <span className="required">*</span></label>
                   <div className="duration-group">
                     {formData.duration === 'กำหนดเอง' && (
-                      <input type="text" placeholder="45 นาที" className="user-custom-input" style={{ flex: 1 }} 
+                      <input type="text" placeholder="เช่น 45 นาที" className="user-custom-input" style={{ flex: 1 }}
                         value={customDuration} onChange={e => setCustomDuration(e.target.value)} />
                     )}
-                    <TimeDropdown 
-                        className="dropdown-time"
-                        value={formData.duration} onChange={val => setFormData({ ...formData, duration: val })} 
-                        timeOptions={duration} placeholder="ระยะเวลา" 
+                    <TimeDropdown
+                      className="dropdown-time"
+                      value={formData.duration} onChange={val => setFormData({ ...formData, duration: val })}
+                      timeOptions={duration} placeholder="ระยะเวลา"
                     />
                   </div>
                 </div>
@@ -276,20 +276,20 @@ const User = () => {
               <div className="user-gray-panel">
                 <div className="user-section-title" style={{ marginBottom: '10px' }}>เลือกเวลา</div>
                 <div className="time-slot-container">
-                  {(!formData.type || formData.type === 'เลือกกิจกรรม') ? 
+                  {(!formData.type || formData.type === 'เลือกกิจกรรม') ?
                     <div className="empty-state-text">กรุณาเลือกประเภทกิจกรรมก่อน</div>
-                  : formData.days.length === 0 ? 
-                    <div className="empty-state-text">กรุณาเลือกวันที่จากปฏิทิน</div>
-                  : availableTimeSlots.length > 0 ? 
-                    availableTimeSlots.map((slot, idx) => (
-                      <button key={idx} 
-                        onClick={() => setFormData(prev => ({ ...prev, startTime: slot, endTime: '' }))}
-                        className={`time-btn ${formData.startTime === slot ? 'active' : ''}`}
-                      >
-                        {slot}
-                      </button>
-                    )) 
-                  : <div className="error-state-box">ไม่มีรอบเวลาว่าง</div>}
+                    : formData.days.length === 0 ?
+                      <div className="empty-state-text">กรุณาเลือกวันที่จากปฏิทิน</div>
+                      : availableTimeSlots.length > 0 ?
+                        availableTimeSlots.map((slot, idx) => (
+                          <button key={idx}
+                            onClick={() => setFormData(prev => ({ ...prev, startTime: slot, endTime: '' }))}
+                            className={`time-btn ${formData.startTime === slot ? 'active' : ''}`}
+                          >
+                            {slot}
+                          </button>
+                        ))
+                        : <div className="error-state-box">ไม่มีรอบเวลาว่าง</div>}
                 </div>
               </div>
             </div>
@@ -327,9 +327,9 @@ const User = () => {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">รายละเอียดเพิ่มเติม <span className="required">*</span></label>
+                  <label className="input-label">รายละเอียดเพิ่มเติม </label>
                   <textarea className="user-custom-input"
-                    placeholder="ระบุรายละเอียดเพิ่มเติม..." 
+                    placeholder="ระบุรายละเอียดเพิ่มเติม..."
                     value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                 </div>
               </div>

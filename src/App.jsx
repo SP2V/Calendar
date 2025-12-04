@@ -22,7 +22,7 @@ function App() {
       {/* กำหนด Routes สำหรับการนำทางระหว่างหน้า */}
       <Routes>
         {/* Route หลัก (/) จะ redirect ไปที่หน้า Admin อัตโนมัติ */}
-        <Route path="/" element={<Navigate to="/admin" replace />} />
+        <Route path="/" element={<Navigate to="/user" replace />} />
         
         {/* Route สำหรับหน้า User */}
         <Route path="/user" element={<User />} />

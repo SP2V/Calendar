@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './User.css'; // Import CSS ที่แยกออกมา
+import './User.css';
 import TimeDropdown from "../components/AdminDropdown";
 import PopupModal from "../components/PopupModal";
 import ErrorPopup from "../components/ErrorPopup";
@@ -9,7 +9,6 @@ import {
 } from '../firebase';
 
 // --- ICONS (SVG) ---
-// (ไอคอนยังคงไว้ในไฟล์ JS เพื่อความสะดวกในการเรียกใช้ Component)
 const CalendarIcon = ({ style }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -56,7 +55,8 @@ const User = () => {
   const [popupMessage, setPopupMessage] = useState({ type: '', message: '' });
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+  // (ส่วน UI Header) ใช้แสดงผลเฉยๆ ไม่มีจุดก็ได้ หรือจะมีก็ได้ตาม Design
+  const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส']; 
   const fullDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
   const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
   const duration = ['30 นาที', '1 ชั่วโมง', '1.5 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง', 'กำหนดเอง'];
@@ -73,11 +73,14 @@ const User = () => {
     return `${y}-${m}-${d}`;
   };
 
+  // --- แก้ไขจุดที่ 1: เพิ่มจุด (.) ให้ตรงกับ Database เพื่อให้ map เจอ ---
+  const dayAbbreviations = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.']; 
+
   const getThaiDayNameFromDateStr = (dateStr) => {
     if (!dateStr) return '';
     const [y, m, d] = dateStr.split('-').map(Number);
     const date = new Date(y, m - 1, d);
-    return fullDays[date.getDay()];
+    return dayAbbreviations[date.getDay()];
   };
 
   const formatDisplayDate = (dateStr) => {
@@ -88,6 +91,10 @@ const User = () => {
 
   const calculateEndTime = (startTime, durationStr) => {
     if (!startTime || !durationStr) return '';
+    
+    // ป้องกันกรณี startTime มีขีดติดมา (เผื่อหลุดมา) ให้ตัดออกก่อน
+    const actualStartTime = startTime.includes('-') ? startTime.split('-')[0].trim() : startTime;
+
     let minutesToAdd = 0;
     if (durationStr === '30 นาที') minutesToAdd = 30;
     else if (durationStr === '1 ชั่วโมง') minutesToAdd = 60;
@@ -97,26 +104,51 @@ const User = () => {
     else if (durationStr === 'กำหนดเอง') minutesToAdd = parseInt(customDuration) || 0;
     else { const cleanStr = durationStr.replace(/\D/g, ''); minutesToAdd = parseInt(cleanStr) || 0; }
 
-    const [startH, startM] = startTime.split(/[.:]/).map(Number);
+    const [startH, startM] = actualStartTime.split(/[.:]/).map(Number);
+    
+    // ตรวจสอบว่า parse เวลาได้ถูกต้องไหม
+    if (isNaN(startH)) return startTime; 
+
     const date = new Date();
     date.setHours(startH, startM + minutesToAdd);
     const endH = String(date.getHours()).padStart(2, '0');
     const endM = String(date.getMinutes()).padStart(2, '0');
-    return `${startTime}-${endH}:${endM}`;
+    return `${actualStartTime}-${endH}:${endM}`;
   };
 
   // --- CORE LOGIC ---
+  const timeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    // ตัดเอาเฉพาะเวลาเริ่มมาคำนวณนาที
+    const startTime = timeStr.includes('-') ? timeStr.split('-')[0].trim() : timeStr;
+    const [hours, minutes] = startTime.split(':').map(Number);
+    return hours * 60 + (minutes || 0);
+  };
+
   const getAvailableTimeSlots = () => {
     if (!formData.type || formData.type === 'เลือกกิจกรรม') return [];
-    const activitySchedules = schedules.filter(s => s.type === formData.type);
     if (formData.days.length === 0) return [];
+
     const selectedDateStr = formData.days[0];
     const targetDayName = getThaiDayNameFromDateStr(selectedDateStr);
-    const dailySchedules = activitySchedules.filter(s => s.day === targetDayName);
-    const timeSlots = new Set();
-    dailySchedules.forEach(schedule => { if (schedule.time) timeSlots.add(schedule.time); });
-    return Array.from(timeSlots).sort((a, b) => a.localeCompare(b));
+
+    const matchingSchedules = schedules.filter(schedule =>
+      schedule.type === formData.type &&
+      schedule.day === targetDayName && // ตอนนี้ targetDayName จะมีจุด (.) แล้ว ตรงกับ DB
+      schedule.time 
+    );
+
+    // --- แก้ไขจุดที่ 2: ดึงเฉพาะเวลาเริ่มถ้ามีขีด ---
+    const uniqueTimeSlots = [...new Set(matchingSchedules.map(s => {
+        // ถ้า time เป็น "19:00 - 22:00" จะได้ "19:00"
+        return s.time.includes('-') ? s.time.split('-')[0].trim() : s.time;
+    }))];
+
+    return uniqueTimeSlots.sort((a, b) =>
+      timeToMinutes(a) - timeToMinutes(b)
+    );
   };
+  
   const availableTimeSlots = getAvailableTimeSlots();
 
   // --- EFFECTS ---
@@ -179,7 +211,6 @@ const User = () => {
       const isPast = currentDayDate < todayObj;
       const isToday = currentDayDate.getTime() === todayObj.getTime();
 
-      // Logic Class Name
       let btnClass = 'user-day-btn';
       if (isSelected) btnClass += ' active';
       if (isToday) btnClass += ' today';
@@ -218,7 +249,6 @@ const User = () => {
             {/* Row 1: Activity */}
             <div className="form-section-Activity">
               <label className="user-section-title">เลือกกิจกรรม</label>
-              {/* ใช้ className จาก CSS แทน style */}
               <TimeDropdown
                 className="dropdown-full"
                 value={formData.type}
@@ -301,7 +331,6 @@ const User = () => {
               <div className="format-section">
                 <h3 className="user-section-title">รูปแบบการประชุม</h3>
 
-                {/* Toggle Buttons */}
                 <div className="toggle-container">
                   <button
                     className={`toggle-btn ${formData.meetingFormat === 'Online' ? 'active' : ''}`}

@@ -55,11 +55,12 @@ const User = () => {
   const [popupMessage, setPopupMessage] = useState({ type: '', message: '' });
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // (ส่วน UI Header) ใช้แสดงผลเฉยๆ ไม่มีจุดก็ได้ หรือจะมีก็ได้ตาม Design
-  const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส']; 
+  const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
   const fullDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
   const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
   const duration = ['30 นาที', '1 ชั่วโมง', '1.5 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง', 'กำหนดเอง'];
+  // เพิ่มจุด (.) ให้ตรงกับ Database
+  const dayAbbreviations = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
 
   // --- HELPER FUNCTIONS ---
   const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
@@ -72,9 +73,6 @@ const User = () => {
     const d = String(date.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
   };
-
-  // --- แก้ไขจุดที่ 1: เพิ่มจุด (.) ให้ตรงกับ Database เพื่อให้ map เจอ ---
-  const dayAbbreviations = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.']; 
 
   const getThaiDayNameFromDateStr = (dateStr) => {
     if (!dateStr) return '';
@@ -89,42 +87,49 @@ const User = () => {
     return `${d} ${thaiMonths[m - 1]} ${y + 543}`;
   };
 
-  const calculateEndTime = (startTime, durationStr) => {
-    if (!startTime || !durationStr) return '';
+  // --- NEW LOGIC: Time & Duration Helpers ---
+
+  // ฟังก์ชันแปลงข้อความระยะเวลาเป็นตัวเลขนาที (ใช้ร่วมกันหลายที่)
+  const getDurationInMinutes = (durationStr, customVal) => {
+    if (!durationStr) return 0;
+    if (durationStr === '30 นาที') return 30;
+    if (durationStr === '1 ชั่วโมง') return 60;
+    if (durationStr === '1.5 ชั่วโมง') return 90;
+    if (durationStr === '2 ชั่วโมง') return 120;
+    if (durationStr === '3 ชั่วโมง') return 180;
+    if (durationStr === 'กำหนดเอง') return parseInt(customVal) || 0;
     
-    // ป้องกันกรณี startTime มีขีดติดมา (เผื่อหลุดมา) ให้ตัดออกก่อน
-    const actualStartTime = startTime.includes('-') ? startTime.split('-')[0].trim() : startTime;
-
-    let minutesToAdd = 0;
-    if (durationStr === '30 นาที') minutesToAdd = 30;
-    else if (durationStr === '1 ชั่วโมง') minutesToAdd = 60;
-    else if (durationStr === '1.5 ชั่วโมง') minutesToAdd = 90;
-    else if (durationStr === '2 ชั่วโมง') minutesToAdd = 120;
-    else if (durationStr === '3 ชั่วโมง') minutesToAdd = 180;
-    else if (durationStr === 'กำหนดเอง') minutesToAdd = parseInt(customDuration) || 0;
-    else { const cleanStr = durationStr.replace(/\D/g, ''); minutesToAdd = parseInt(cleanStr) || 0; }
-
-    const [startH, startM] = actualStartTime.split(/[.:]/).map(Number);
-    
-    // ตรวจสอบว่า parse เวลาได้ถูกต้องไหม
-    if (isNaN(startH)) return startTime; 
-
-    const date = new Date();
-    date.setHours(startH, startM + minutesToAdd);
-    const endH = String(date.getHours()).padStart(2, '0');
-    const endM = String(date.getMinutes()).padStart(2, '0');
-    return `${actualStartTime}-${endH}:${endM}`;
+    const cleanStr = durationStr.replace(/\D/g, '');
+    return parseInt(cleanStr) || 0;
   };
 
-  // --- CORE LOGIC ---
+  // แปลงนาที (นับจากเที่ยงคืน) กลับเป็นเวลา HH:MM
+  const minutesToTimeStr = (minutes) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  };
+
+  // แปลงเวลา HH:MM เป็นนาที
   const timeToMinutes = (timeStr) => {
     if (!timeStr) return 0;
-    // ตัดเอาเฉพาะเวลาเริ่มมาคำนวณนาที
-    const startTime = timeStr.includes('-') ? timeStr.split('-')[0].trim() : timeStr;
-    const [hours, minutes] = startTime.split(':').map(Number);
-    return hours * 60 + (minutes || 0);
+    // เผื่อกรณีมีขีดติดมา ตัดเอาเฉพาะเวลาตัวแรก
+    const cleanTime = timeStr.includes('-') ? timeStr.split('-')[0].trim() : timeStr;
+    const [hours, minutes] = cleanTime.split(':').map(Number);
+    return (hours * 60) + (minutes || 0);
   };
 
+  const calculateEndTime = (startTime, durationStr) => {
+    if (!startTime || !durationStr) return '';
+    const minsToAdd = getDurationInMinutes(durationStr, customDuration);
+    const [startH, startM] = startTime.split(/[.:]/).map(Number);
+    if (isNaN(startH)) return startTime;
+
+    const totalMins = (startH * 60) + startM + minsToAdd;
+    return `${startTime}-${minutesToTimeStr(totalMins)}`;
+  };
+
+  // --- CORE LOGIC: Generate Time Slots ---
   const getAvailableTimeSlots = () => {
     if (!formData.type || formData.type === 'เลือกกิจกรรม') return [];
     if (formData.days.length === 0) return [];
@@ -132,23 +137,48 @@ const User = () => {
     const selectedDateStr = formData.days[0];
     const targetDayName = getThaiDayNameFromDateStr(selectedDateStr);
 
+    // 1. ดึง Schedule ที่ตรงกับวันและประเภท
     const matchingSchedules = schedules.filter(schedule =>
       schedule.type === formData.type &&
-      schedule.day === targetDayName && // ตอนนี้ targetDayName จะมีจุด (.) แล้ว ตรงกับ DB
-      schedule.time 
+      schedule.day === targetDayName &&
+      schedule.time
     );
 
-    // --- แก้ไขจุดที่ 2: ดึงเฉพาะเวลาเริ่มถ้ามีขีด ---
-    const uniqueTimeSlots = [...new Set(matchingSchedules.map(s => {
-        // ถ้า time เป็น "19:00 - 22:00" จะได้ "19:00"
-        return s.time.includes('-') ? s.time.split('-')[0].trim() : s.time;
-    }))];
+    // 2. ดึง Duration ของผู้ใช้มาเตรียมคำนวณ
+    const userDurationMins = getDurationInMinutes(formData.duration, customDuration);
+    // ถ้ายังไม่เลือก Duration ให้ใช้ค่า Default 60 นาทีในการแสดงผลไปก่อน (หรือจะใช้ 30 ก็ได้)
+    const durationCheck = userDurationMins > 0 ? userDurationMins : 60;
 
-    return uniqueTimeSlots.sort((a, b) =>
-      timeToMinutes(a) - timeToMinutes(b)
-    );
+    const generatedSlots = new Set();
+
+    matchingSchedules.forEach(sch => {
+      const timeStr = sch.time;
+
+      if (timeStr.includes('-')) {
+        // กรณีเป็นช่วงเวลา เช่น "19:00 - 22:00"
+        const [startStr, endStr] = timeStr.split('-').map(s => s.trim());
+        
+        let currentMins = timeToMinutes(startStr);
+        const endMins = timeToMinutes(endStr);
+        
+        // Loop สร้างปุ่มเวลา โดยขยับทีละ 30 นาที (Interval)
+        const STEP_INTERVAL = 30; 
+
+        while (currentMins + durationCheck <= endMins) {
+          generatedSlots.add(minutesToTimeStr(currentMins));
+          currentMins += STEP_INTERVAL;
+        }
+
+      } else {
+        // กรณีเป็นเวลาเดี่ยว เช่น "19:00" ก็ใส่ไปเลย
+        generatedSlots.add(timeStr);
+      }
+    });
+
+    // แปลงกลับเป็น Array และเรียงลำดับ
+    return Array.from(generatedSlots).sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
   };
-  
+
   const availableTimeSlots = getAvailableTimeSlots();
 
   // --- EFFECTS ---

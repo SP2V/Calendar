@@ -1,9 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary: #3b82f6;       /* Blue-500 */
+  --primary: #3b82f6;
+  /* Blue-500 */
   --primary-color-today: #8fdaffff;
-  --primary-hover: #2563eb; /* Blue-600 */
+  --primary-hover: #2563eb;
+  /* Blue-600 */
   --bg-gradient-start: #f3f4f6;
   --bg-gradient-end: #e5e7eb;
   --card-bg: #ffffff;
@@ -112,7 +114,8 @@ body {
   border: 1px solid white;
 }
 
-.user-form-card .form-section,.form-section-Activity {
+.user-form-card .form-section,
+.form-section-Activity {
   margin-bottom: 1rem;
 }
 
@@ -136,8 +139,15 @@ body {
   gap: 1rem;
 }
 
-.col-2 { flex: 2; min-width: 250px; }
-.col-1 { flex: 1; min-width: 150px; }
+.col-2 {
+  flex: 2;
+  min-width: 250px;
+}
+
+.col-1 {
+  flex: 1;
+  min-width: 150px;
+}
 
 /* .col-2 .user-custom-input {
   width: 100%;
@@ -151,7 +161,7 @@ body {
 }
 
 /* Inputs & Selects */
-input[type="text"], 
+input[type="text"],
 select,
 .user-custom-input {
   width: 100%;
@@ -165,10 +175,11 @@ select,
   background-color: #fff;
   outline: none;
   transition: all 0.2s;
-  box-sizing: border-box; /* สำคัญเพื่อไม่ให้ width เกิน */
+  box-sizing: border-box;
+  /* สำคัญเพื่อไม่ให้ width เกิน */
 }
 
-input[type="text"]:focus, 
+input[type="text"]:focus,
 select:focus,
 .user-custom-input:focus {
   border-color: var(--primary);
@@ -238,7 +249,10 @@ textarea.user-custom-input {
   font-weight: 600;
   transition: color 0.2s;
 }
-.nav-btn:hover { color: var(--primary); }
+
+.nav-btn:hover {
+  color: var(--primary);
+}
 
 .user-calendar-grid {
   display: grid;
@@ -296,8 +310,8 @@ textarea.user-custom-input {
 
 /* Time Slots (Right) */
 .time-slot-container {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 
@@ -407,7 +421,8 @@ textarea.user-custom-input {
 .summary-box {
   flex: 1;
   min-width: 300px;
-  background-color: #eff6ff; /* ฟ้าอ่อน */
+  background-color: #eff6ff;
+  /* ฟ้าอ่อน */
   border: 1px solid #bfdbfe;
   border-radius: 12px;
   padding: 1.1rem;
@@ -418,7 +433,8 @@ textarea.user-custom-input {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #0369a1; /* ฟ้าเข้ม */
+  color: #0369a1;
+  /* ฟ้าเข้ม */
   font-weight: 700;
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
@@ -485,14 +501,15 @@ textarea.user-custom-input {
 /* 1. แก้ไข dropdown-full ให้ยืดเต็ม 100% และปลดล็อก max-width */
 .dropdown-full {
   width: 100% !important;
-  max-width: 100% !important; /* เปลี่ยนจาก 350px เป็น 100% */
+  max-width: 100% !important;
+  /* เปลี่ยนจาก 350px เป็น 100% */
 }
 
 /* 2. (แนะนำ) เพิ่ม class นี้เพื่อคุมขนาด Container ของส่วนเลือกกิจกรรม */
 .form-section-Activity {
   width: 100%;
   /* ถ้าอยากจำกัดความกว้างไม่ให้ยาวเกินไป ให้ใส่ค่าตรงนี้ เช่น */
-  max-width: 256px; 
+  max-width: 256px;
   margin-bottom: 1.5rem;
 }
 

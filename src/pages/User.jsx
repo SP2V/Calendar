@@ -4,6 +4,7 @@ import TimeDropdown from "../components/AdminDropdown";
 import PopupModal from "../components/PopupModal";
 import ErrorPopup from "../components/ErrorPopup";
 import BookingPreviewModal from "../components/BookingPreviewModal";
+import CustomDurationModal from "../components/CustomDurationModal";
 import {
   subscribeSchedules,
   subscribeActivityTypes,
@@ -52,8 +53,10 @@ const User = () => {
     description: ''
   });
   const [customDuration, setCustomDuration] = useState('');
+  const [customDurationUnit, setCustomDurationUnit] = useState('นาที'); // New state for unit
   const [calendarEvents, setCalendarEvents] = useState([]); // New state for events
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showDurationModal, setShowDurationModal] = useState(false);
 
   // UI States
   const [isViewMode, setIsViewMode] = useState(false);
@@ -95,14 +98,18 @@ const User = () => {
   // --- NEW LOGIC: Time & Duration Helpers ---
 
   // ฟังก์ชันแปลงข้อความระยะเวลาเป็นตัวเลขนาที (ใช้ร่วมกันหลายที่)
-  const getDurationInMinutes = (durationStr, customVal) => {
+  const getDurationInMinutes = (durationStr, customVal, customUnit = 'นาที') => {
     if (!durationStr) return 0;
     if (durationStr === '30 นาที') return 30;
     if (durationStr === '1 ชั่วโมง') return 60;
     if (durationStr === '1.5 ชั่วโมง') return 90;
     if (durationStr === '2 ชั่วโมง') return 120;
     if (durationStr === '3 ชั่วโมง') return 180;
-    if (durationStr === 'กำหนดเอง') return parseInt(customVal) || 0;
+    if (durationStr === 'กำหนดเอง') {
+      const val = parseFloat(customVal) || 0;
+      if (customUnit === 'ชั่วโมง') return val * 60;
+      return val; // นาที
+    }
 
     const cleanStr = durationStr.replace(/\D/g, '');
     return parseInt(cleanStr) || 0;
@@ -126,7 +133,7 @@ const User = () => {
 
   const calculateEndTime = (startTime, durationStr) => {
     if (!startTime || !durationStr) return '';
-    const minsToAdd = getDurationInMinutes(durationStr, customDuration);
+    const minsToAdd = getDurationInMinutes(durationStr, customDuration, customDurationUnit);
     const [startH, startM] = startTime.split(/[.:]/).map(Number);
     if (isNaN(startH)) return startTime;
 
@@ -150,7 +157,7 @@ const User = () => {
     );
 
     // 2. ดึง Duration ของผู้ใช้มาเตรียมคำนวณ
-    const userDurationMins = getDurationInMinutes(formData.duration, customDuration);
+    const userDurationMins = getDurationInMinutes(formData.duration, customDuration, customDurationUnit);
     // ถ้ายังไม่เลือก Duration ให้ใช้ค่า Default 60 นาทีในการแสดงผลไปก่อน (หรือจะใช้ 30 ก็ได้)
     const durationCheck = userDurationMins > 0 ? userDurationMins : 60;
 
@@ -167,7 +174,7 @@ const User = () => {
         const endMins = timeToMinutes(endStr);
 
         // Loop สร้างปุ่มเวลา โดยขยับทีละ 30 นาที (Interval)
-        const STEP_INTERVAL = 30;
+        const STEP_INTERVAL = userDurationMins;
 
         while (currentMins + durationCheck <= endMins) {
           generatedSlots.add(minutesToTimeStr(currentMins));
@@ -231,11 +238,48 @@ const User = () => {
     });
   };
 
+  // Handle when duration dropdown changes
+  const handleDurationChange = (val) => {
+    if (val === 'กำหนดเอง') {
+      setShowDurationModal(true);
+    }
+    setFormData({ ...formData, duration: val });
+  };
+
+  const handleCustomDurationConfirm = (val, unit) => {
+    setCustomDuration(val);
+    setCustomDurationUnit(unit);
+    setShowDurationModal(false);
+  };
+
+  const handleCustomDurationCancel = () => {
+    setShowDurationModal(false);
+    if (!customDuration) {
+      setFormData(prev => ({ ...prev, duration: '' }));
+    }
+  };
+
   const handleReview = () => {
     if (!formData.type || formData.type === 'เลือกกิจกรรม') { setPopupMessage({ type: 'error', message: 'กรุณาเลือกประเภทกิจกรรม' }); return; }
     if (!formData.subject || formData.subject.trim() === '') { setPopupMessage({ type: 'error', message: 'กรุณากรอกหัวข้อการประชุม' }); return; }
-    const finalDuration = formData.duration === 'กำหนดเอง' ? customDuration : formData.duration;
-    if (!finalDuration || finalDuration.trim() === '') { setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลา' }); return; }
+
+    // Check if custom duration is selected but value is empty
+    if (formData.duration === 'กำหนดเอง') {
+      const val = parseFloat(customDuration);
+      let totalMinutes = val;
+      if (customDurationUnit === 'ชั่วโมง') totalMinutes = val * 60;
+
+      if (!val || val <= 0) {
+        setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลา (เลขจำนวนเต็ม/ทศนิยม)' });
+        return;
+      }
+      if (totalMinutes < 10) {
+        setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลาอย่างน้อย 10 นาที' });
+        return;
+      }
+    } else {
+      if (!formData.duration || formData.duration.trim() === '') { setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลา' }); return; }
+    }
     if (formData.days.length === 0) { setPopupMessage({ type: 'error', message: 'กรุณาเลือกวันที่จากปฏิทิน' }); return; }
     if (!formData.startTime) { setPopupMessage({ type: 'error', message: 'กรุณาเลือกเวลาที่ต้องการจอง' }); return; }
     if (formData.meetingFormat === 'Online' && (!formData.location || formData.location.trim() === '')) { setPopupMessage({ type: 'error', message: 'กรุณากรอกลิงก์การประชุม' }); return; }
@@ -256,7 +300,7 @@ const User = () => {
 
       const startDateTime = new Date(year, month - 1, day, hour, minute);
 
-      const durationMins = getDurationInMinutes(formData.duration, customDuration);
+      const durationMins = getDurationInMinutes(formData.duration, customDuration, customDurationUnit);
       const endDateTime = new Date(startDateTime.getTime() + durationMins * 60000);
 
       const eventPayload = {
@@ -294,6 +338,7 @@ const User = () => {
           description: ''
         });
         setCustomDuration('');
+        setCustomDurationUnit('นาที');
       } else {
         throw new Error(result.message || 'Unknown error');
       }
@@ -380,13 +425,9 @@ const User = () => {
                 <div className="col-1">
                   <label className="input-label">ระยะเวลา (Duration) <span className="required">*</span></label>
                   <div className="duration-group">
-                    {formData.duration === 'กำหนดเอง' && (
-                      <input type="text" placeholder="เช่น 45 นาที" className="user-custom-input" style={{ flex: 1 }}
-                        value={customDuration} onChange={e => setCustomDuration(e.target.value)} />
-                    )}
                     <TimeDropdown
                       className="dropdown-time"
-                      value={formData.duration} onChange={val => setFormData({ ...formData, duration: val })}
+                      value={formData.duration} onChange={handleDurationChange}
                       timeOptions={duration} placeholder="ระยะเวลา"
                     />
                   </div>
@@ -491,7 +532,7 @@ const User = () => {
                   </div>
                   <div className="summary-item">
                     <div className="summary-label"><ClockIcon style={{ width: '14px' }} /> ระยะเวลา</div>
-                    <p className="summary-value">{formData.duration === 'กำหนดเอง' ? `${customDuration} (กำหนดเอง)` : (formData.duration || '-')}</p>
+                    <p className="summary-value">{formData.duration === 'กำหนดเอง' ? `${customDuration} ${customDurationUnit}` : (formData.duration || '-')}</p>
                   </div>
                   <div className="summary-item">
                     <div className="summary-label"><ClockIcon style={{ width: '14px' }} /> เวลา</div>
@@ -557,11 +598,19 @@ const User = () => {
           subject: formData.subject,
           date: formData.days[0],
           timeSlot: formData.startTime ? calculateEndTime(formData.startTime, formData.duration === 'กำหนดเอง' ? customDuration : formData.duration) ? `${formData.startTime} - ${calculateEndTime(formData.startTime, formData.duration === 'กำหนดเอง' ? customDuration : formData.duration).split('-')[1]} น.` : '-' : '-',
-          duration: formData.duration === 'กำหนดเอง' ? `${customDuration} (กำหนดเอง)` : formData.duration,
+          duration: formData.duration === 'กำหนดเอง' ? `${customDuration} ${customDurationUnit}` : formData.duration,
           meetingFormat: formData.meetingFormat,
           location: formData.location,
           description: formData.description
         }}
+      />
+
+      <CustomDurationModal
+        isOpen={showDurationModal}
+        onClose={handleCustomDurationCancel}
+        onConfirm={handleCustomDurationConfirm}
+        initialValue={customDuration}
+        initialUnit={customDurationUnit}
       />
 
       {popupMessage.type === 'success' && <PopupModal message={popupMessage.message} onClose={() => setPopupMessage({ type: '', message: '' })} />}

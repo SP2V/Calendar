@@ -536,7 +536,7 @@ const User = () => {
                   </div>
                   <div className="summary-item">
                     <div className="summary-label"><ClockIcon style={{ width: '14px' }} /> เวลา</div>
-                    <p className="summary-value">{formData.startTime ? calculateEndTime(formData.startTime, formData.duration === 'กำหนดเอง' ? customDuration : formData.duration) + ' น.' : '-'}</p>
+                    <p className="summary-value">{formData.startTime ? calculateEndTime(formData.startTime, formData.duration) + ' น.' : '-'}</p>
                   </div>
                   <div className="summary-item span-2">
                     <div className="summary-label">{formData.meetingFormat === 'Online' ? <MonitorIcon style={{ width: '14px' }} /> : <MapPinIcon style={{ width: '14px' }} />} รูปแบบ</div>
@@ -597,7 +597,7 @@ const User = () => {
           type: formData.type,
           subject: formData.subject,
           date: formData.days[0],
-          timeSlot: formData.startTime ? calculateEndTime(formData.startTime, formData.duration === 'กำหนดเอง' ? customDuration : formData.duration) ? `${formData.startTime} - ${calculateEndTime(formData.startTime, formData.duration === 'กำหนดเอง' ? customDuration : formData.duration).split('-')[1]} น.` : '-' : '-',
+          timeSlot: formData.startTime ? `${formData.startTime} - ${calculateEndTime(formData.startTime, formData.duration).split('-')[1]} น.` : '-',
           duration: formData.duration === 'กำหนดเอง' ? `${customDuration} ${customDurationUnit}` : formData.duration,
           meetingFormat: formData.meetingFormat,
           location: formData.location,

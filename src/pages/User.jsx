@@ -272,6 +272,20 @@ const User = () => {
         });
 
         setPopupMessage({ type: 'success', message: 'จองนัดหมายและบันทึกลงปฏิทินเรียบร้อยแล้ว' });
+
+        // Clear form
+        setFormData({
+          type: '',
+          days: [],
+          startTime: '',
+          endTime: '',
+          duration: '',
+          subject: '',
+          meetingFormat: 'Online',
+          location: '',
+          description: ''
+        });
+        setCustomDuration('');
       } else {
         throw new Error(result.message || 'Unknown error');
       }

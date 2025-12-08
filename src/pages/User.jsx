@@ -469,7 +469,7 @@ const User = () => {
                               onClick={() => setFormData(prev => ({ ...prev, startTime: slot, endTime: '' }))}
                               className={`time-btn ${formData.startTime === slot ? 'active' : ''}`}
                             >
-                              {slot}
+                              {calculateEndTime(slot, formData.duration).replace('-', ' - ')}
                             </button>
                           ))
                           : <div className="error-state-box">ไม่มีรอบเวลาว่าง</div>}

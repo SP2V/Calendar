@@ -410,23 +410,23 @@ const User = () => {
                 <div className="time-slot-container">
                   {(!formData.type || formData.type === 'เลือกกิจกรรม') ?
                     <div className="empty-state-text">กรุณาเลือกประเภทกิจกรรมก่อน</div>
-                    : formData.days.length === 0 ?
-                      <div className="empty-state-text">กรุณาเลือกวันที่จากปฏิทิน</div>
-                      : availableTimeSlots.length > 0 ?
-                        availableTimeSlots.map((slot, idx) => (
-                          <button key={idx}
-                            onClick={() => setFormData(prev => ({ ...prev, startTime: slot, endTime: '' }))}
-                            className={`time-btn ${formData.startTime === slot ? 'active' : ''}`}
-                          >
-                            {slot}
-                          </button>
-                        ))
-                        : <div className="error-state-box">ไม่มีรอบเวลาว่าง</div>}
+                    : (!formData.duration) ?
+                      <div className="empty-state-text">กรุณาระบุระยะเวลาก่อน</div>
+                      : formData.days.length === 0 ?
+                        <div className="empty-state-text">กรุณาเลือกวันที่จากปฏิทิน</div>
+                        : availableTimeSlots.length > 0 ?
+                          availableTimeSlots.map((slot, idx) => (
+                            <button key={idx}
+                              onClick={() => setFormData(prev => ({ ...prev, startTime: slot, endTime: '' }))}
+                              className={`time-btn ${formData.startTime === slot ? 'active' : ''}`}
+                            >
+                              {slot}
+                            </button>
+                          ))
+                          : <div className="error-state-box">ไม่มีรอบเวลาว่าง</div>}
                 </div>
               </div>
             </div>
-
-            {/* --- Bottom Section: Layout --- */}
             <div className="bottom-layout">
 
               {/* LEFT: Format & Input */}

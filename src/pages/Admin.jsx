@@ -12,7 +12,7 @@ import {
   addActivityType,
   updateActivityType,
   deleteActivityType
-} from '../firebase';
+} from '../services/firebase';
 
 
 // --------------------------- ICONS ---------------------------

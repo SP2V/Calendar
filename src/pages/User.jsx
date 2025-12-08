@@ -6,7 +6,9 @@ import ErrorPopup from "../components/ErrorPopup";
 import {
   subscribeSchedules,
   subscribeActivityTypes,
-} from '../firebase';
+  addBooking,
+} from '../services/firebase';
+import { createCalendarEvent, getCalendarEvents } from '../services/calendarService';
 
 // --- ICONS (SVG) ---
 const CalendarIcon = ({ style }) => (
@@ -49,6 +51,7 @@ const User = () => {
     description: ''
   });
   const [customDuration, setCustomDuration] = useState('');
+  const [calendarEvents, setCalendarEvents] = useState([]); // New state for events
 
   // UI States
   const [isViewMode, setIsViewMode] = useState(false);
@@ -98,7 +101,7 @@ const User = () => {
     if (durationStr === '2 ชั่วโมง') return 120;
     if (durationStr === '3 ชั่วโมง') return 180;
     if (durationStr === 'กำหนดเอง') return parseInt(customVal) || 0;
-    
+
     const cleanStr = durationStr.replace(/\D/g, '');
     return parseInt(cleanStr) || 0;
   };
@@ -157,12 +160,12 @@ const User = () => {
       if (timeStr.includes('-')) {
         // กรณีเป็นช่วงเวลา เช่น "19:00 - 22:00"
         const [startStr, endStr] = timeStr.split('-').map(s => s.trim());
-        
+
         let currentMins = timeToMinutes(startStr);
         const endMins = timeToMinutes(endStr);
-        
+
         // Loop สร้างปุ่มเวลา โดยขยับทีละ 30 นาที (Interval)
-        const STEP_INTERVAL = 30; 
+        const STEP_INTERVAL = 30;
 
         while (currentMins + durationCheck <= endMins) {
           generatedSlots.add(minutesToTimeStr(currentMins));
@@ -198,6 +201,21 @@ const User = () => {
     }
   }, [popupMessage]);
 
+  // Fetch events when switching to View Mode
+  useEffect(() => {
+    if (isViewMode) {
+      const fetchEvents = async () => {
+        try {
+          const events = await getCalendarEvents();
+          setCalendarEvents(events);
+        } catch (error) {
+          console.error("Failed to fetch events", error);
+        }
+      };
+      fetchEvents();
+    }
+  }, [isViewMode]);
+
   // --- HANDLERS ---
   const handleDaySelect = (dayNum) => {
     const selectedDateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNum);
@@ -221,7 +239,47 @@ const User = () => {
     if (formData.meetingFormat === 'Online' && (!formData.location || formData.location.trim() === '')) { setPopupMessage({ type: 'error', message: 'กรุณากรอกลิงก์การประชุม' }); return; }
     if (formData.meetingFormat === 'On-site' && (!formData.location || formData.location.trim() === '')) { setPopupMessage({ type: 'error', message: 'กรุณาระบุสถานที่' }); return; }
 
-    setPopupMessage({ type: 'success', message: 'บันทึกข้อมูลสำเร็จ (Mockup)' });
+    // --- Google Calendar Integration ---
+    try {
+      const dateStr = formData.days[0];
+      const timeStr = formData.startTime;
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const [hour, minute] = timeStr.split(':').map(Number);
+
+      const startDateTime = new Date(year, month - 1, day, hour, minute);
+
+      const durationMins = getDurationInMinutes(formData.duration, customDuration);
+      const endDateTime = new Date(startDateTime.getTime() + durationMins * 60000);
+
+      const eventPayload = {
+        title: `[${formData.type}] ${formData.subject}`,
+        startTime: startDateTime.toISOString(),
+        endTime: endDateTime.toISOString(),
+        description: `รายละเอียด: ${formData.description || '-'}\nรูปแบบ: ${formData.meetingFormat}`,
+        location: formData.location
+      };
+
+      setPopupMessage({ type: 'success', message: 'กำลังบันทึก...' });
+
+      const result = await createCalendarEvent(eventPayload);
+
+      if (result.status === 'success') {
+        // Save to Firestore
+        await addBooking({
+          ...eventPayload,
+          googleCalendarEventId: result.eventId || null,
+          status: 'confirmed'
+        });
+
+        setPopupMessage({ type: 'success', message: 'จองนัดหมายและบันทึกลงปฏิทินเรียบร้อยแล้ว' });
+      } else {
+        throw new Error(result.message || 'Unknown error');
+      }
+
+    } catch (error) {
+      console.error("Calendar Error:", error);
+      setPopupMessage({ type: 'error', message: `เชื่อมต่อไม่ได้: ${error.message}` });
+    }
   };
 
   // --- RENDER HELPERS ---
@@ -434,7 +492,36 @@ const User = () => {
         ) : (
           <div className="user-form-card">
             <h2 className="user-section-title">รายการนัดหมายทั้งหมด</h2>
-            <div style={{ textAlign: 'center', padding: '1rem', color: '#6b7280' }}>ส่วนแสดงผลรายการ (List View)</div>
+            {/* <div style={{ textAlign: 'center', padding: '1rem', color: '#6b7280' }}>ส่วนแสดงผลรายการ (List View)</div> */}
+
+            <div className="user-event-list">
+              {calendarEvents.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>ไม่พบรายการนัดหมาย</div>
+              ) : (
+                calendarEvents.map(event => (
+                  <div key={event.id} className="summary-box" style={{ marginBottom: '1rem' }}>
+                    <div className="summary-grid">
+                      <div className="summary-item span-2">
+                        <div className="summary-label"><FileTextIcon style={{ width: '14px' }} /> หัวข้อ</div>
+                        <p className="summary-value" style={{ fontWeight: 'bold' }}>{event.title}</p>
+                      </div>
+                      <div className="summary-item">
+                        <div className="summary-label"><CalendarIcon style={{ width: '14px' }} /> เริ่ม</div>
+                        <p className="summary-value">{new Date(event.startTime).toLocaleString('th-TH')}</p>
+                      </div>
+                      <div className="summary-item">
+                        <div className="summary-label"><ClockIcon style={{ width: '14px' }} /> สิ้นสุด</div>
+                        <p className="summary-value">{new Date(event.endTime).toLocaleString('th-TH')}</p>
+                      </div>
+                      <div className="summary-item span-2">
+                        <div className="summary-label"><MapPinIcon style={{ width: '14px' }} /> รายละเอียด/สถานที่</div>
+                        <p className="summary-value" style={{ whiteSpace: 'pre-wrap' }}>{event.description} @ {event.location}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>

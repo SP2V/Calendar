@@ -145,12 +145,12 @@ export const updateActivityType = async (id, name, color) => {
   if (!db) throw new Error('Firestore not initialized');
   if (!name || !name.trim()) return;
   const docRef = doc(db, 'activityTypes', id);
-  
+
   const updateData = { name: name.trim() };
   if (color) {
     updateData.color = color;
   }
-  
+
   await updateDoc(docRef, updateData);
 };
 
@@ -159,6 +159,19 @@ export const deleteActivityType = async (id) => {
   if (!db) throw new Error('Firestore not initialized');
   const docRef = doc(db, 'activityTypes', id);
   await deleteDoc(docRef);
+};
+
+// ================= BOOKINGS =================
+
+// ✅ ADD BOOKING
+export const addBooking = async (bookingData) => {
+  if (!db) throw new Error('Firestore not initialized');
+  const bookingsRef = collection(db, 'bookings');
+  const docRef = await addDoc(bookingsRef, {
+    ...bookingData,
+    createdAt: new Date().toISOString()
+  });
+  return docRef.id;
 };
 
 export default {
@@ -173,4 +186,5 @@ export default {
   addActivityType,
   updateActivityType,
   deleteActivityType,
+  addBooking,
 };

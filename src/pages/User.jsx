@@ -174,7 +174,7 @@ const User = () => {
         const endMins = timeToMinutes(endStr);
 
         // Loop สร้างปุ่มเวลา โดยขยับทีละ 30 นาที (Interval)
-        const STEP_INTERVAL = userDurationMins;
+        const STEP_INTERVAL = userDurationMins > 0 ? userDurationMins : 30;
 
         while (currentMins + durationCheck <= endMins) {
           generatedSlots.add(minutesToTimeStr(currentMins));

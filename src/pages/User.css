@@ -313,6 +313,9 @@ textarea.user-custom-input {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 5px;
 }
 
 .time-btn {
@@ -342,6 +345,7 @@ textarea.user-custom-input {
 }
 
 .empty-state-text {
+  grid-column: 1 / -1;
   width: 100%;
   text-align: center;
   padding: 1.5rem;

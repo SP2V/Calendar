@@ -3,6 +3,7 @@ import './User.css';
 import TimeDropdown from "../components/AdminDropdown";
 import PopupModal from "../components/PopupModal";
 import ErrorPopup from "../components/ErrorPopup";
+import BookingPreviewModal from "../components/BookingPreviewModal";
 import {
   subscribeSchedules,
   subscribeActivityTypes,
@@ -52,6 +53,7 @@ const User = () => {
   });
   const [customDuration, setCustomDuration] = useState('');
   const [calendarEvents, setCalendarEvents] = useState([]); // New state for events
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // UI States
   const [isViewMode, setIsViewMode] = useState(false);
@@ -229,7 +231,7 @@ const User = () => {
     });
   };
 
-  const handleSave = async () => {
+  const handleReview = () => {
     if (!formData.type || formData.type === 'เลือกกิจกรรม') { setPopupMessage({ type: 'error', message: 'กรุณาเลือกประเภทกิจกรรม' }); return; }
     if (!formData.subject || formData.subject.trim() === '') { setPopupMessage({ type: 'error', message: 'กรุณากรอกหัวข้อการประชุม' }); return; }
     const finalDuration = formData.duration === 'กำหนดเอง' ? customDuration : formData.duration;
@@ -238,6 +240,12 @@ const User = () => {
     if (!formData.startTime) { setPopupMessage({ type: 'error', message: 'กรุณาเลือกเวลาที่ต้องการจอง' }); return; }
     if (formData.meetingFormat === 'Online' && (!formData.location || formData.location.trim() === '')) { setPopupMessage({ type: 'error', message: 'กรุณากรอกลิงก์การประชุม' }); return; }
     if (formData.meetingFormat === 'On-site' && (!formData.location || formData.location.trim() === '')) { setPopupMessage({ type: 'error', message: 'กรุณาระบุสถานที่' }); return; }
+
+    setShowPreviewModal(true);
+  };
+
+  const handleConfirmBooking = async () => {
+    setShowPreviewModal(false);
 
     // --- Google Calendar Integration ---
     try {
@@ -340,7 +348,7 @@ const User = () => {
             </div>
           </div>
           <button className="user-header-btn-back" onClick={() => setIsViewMode(!isViewMode)}>
-            {isViewMode ? '+ จองเพิ่ม' : 'รายการจองนัดหมายของฉัน'}
+            {isViewMode ? '+ เพิ่มรายการ' : 'รายการนัดหมายของฉัน'}
           </button>
         </div>
 
@@ -499,7 +507,7 @@ const User = () => {
 
             {/* Footer */}
             <div className="user-action-footer">
-              <button className="btn-confirm" onClick={handleSave}>ยืนยันการจอง</button>
+              <button className="btn-confirm" onClick={handleReview}>ยืนยันการจอง</button>
             </div>
 
           </div>
@@ -539,6 +547,23 @@ const User = () => {
           </div>
         )}
       </div>
+
+      <BookingPreviewModal
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        onConfirm={handleConfirmBooking}
+        data={{
+          type: formData.type,
+          subject: formData.subject,
+          date: formData.days[0],
+          timeSlot: formData.startTime ? calculateEndTime(formData.startTime, formData.duration === 'กำหนดเอง' ? customDuration : formData.duration) ? `${formData.startTime} - ${calculateEndTime(formData.startTime, formData.duration === 'กำหนดเอง' ? customDuration : formData.duration).split('-')[1]} น.` : '-' : '-',
+          duration: formData.duration === 'กำหนดเอง' ? `${customDuration} (กำหนดเอง)` : formData.duration,
+          meetingFormat: formData.meetingFormat,
+          location: formData.location,
+          description: formData.description
+        }}
+      />
+
       {popupMessage.type === 'success' && <PopupModal message={popupMessage.message} onClose={() => setPopupMessage({ type: '', message: '' })} />}
       {popupMessage.type === 'error' && <ErrorPopup message={popupMessage.message} onClose={() => setPopupMessage({ type: '', message: '' })} />}
     </div>

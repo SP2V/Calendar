@@ -26,6 +26,27 @@
     align-items: center;
 }
 
+.btn-close-x {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-close-x:hover {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;

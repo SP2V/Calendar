@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar } from 'lucide-react';
+import { Calendar, X } from 'lucide-react';
 import './BookingPreviewModal.css';
 
 const BookingPreviewModal = ({ isOpen, onClose, onConfirm, data, readOnly = false }) => {
@@ -16,6 +16,12 @@ const BookingPreviewModal = ({ isOpen, onClose, onConfirm, data, readOnly = fals
     return (
         <div className="preview-modal-overlay">
             <div className="preview-modal-container">
+                {/* Close Button X (Only for ReadOnly view or general close usage) */}
+                {readOnly && (
+                    <button className="btn-close-x" onClick={onClose}>
+                        <X size={24} />
+                    </button>
+                )}
                 {/* Header Icon */}
                 <div className="icon-wrapper">
                     <div className="icon-circle">
@@ -75,11 +81,7 @@ const BookingPreviewModal = ({ isOpen, onClose, onConfirm, data, readOnly = fals
 
                 {/* Footer Buttons */}
                 <div className="modal-footer">
-                    {readOnly ? (
-                        <button className="btn-modal btn-confirm-modal" onClick={onClose}>
-                            ปิด
-                        </button>
-                    ) : (
+                    {!readOnly && (
                         <>
                             <button className="btn-modal btn-edit" onClick={onClose}>
                                 แก้ไข

@@ -354,7 +354,7 @@ const User = () => {
         title: `[${formData.type}] ${formData.subject}`,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
-        description: `รายละเอียด: ${formData.description || '-'}\nรูปแบบ: ${formData.meetingFormat}`,
+        description: `${formData.description || '-'}`,
         location: formData.location
       };
 
@@ -432,23 +432,18 @@ const User = () => {
       durationStr = m > 0 ? `${h} ชม. ${m} นาที` : `${h} ชั่วโมง`;
     }
 
+    const normalizedFormat = booking.type === 'Training' ? 'On-site' : // Example heuristic correction if needed, but better to trust data
+      (booking.meetingFormat || booking.bookingData?.meetingFormat || (booking.location && booking.location.includes('http') ? 'Online' : 'On-site'));
+
     setViewingBooking({
-      type: booking.type || '-', // Assuming type is not saved in payload? It is in ...eventPayload, let's hope. If not, might be missing. 
-      // Actually user payload has type: formData.type via spread? No, let's check addBooking payload in previous step.
-      // Yes, ...eventPayload has bookingData? No, let's fix that.
-      // Wait, eventPayload has subject, startTime... 
-      // I will assume 'type' field exists or basic info is shown.
-      subject: booking.subject,
+      type: booking.type || 'นัดหมาย',
+      subject: booking.title || booking.subject || '-',
       date: dateStr,
       timeSlot: timeStr,
       duration: durationStr,
-      meetingFormat: booking.bookingData?.meetingFormat || 'Online', // Fallback if not saved directly?
-      // Actually, I should save all formData fields to be sure.
-      // But for now, let's try to read what we have.
-      location: booking.location,
-      description: booking.description,
-      // For mismatched fields:
-      meetingFormat: booking.location && booking.location.includes('http') ? 'Online' : 'On-site', // Heuristic if missing
+      meetingFormat: normalizedFormat,
+      location: booking.location || '-',
+      description: booking.description || '-'
     });
   };
 
@@ -748,7 +743,7 @@ const User = () => {
                           <div key={item.id} className="booking-card">
                             <div className="card-header">
                               <h3 className="card-type">{item.type || 'นัดหมาย'}</h3>
-                              <p className="card-subject">{item.subject}</p>
+                              <p className="card-subject">{item.title}</p>
                             </div>
                             <div className="card-body">
                               <div className="card-row">

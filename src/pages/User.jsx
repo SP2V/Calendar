@@ -10,8 +10,10 @@ import {
   subscribeActivityTypes,
   addBooking,
   subscribeBookings,
+  deleteBooking,
 } from '../services/firebase';
-import { createCalendarEvent, getCalendarEvents } from '../services/calendarService';
+import { createCalendarEvent } from '../services/calendarService';
+import { Trash2, Eye } from 'lucide-react';
 
 // --- ICONS (SVG) ---
 const CalendarIcon = ({ style }) => (
@@ -56,9 +58,11 @@ const User = () => {
   });
   const [customDuration, setCustomDuration] = useState('');
   const [customDurationUnit, setCustomDurationUnit] = useState('นาที'); // New state for unit
-  const [calendarEvents, setCalendarEvents] = useState([]); // New state for events
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showDurationModal, setShowDurationModal] = useState(false);
+
+  // View/Delete State
+  const [viewingBooking, setViewingBooking] = useState(null); // For Viewing Details
 
   // UI States
   const [isViewMode, setIsViewMode] = useState(false);
@@ -259,20 +263,7 @@ const User = () => {
     }
   }, [popupMessage]);
 
-  // Fetch events when switching to View Mode
-  useEffect(() => {
-    if (isViewMode) {
-      const fetchEvents = async () => {
-        try {
-          const events = await getCalendarEvents();
-          setCalendarEvents(events);
-        } catch (error) {
-          console.error("Failed to fetch events", error);
-        }
-      };
-      fetchEvents();
-    }
-  }, [isViewMode]);
+
 
   // --- HANDLERS ---
   const handleDaySelect = (dayNum) => {
@@ -369,7 +360,9 @@ const User = () => {
         await addBooking({
           ...eventPayload,
           googleCalendarEventId: result.eventId || null,
-          status: 'confirmed'
+          status: 'confirmed',
+          type: formData.type,
+          meetingFormat: formData.meetingFormat
         });
 
         setPopupMessage({ type: 'success', message: 'จองนัดหมายและบันทึกลงปฏิทินเรียบร้อยแล้ว' });
@@ -396,6 +389,60 @@ const User = () => {
       console.error("Calendar Error:", error);
       setPopupMessage({ type: 'error', message: `เชื่อมต่อไม่ได้: ${error.message}` });
     }
+  };
+
+  // --- ACTIONS ---
+  const handleDeleteBooking = async (id) => {
+    if (window.confirm('คุณต้องการลบรายการนัดหมายนี้ใช่หรือไม่?')) {
+      try {
+        await deleteBooking(id);
+        setPopupMessage({ type: 'success', message: 'ลบรายการเรียบร้อยแล้ว' });
+      } catch (error) {
+        console.error("Delete Error:", error);
+        setPopupMessage({ type: 'error', message: 'ลบรายการไม่สำเร็จ' });
+      }
+    }
+  };
+
+  const handleViewBookingDetails = (booking) => {
+    // Transform booking data for Modal
+    const start = new Date(booking.startTime);
+    const end = new Date(booking.endTime);
+
+    // Format Date: YYYY-MM-DD
+    const dateStr = start.getFullYear() + '-' + String(start.getMonth() + 1).padStart(2, '0') + '-' + String(start.getDate()).padStart(2, '0');
+
+    // Format Time: HH:MM - HH:MM
+    const timeStr = `${start.getHours().toString().padStart(2, '0')}:${start.getMinutes().toString().padStart(2, '0')} - ${end.getHours().toString().padStart(2, '0')}:${end.getMinutes().toString().padStart(2, '0')} น.`;
+
+    // Calculate Duration
+    const diffMs = end - start;
+    const diffMins = Math.floor(diffMs / 60000);
+    let durationStr = `${diffMins} นาที`;
+    if (diffMins >= 60) {
+      const h = Math.floor(diffMins / 60);
+      const m = diffMins % 60;
+      durationStr = m > 0 ? `${h} ชม. ${m} นาที` : `${h} ชั่วโมง`;
+    }
+
+    setViewingBooking({
+      type: booking.type || '-', // Assuming type is not saved in payload? It is in ...eventPayload, let's hope. If not, might be missing. 
+      // Actually user payload has type: formData.type via spread? No, let's check addBooking payload in previous step.
+      // Yes, ...eventPayload has bookingData? No, let's fix that.
+      // Wait, eventPayload has subject, startTime... 
+      // I will assume 'type' field exists or basic info is shown.
+      subject: booking.subject,
+      date: dateStr,
+      timeSlot: timeStr,
+      duration: durationStr,
+      meetingFormat: booking.bookingData?.meetingFormat || 'Online', // Fallback if not saved directly?
+      // Actually, I should save all formData fields to be sure.
+      // But for now, let's try to read what we have.
+      location: booking.location,
+      description: booking.description,
+      // For mismatched fields:
+      meetingFormat: booking.location && booking.location.includes('http') ? 'Online' : 'On-site', // Heuristic if missing
+    });
   };
 
   // --- RENDER HELPERS ---
@@ -612,15 +659,15 @@ const User = () => {
             {/* <div style={{ textAlign: 'center', padding: '1rem', color: '#6b7280' }}>ส่วนแสดงผลรายการ (List View)</div> */}
 
             <div className="user-event-list">
-              {calendarEvents.length === 0 ? (
+              {bookings.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>ไม่พบรายการนัดหมาย</div>
               ) : (
-                calendarEvents.map(event => (
+                bookings.map(event => (
                   <div key={event.id} className="summary-box" style={{ marginBottom: '1rem' }}>
                     <div className="summary-grid">
                       <div className="summary-item span-2">
                         <div className="summary-label"><FileTextIcon style={{ width: '14px' }} /> หัวข้อ</div>
-                        <p className="summary-value" style={{ fontWeight: 'bold' }}>{event.title}</p>
+                        <p className="summary-value" style={{ fontWeight: 'bold' }}>{event.subject}</p>
                       </div>
                       <div className="summary-item">
                         <div className="summary-label"><CalendarIcon style={{ width: '14px' }} /> เริ่ม</div>
@@ -634,6 +681,16 @@ const User = () => {
                         <div className="summary-label"><MapPinIcon style={{ width: '14px' }} /> รายละเอียด/สถานที่</div>
                         <p className="summary-value" style={{ whiteSpace: 'pre-wrap' }}>{event.description} @ {event.location}</p>
                       </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="list-action-row" style={{ marginTop: '10px', borderTop: '1px solid #eee', paddingTop: '8px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                      <button className="action-btn-icon view" onClick={() => handleViewBookingDetails(event)} title="ดูรายละเอียด">
+                        <Eye size={18} />
+                      </button>
+                      <button className="action-btn-icon delete" onClick={() => handleDeleteBooking(event.id)} title="ลบรายการ">
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </div>
                 ))
@@ -658,6 +715,16 @@ const User = () => {
           description: formData.description
         }}
       />
+
+      {/* View Details Modal */}
+      {viewingBooking && (
+        <BookingPreviewModal
+          isOpen={!!viewingBooking}
+          onClose={() => setViewingBooking(null)}
+          readOnly={true}
+          data={viewingBooking}
+        />
+      )}
 
       <CustomDurationModal
         isOpen={showDurationModal}

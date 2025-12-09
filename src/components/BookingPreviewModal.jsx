@@ -2,7 +2,7 @@ import React from 'react';
 import { Calendar } from 'lucide-react';
 import './BookingPreviewModal.css';
 
-const BookingPreviewModal = ({ isOpen, onClose, onConfirm, data }) => {
+const BookingPreviewModal = ({ isOpen, onClose, onConfirm, data, readOnly = false }) => {
     if (!isOpen) return null;
 
     // Helper to format date
@@ -25,8 +25,8 @@ const BookingPreviewModal = ({ isOpen, onClose, onConfirm, data }) => {
 
                 {/* Title */}
                 <div className="modal-header-text">
-                    <h2 className="modal-title">ตรวจสอบการจอง</h2>
-                    <p className="modal-subtitle">ข้อมูลการจองของคุณ</p>
+                    <h2 className="modal-title">{readOnly ? 'รายละเอียดการนัดหมาย' : 'ตรวจสอบการจอง'}</h2>
+                    <p className="modal-subtitle">{readOnly ? 'ข้อมูลการนัดหมายทั้งหมด' : 'ข้อมูลการจองของคุณ'}</p>
                 </div>
 
                 {/* Content Box */}
@@ -75,12 +75,20 @@ const BookingPreviewModal = ({ isOpen, onClose, onConfirm, data }) => {
 
                 {/* Footer Buttons */}
                 <div className="modal-footer">
-                    <button className="btn-modal btn-edit" onClick={onClose}>
-                        แก้ไข
-                    </button>
-                    <button className="btn-modal btn-confirm-modal" onClick={onConfirm}>
-                        ยืนยัน
-                    </button>
+                    {readOnly ? (
+                        <button className="btn-modal btn-confirm-modal" onClick={onClose}>
+                            ปิด
+                        </button>
+                    ) : (
+                        <>
+                            <button className="btn-modal btn-edit" onClick={onClose}>
+                                แก้ไข
+                            </button>
+                            <button className="btn-modal btn-confirm-modal" onClick={onConfirm}>
+                                ยืนยัน
+                            </button>
+                        </>
+                    )}
                 </div>
 
             </div>

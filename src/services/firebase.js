@@ -163,6 +163,7 @@ export const deleteActivityType = async (id) => {
 
 // ================= BOOKINGS =================
 
+
 // ✅ ADD BOOKING
 export const addBooking = async (bookingData) => {
   if (!db) throw new Error('Firestore not initialized');
@@ -172,6 +173,13 @@ export const addBooking = async (bookingData) => {
     createdAt: new Date().toISOString()
   });
   return docRef.id;
+};
+
+// ✅ DELETE BOOKING
+export const deleteBooking = async (id) => {
+  if (!db) throw new Error('Firestore not initialized');
+  const docRef = doc(db, 'bookings', id);
+  await deleteDoc(docRef);
 };
 
 // ✅ SUBSCRIBE BOOKINGS (Realtime)
@@ -206,5 +214,6 @@ export default {
   updateActivityType,
   deleteActivityType,
   addBooking,
-  subscribeBookings, // Export เพิ่ม
+  subscribeBookings,
+  deleteBooking, // Export เพิ่ม
 };

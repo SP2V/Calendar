@@ -540,3 +540,39 @@ textarea.user-custom-input {
   box-shadow: none;
   border-color: #d1d5db;
 }
+
+/* Action Buttons in List */
+.action-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: transparent;
+}
+
+.action-btn-icon:hover {
+  background-color: #f3f4f6;
+}
+
+.action-btn-icon.view {
+  color: #3b82f6;
+  /* Blue */
+}
+
+.action-btn-icon.view:hover {
+  background-color: #eff6ff;
+}
+
+.action-btn-icon.delete {
+  color: #ef4444;
+  /* Red */
+}
+
+.action-btn-icon.delete:hover {
+  background-color: #fef2f2;
+}

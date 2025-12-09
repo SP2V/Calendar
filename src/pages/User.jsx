@@ -71,7 +71,7 @@ const User = () => {
 
   // Redesign: List View Filter & Pagination States
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState('ทั้งหมด');
+  const [filterType, setFilterType] = useState('แสดงทั้งหมด');
   const [viewLayout, setViewLayout] = useState('grid'); // 'grid' or 'list'
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -685,16 +685,12 @@ const User = () => {
                   />
                 </div>
                 <div className="filter-dropdown-wrapper">
-                  <select
-                    className="filter-dropdown"
+                  <TimeDropdown
                     value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                  >
-                    <option value="ทั้งหมด">ทั้งหมด</option>
-                    {activityTypes.map(t => (
-                      <option key={t.id} value={t.name}>{t.name}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => setFilterType(val)}
+                    timeOptions={['แสดงทั้งหมด', ...new Set(schedules.map(item => item.type))]}
+                    placeholder="กรองกิจกรรม"
+                  />
                 </div>
               </div>
               <div className="view-toggles">
@@ -702,13 +698,13 @@ const User = () => {
                   className={`view-toggle-btn ${viewLayout === 'grid' ? 'active' : ''}`}
                   onClick={() => setViewLayout('grid')}
                 >
-                  <LayoutGrid size={18} /> 
+                  <LayoutGrid size={18} />
                 </button>
                 <button
                   className={`view-toggle-btn ${viewLayout === 'list' ? 'active' : ''}`}
                   onClick={() => setViewLayout('list')}
                 >
-                  <List size={18} /> 
+                  <List size={18} />
                 </button>
               </div>
             </div>
@@ -722,7 +718,7 @@ const User = () => {
                   const desc = b.description || '';
                   const matchesSearch = sub.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     desc.toLowerCase().includes(searchQuery.toLowerCase());
-                  const matchesType = filterType === 'ทั้งหมด' || b.type === filterType;
+                  const matchesType = filterType === 'แสดงทั้งหมด' || b.type === filterType;
                   return matchesSearch && matchesType;
                 });
 
@@ -745,48 +741,99 @@ const User = () => {
                 return (
                   <>
                     {/* Grid / List Layout */}
-                    <div className={viewLayout === 'grid' ? 'bookings-grid' : 'bookings-list-layout'}>
-                      {currentItems.map(item => {
-                        const starT = new Date(item.startTime);
-                        const endT = new Date(item.endTime);
-                        const dateStr = starT.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
-                        const timeRange = `${starT.getHours().toString().padStart(2, '0')}:${starT.getMinutes().toString().padStart(2, '0')} - ${endT.getHours().toString().padStart(2, '0')}:${endT.getMinutes().toString().padStart(2, '0')} น.`;
-                        const isOnline = item.meetingFormat === 'Online' || (item.location && item.location.includes('http'));
+                    {/* Grid / List Layout */}
+                    {viewLayout === 'grid' ? (
+                      <div className="bookings-grid">
+                        {currentItems.map(item => {
+                          const starT = new Date(item.startTime);
+                          const endT = new Date(item.endTime);
+                          const dateStr = starT.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+                          const timeRange = `${starT.getHours().toString().padStart(2, '0')}:${starT.getMinutes().toString().padStart(2, '0')} - ${endT.getHours().toString().padStart(2, '0')}:${endT.getMinutes().toString().padStart(2, '0')} น.`;
+                          const isOnline = item.meetingFormat === 'Online' || (item.location && item.location.includes('http'));
 
-                        return (
-                          <div key={item.id} className="booking-card">
-                            <div className="card-header">
-                              <h3 className="card-type">{item.type || 'นัดหมาย'}</h3>
-                              <p className="card-subject">{item.title}</p>
-                            </div>
-                            <div className="card-body">
-                              <div className="card-row">
-                                <CalendarIcon style={{ width: 16, height: 16 }} />
-                                <span>{dateStr}</span>
+                          return (
+                            <div key={item.id} className="booking-card">
+                              <div className="card-header">
+                                <h3 className="card-type">{item.type || 'นัดหมาย'}</h3>
+                                <p className="card-subject">{item.title}</p>
                               </div>
-                              <div className="card-row">
-                                <ClockIcon style={{ width: 16, height: 16 }} />
-                                <span>{timeRange}</span>
+                              <div className="card-body">
+                                <div className="card-row">
+                                  <CalendarIcon style={{ width: 16, height: 16 }} />
+                                  <span>{dateStr}</span>
+                                </div>
+                                <div className="card-row">
+                                  <ClockIcon style={{ width: 16, height: 16 }} />
+                                  <span>{timeRange}</span>
+                                </div>
+                                <div className="card-row">
+                                  {isOnline ? <MonitorIcon style={{ width: 16, height: 16 }} /> : <MapPinIcon style={{ width: 16, height: 16 }} />}
+                                  <span className={`status-badge ${isOnline ? 'online' : 'onsite'}`}>
+                                    {isOnline ? 'Online' : 'On-site'}
+                                  </span>
+                                </div>
                               </div>
-                              <div className="card-row">
-                                {isOnline ? <MonitorIcon style={{ width: 16, height: 16 }} /> : <MapPinIcon style={{ width: 16, height: 16 }} />}
-                                <span className={`status-badge ${isOnline ? 'online' : 'onsite'}`}>
-                                  {isOnline ? 'Online' : 'On-site'}
-                                </span>
+                              <div className="card-actions">
+                                <button className="btn-card-action view" onClick={() => handleViewBookingDetails(item)}>
+                                  ดูรายละเอียด
+                                </button>
+                                <button className="btn-card-action cancel" onClick={() => handleDeleteBooking(item.id)}>
+                                  ยกเลิก
+                                </button>
                               </div>
                             </div>
-                            <div className="card-actions">
-                              <button className="btn-card-action view" onClick={() => handleViewBookingDetails(item)}>
-                                ดูรายละเอียด
-                              </button>
-                              <button className="btn-card-action cancel" onClick={() => handleDeleteBooking(item.id)}>
-                                ยกเลิกการจอง
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="bookings-list-container">
+                        <table className="bookings-table">
+                          <thead>
+                            <tr>
+                              <th>หัวข้อ</th>
+                              <th>กิจกรรม</th>
+                              <th>วันที่</th>
+                              <th>เวลา</th>
+                              <th>รูปแบบ</th>
+                              <th>การดำเนินการ</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {currentItems.map(item => {
+                              const starT = new Date(item.startTime);
+                              const endT = new Date(item.endTime);
+                              const dateStr = starT.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+                              const timeRange = `${starT.getHours().toString().padStart(2, '0')}:${starT.getMinutes().toString().padStart(2, '0')} - ${endT.getHours().toString().padStart(2, '0')}:${endT.getMinutes().toString().padStart(2, '0')} น.`;
+                              const isOnline = item.meetingFormat === 'Online' || (item.location && item.location.includes('http'));
+
+                              return (
+                                <tr key={item.id}>
+                                  <td className="cell-subject">{item.title}</td>
+                                  <td>{item.type || 'นัดหมาย'}</td>
+                                  <td>{dateStr}</td>
+                                  <td>{timeRange}</td>
+                                  <td>
+                                    <span className={`status-badge ${isOnline ? 'online' : 'onsite'}`}>
+                                      {isOnline ? 'Online' : 'On-site'}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <div className="table-actions">
+                                      <button className="btn-table-action view" onClick={() => handleViewBookingDetails(item)}>
+                                        ดูรายละเอียด
+                                      </button>
+                                      <button className="btn-table-action cancel" onClick={() => handleDeleteBooking(item.id)}>
+                                        ยกเลิก
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
 
                     {/* Pagination Controls */}
                     {totalPages > 1 && (

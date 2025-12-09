@@ -613,11 +613,13 @@ textarea.user-custom-input {
   top: 50%;
   transform: translateY(-50%);
   color: #9ca3af;
+  outline: none;
 }
 
 .search-input {
   width: 100%;
   padding: 0.5rem 0.5rem 0.5rem 36px;
+  padding-left: 1rem;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   outline: none;
@@ -853,4 +855,85 @@ textarea.user-custom-input {
   background: white;
   border-radius: 12px;
   color: #6b7280;
+}
+
+/* --- Table List Layout --- */
+.bookings-list-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.bookings-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.bookings-table th {
+  background-color: #f9fafb;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.bookings-table td {
+  padding: 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.bookings-table tr:last-child td {
+  border-bottom: none;
+}
+
+.bookings-table tr:hover td {
+  background-color: #f9fafb;
+}
+
+.cell-subject {
+  font-weight: 600;
+  color: #111827 !important;
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-table-action {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-table-action.view {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+}
+
+.btn-table-action.view:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-table-action.cancel {
+  background-color: white;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.btn-table-action.cancel:hover {
+  background-color: #fef2f2;
 }

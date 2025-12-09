@@ -521,3 +521,22 @@ textarea.user-custom-input {
   width: 140px !important;
   min-width: auto !important;
 }
+
+/* Disabled / Booked State */
+.time-btn:disabled,
+.time-btn.booked {
+  background-color: #d1d5db;
+  /* Gray-300 */
+  color: #9ca3af;
+  /* Gray-400 */
+  border-color: #d1d5db;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.time-btn:disabled:hover,
+.time-btn.booked:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #d1d5db;
+}

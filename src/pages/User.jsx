@@ -9,6 +9,7 @@ import {
   subscribeSchedules,
   subscribeActivityTypes,
   addBooking,
+  subscribeBookings,
 } from '../services/firebase';
 import { createCalendarEvent, getCalendarEvents } from '../services/calendarService';
 
@@ -39,6 +40,7 @@ const User = () => {
   const [schedules, setSchedules] = useState([]);
   const [types, setTypes] = useState(['เลือกกิจกรรม']);
   const [activityTypes, setActivityTypes] = useState([]);
+  const [bookings, setBookings] = useState([]); // New state for bookings
 
   // Form State
   const [formData, setFormData] = useState({
@@ -141,6 +143,52 @@ const User = () => {
     return `${startTime}-${minutesToTimeStr(totalMins)}`;
   };
 
+  // Check if a specific time slot is booked
+  const isTimeSlotBooked = (timeStr) => {
+    if (formData.days.length === 0) return false;
+
+    // Parse selected Date
+    const dateStr = formData.days[0];
+    const [year, month, day] = dateStr.split('-').map(Number);
+
+    // Parse Slot Start Time
+    const [h, m] = timeStr.split(':').map(Number);
+    const slotStart = new Date(year, month - 1, day, h, m);
+
+    // Calculate Slot End Time
+    const durationMins = getDurationInMinutes(formData.duration, customDuration, customDurationUnit);
+    // If no duration selected yet, default to 1 min check or 30 mins just to see if start time overlaps
+    // But logically, we need duration to know if it overlaps "into" a booking
+    // For safety, let's use 1 minute if 0, to at least check start point
+    const bufferMins = durationMins > 0 ? durationMins : 1;
+    const slotEnd = new Date(slotStart.getTime() + bufferMins * 60000);
+
+    // Filter bookings for this day
+    const dayBookings = bookings.filter(b => {
+      // Basic check: is it non-cancelled? (Assuming 'confirmed' status or similar)
+      // If you have cancelled status, filter it out here. 
+      // For now assume all in 'bookings' collection are active.
+      if (b.status === 'cancelled') return false;
+
+      const bStart = new Date(b.startTime);
+      const bEnd = new Date(b.endTime);
+
+      // Check if booking falls on the same day
+      return bStart.getDate() === day &&
+        bStart.getMonth() === (month - 1) &&
+        bStart.getFullYear() === year;
+    });
+
+    // Check overlap
+    return dayBookings.some(b => {
+      const bStart = new Date(b.startTime);
+      const bEnd = new Date(b.endTime);
+
+      // Overlap logic: (StartA < EndB) and (EndA > StartB)
+      return slotStart < bEnd && slotEnd > bStart;
+    });
+  };
+
   // --- CORE LOGIC: Generate Time Slots ---
   const getAvailableTimeSlots = () => {
     if (!formData.type || formData.type === 'เลือกกิจกรรม') return [];
@@ -200,7 +248,8 @@ const User = () => {
       setActivityTypes(fetchedTypes);
       setTypes(['เลือกกิจกรรม', ...fetchedTypes.map(t => t.name)]);
     });
-    return () => { unsubSchedules(); unsubTypes(); };
+    const unsubBookings = subscribeBookings(setBookings);
+    return () => { unsubSchedules(); unsubTypes(); unsubBookings(); };
   }, []);
 
   useEffect(() => {
@@ -464,14 +513,19 @@ const User = () => {
                       : formData.days.length === 0 ?
                         <div className="empty-state-text">กรุณาเลือกวันที่จากปฏิทิน</div>
                         : availableTimeSlots.length > 0 ?
-                          availableTimeSlots.map((slot, idx) => (
-                            <button key={idx}
-                              onClick={() => setFormData(prev => ({ ...prev, startTime: slot, endTime: '' }))}
-                              className={`time-btn ${formData.startTime === slot ? 'active' : ''}`}
-                            >
-                              {calculateEndTime(slot, formData.duration).replace('-', ' - ')}
-                            </button>
-                          ))
+                          availableTimeSlots.map((slot, idx) => {
+                            const isBooked = isTimeSlotBooked(slot);
+                            return (
+                              <button key={idx}
+                                onClick={() => !isBooked && setFormData(prev => ({ ...prev, startTime: slot, endTime: '' }))}
+                                disabled={isBooked}
+                                className={`time-btn ${formData.startTime === slot ? 'active' : ''} ${isBooked ? 'booked' : ''}`}
+                                title={isBooked ? "เวลานี้ถูกจองแล้ว" : ""}
+                              >
+                                {calculateEndTime(slot, formData.duration).replace('-', ' - ')}
+                              </button>
+                            );
+                          })
                           : <div className="error-state-box">ไม่มีรอบเวลาว่าง</div>}
                 </div>
               </div>

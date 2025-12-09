@@ -174,12 +174,31 @@ export const addBooking = async (bookingData) => {
   return docRef.id;
 };
 
+// ✅ SUBSCRIBE BOOKINGS (Realtime)
+export const subscribeBookings = (callback) => {
+  if (!db) return () => { };
+  const bookingsRef = collection(db, 'bookings');
+  const q = query(bookingsRef, orderBy('startTime', 'asc'));
+  const unsub = onSnapshot(
+    q,
+    snapshot => {
+      const items = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      callback(items);
+    },
+    err => console.error('subscribeBookings error:', err)
+  );
+  return unsub;
+};
+
 export default {
   addScheduleDoc,
   getAllSchedules,
   getScheduleById,
   updateScheduleById,
-  updateScheduleDoc, // Export เพิ่มตรงนี้ด้วย
+  updateScheduleDoc,
   deleteScheduleById,
   subscribeSchedules,
   subscribeActivityTypes,
@@ -187,4 +206,5 @@ export default {
   updateActivityType,
   deleteActivityType,
   addBooking,
+  subscribeBookings, // Export เพิ่ม
 };

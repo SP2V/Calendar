@@ -1,5 +1,5 @@
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbx9tS-hlGppgX2RuknqR339qzMxXsZ7R_ZQP5K1gi8VyGq0eUfg3-qZwawMeJO_wj_GtQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbybTIrjr0ncGAPY2KaN14rZ0MDmvm9OupavwqYPPc216iCNqad06ZZTcGR2jrkV7hfw6Q/exec';
 
 /**
  * Create a new event in Google Calendar
@@ -23,6 +23,30 @@ export const createCalendarEvent = async (eventData) => {
   } catch (error) {
     console.error("Error creating calendar event:", error);
     throw error;
+  }
+};
+
+/**
+ * Delete an event from Google Calendar
+ * @param {string} eventId - Google Calendar Event ID
+ * @returns {Promise<Object>} - Response from GAS
+ */
+export const deleteCalendarEvent = async (eventId) => {
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8',
+      },
+      body: JSON.stringify({ action: 'delete', eventId: eventId }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Error deleting calendar event:", error);
+    // Return null instead of throwing to allow local deletion to proceed
+    return null;
   }
 };
 

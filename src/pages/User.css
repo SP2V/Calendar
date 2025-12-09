@@ -762,12 +762,12 @@ textarea.user-custom-input {
 }
 
 .status-badge.online {
-  background-color: #03B479;
+  background-color: #00A419;
   color: white;
 }
 
 .status-badge.onsite {
-  background-color: #EF6C00;
+  background-color: #F55E00;
   color: white;
 }
 

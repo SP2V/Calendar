@@ -12,7 +12,7 @@ import {
   subscribeBookings,
   deleteBooking,
 } from '../services/firebase';
-import { createCalendarEvent } from '../services/calendarService';
+import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarService';
 import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
 // --- ICONS (SVG) ---
@@ -402,6 +402,20 @@ const User = () => {
   const handleDeleteBooking = async (id) => {
     if (window.confirm('คุณต้องการลบรายการนัดหมายนี้ใช่หรือไม่?')) {
       try {
+        // 1. Find the booking to get Google Calendar Event ID
+        const bookingToDelete = bookings.find(b => b.id === id);
+
+        // 2. Delete from Google Calendar if linked
+        if (bookingToDelete && bookingToDelete.googleCalendarEventId) {
+          try {
+            await deleteCalendarEvent(bookingToDelete.googleCalendarEventId);
+          } catch (calError) {
+            console.warn("Failed to delete from Google Calendar:", calError);
+            // Continue to delete from local DB even if calendar fails
+          }
+        }
+
+        // 3. Delete from Firestore
         await deleteBooking(id);
         setPopupMessage({ type: 'success', message: 'ลบรายการเรียบร้อยแล้ว' });
       } catch (error) {
@@ -688,13 +702,13 @@ const User = () => {
                   className={`view-toggle-btn ${viewLayout === 'grid' ? 'active' : ''}`}
                   onClick={() => setViewLayout('grid')}
                 >
-                  <LayoutGrid size={18} /> ตาราง
+                  <LayoutGrid size={18} /> 
                 </button>
                 <button
                   className={`view-toggle-btn ${viewLayout === 'list' ? 'active' : ''}`}
                   onClick={() => setViewLayout('list')}
                 >
-                  <List size={18} /> รายการ
+                  <List size={18} /> 
                 </button>
               </div>
             </div>

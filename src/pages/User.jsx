@@ -515,7 +515,7 @@ const User = () => {
 
             {/* Row 1: Activity */}
             <div className="form-section-Activity">
-              <label className="user-section-title">เลือกกิจกรรม</label>
+              <label className="user-section-title">เลือกกิจกรรม <span className="required">*</span></label>
               <TimeDropdown
                 className="dropdown-full"
                 value={formData.type}
@@ -675,7 +675,7 @@ const User = () => {
             <div className="filter-bar">
               <div className="filter-left">
                 <div className="search-wrapper">
-                  <Search size={18} className="search-icon" />
+                  {/* <Search size={18} className="search-icon" /> */}
                   <input
                     type="text"
                     placeholder="ค้นหาการจอง..."

@@ -13,7 +13,7 @@ import {
   deleteBooking,
 } from '../services/firebase';
 import { createCalendarEvent } from '../services/calendarService';
-import { Trash2, Eye } from 'lucide-react';
+import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
 // --- ICONS (SVG) ---
 const CalendarIcon = ({ style }) => (
@@ -68,6 +68,13 @@ const User = () => {
   const [isViewMode, setIsViewMode] = useState(false);
   const [popupMessage, setPopupMessage] = useState({ type: '', message: '' });
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Redesign: List View Filter & Pagination States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('ทั้งหมด');
+  const [viewLayout, setViewLayout] = useState('grid'); // 'grid' or 'list'
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
   const fullDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
@@ -654,47 +661,155 @@ const User = () => {
 
           </div>
         ) : (
-          <div className="user-form-card">
-            <h2 className="user-section-title">รายการนัดหมายทั้งหมด</h2>
-            {/* <div style={{ textAlign: 'center', padding: '1rem', color: '#6b7280' }}>ส่วนแสดงผลรายการ (List View)</div> */}
+          <div className="user-view-container">
+            {/* Filter Bar */}
+            <div className="filter-bar">
+              <div className="filter-left">
+                <div className="search-wrapper">
+                  <Search size={18} className="search-icon" />
+                  <input
+                    type="text"
+                    placeholder="ค้นหาการจอง..."
+                    className="search-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <div className="filter-dropdown-wrapper">
+                  <select
+                    className="filter-dropdown"
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                  >
+                    <option value="ทั้งหมด">ทั้งหมด</option>
+                    {activityTypes.map(t => (
+                      <option key={t.id} value={t.name}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="view-toggles">
+                <button
+                  className={`view-toggle-btn ${viewLayout === 'grid' ? 'active' : ''}`}
+                  onClick={() => setViewLayout('grid')}
+                >
+                  <LayoutGrid size={18} /> ตาราง
+                </button>
+                <button
+                  className={`view-toggle-btn ${viewLayout === 'list' ? 'active' : ''}`}
+                  onClick={() => setViewLayout('list')}
+                >
+                  <List size={18} /> รายการ
+                </button>
+              </div>
+            </div>
 
-            <div className="user-event-list">
-              {bookings.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>ไม่พบรายการนัดหมาย</div>
-              ) : (
-                bookings.map(event => (
-                  <div key={event.id} className="summary-box" style={{ marginBottom: '1rem' }}>
-                    <div className="summary-grid">
-                      <div className="summary-item span-2">
-                        <div className="summary-label"><FileTextIcon style={{ width: '14px' }} /> หัวข้อ</div>
-                        <p className="summary-value" style={{ fontWeight: 'bold' }}>{event.subject}</p>
+            {/* Content Display */}
+            <div className="bookings-content">
+              {(() => {
+                // Filter Logic
+                const filtered = bookings.filter(b => {
+                  const sub = b.subject || '';
+                  const desc = b.description || '';
+                  const matchesSearch = sub.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    desc.toLowerCase().includes(searchQuery.toLowerCase());
+                  const matchesType = filterType === 'ทั้งหมด' || b.type === filterType;
+                  return matchesSearch && matchesType;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="empty-state-view">
+                      <div className="empty-icon-box">
+                        <CalendarIcon style={{ width: 48, height: 48, color: '#9ca3af' }} />
                       </div>
-                      <div className="summary-item">
-                        <div className="summary-label"><CalendarIcon style={{ width: '14px' }} /> เริ่ม</div>
-                        <p className="summary-value">{new Date(event.startTime).toLocaleString('th-TH')}</p>
-                      </div>
-                      <div className="summary-item">
-                        <div className="summary-label"><ClockIcon style={{ width: '14px' }} /> สิ้นสุด</div>
-                        <p className="summary-value">{new Date(event.endTime).toLocaleString('th-TH')}</p>
-                      </div>
-                      <div className="summary-item span-2">
-                        <div className="summary-label"><MapPinIcon style={{ width: '14px' }} /> รายละเอียด/สถานที่</div>
-                        <p className="summary-value" style={{ whiteSpace: 'pre-wrap' }}>{event.description} @ {event.location}</p>
-                      </div>
+                      <p>ไม่พบรายการที่ค้นหา</p>
+                    </div>
+                  );
+                }
+
+                // Pagination Logic
+                const totalPages = Math.ceil(filtered.length / itemsPerPage);
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const currentItems = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+                return (
+                  <>
+                    {/* Grid / List Layout */}
+                    <div className={viewLayout === 'grid' ? 'bookings-grid' : 'bookings-list-layout'}>
+                      {currentItems.map(item => {
+                        const starT = new Date(item.startTime);
+                        const endT = new Date(item.endTime);
+                        const dateStr = starT.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+                        const timeRange = `${starT.getHours().toString().padStart(2, '0')}:${starT.getMinutes().toString().padStart(2, '0')} - ${endT.getHours().toString().padStart(2, '0')}:${endT.getMinutes().toString().padStart(2, '0')} น.`;
+                        const isOnline = item.meetingFormat === 'Online' || (item.location && item.location.includes('http'));
+
+                        return (
+                          <div key={item.id} className="booking-card">
+                            <div className="card-header">
+                              <h3 className="card-type">{item.type || 'นัดหมาย'}</h3>
+                              <p className="card-subject">{item.subject}</p>
+                            </div>
+                            <div className="card-body">
+                              <div className="card-row">
+                                <CalendarIcon style={{ width: 16, height: 16 }} />
+                                <span>{dateStr}</span>
+                              </div>
+                              <div className="card-row">
+                                <ClockIcon style={{ width: 16, height: 16 }} />
+                                <span>{timeRange}</span>
+                              </div>
+                              <div className="card-row">
+                                {isOnline ? <MonitorIcon style={{ width: 16, height: 16 }} /> : <MapPinIcon style={{ width: 16, height: 16 }} />}
+                                <span className={`status-badge ${isOnline ? 'online' : 'onsite'}`}>
+                                  {isOnline ? 'Online' : 'On-site'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="card-actions">
+                              <button className="btn-card-action view" onClick={() => handleViewBookingDetails(item)}>
+                                ดูรายละเอียด
+                              </button>
+                              <button className="btn-card-action cancel" onClick={() => handleDeleteBooking(item.id)}>
+                                ยกเลิกการจอง
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="list-action-row" style={{ marginTop: '10px', borderTop: '1px solid #eee', paddingTop: '8px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                      <button className="action-btn-icon view" onClick={() => handleViewBookingDetails(event)} title="ดูรายละเอียด">
-                        <Eye size={18} />
-                      </button>
-                      <button className="action-btn-icon delete" onClick={() => handleDeleteBooking(event.id)} title="ลบรายการ">
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="pagination-controls">
+                        <button
+                          className="page-btn"
+                          disabled={currentPage === 1}
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        >
+                          <ChevronLeft size={16} />
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                          <button
+                            key={page}
+                            className={`page-btn ${currentPage === page ? 'active' : ''}`}
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                        <button
+                          className="page-btn"
+                          disabled={currentPage === totalPages}
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        >
+                          <ChevronRight size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}

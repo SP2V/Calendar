@@ -470,6 +470,12 @@ textarea.user-custom-input {
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.4;
+  /* Truncation */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+  /* Limit width to prevent overflow */
 }
 
 /* --- FOOTER ACTIONS --- */
@@ -739,7 +745,7 @@ textarea.user-custom-input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 80%;
+  max-width: 200px;
   display: block;
 }
 

@@ -867,7 +867,9 @@ const User = () => {
                             <div key={item.id} className="booking-card">
                               <div className="card-header">
                                 <h3 className="card-type">{item.type || 'นัดหมาย'}</h3>
-                                <p className="card-subject">{item.title}</p>
+                                <p className="card-subject">
+                                  {item.subject || item.title.replace(/^\[.*?\]\s*/, '')}
+                                </p>
                               </div>
                               <div className="card-body">
                                 <div className="card-row">
@@ -920,7 +922,9 @@ const User = () => {
 
                               return (
                                 <tr key={item.id}>
-                                  <td className="cell-subject">{item.title}</td>
+                                  <td className="cell-subject">
+                                    {item.subject || item.title.replace(/^\[.*?\]\s*/, '')}
+                                  </td>
                                   <td>{item.type || 'นัดหมาย'}</td>
                                   <td>{dateStr}</td>
                                   <td>{timeRange}</td>

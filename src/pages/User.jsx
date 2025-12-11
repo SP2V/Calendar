@@ -462,6 +462,7 @@ const User = () => {
           googleCalendarEventId: result.eventId || null,
           status: 'confirmed',
           type: formData.type,
+          subject: formData.subject, // Explicitly save subject
           meetingFormat: formData.meetingFormat
         });
 
@@ -825,7 +826,7 @@ const User = () => {
               {(() => {
                 // Filter Logic
                 const filtered = bookings.filter(b => {
-                  const sub = b.subject || '';
+                  const sub = b.title || b.subject || ''; // Use title (which has subj) or subject
                   const desc = b.description || '';
                   const matchesSearch = sub.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     desc.toLowerCase().includes(searchQuery.toLowerCase());

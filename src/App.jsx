@@ -6,6 +6,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Admin from './pages/Admin'
 // นำเข้า User component สำหรับหน้า User
 import User from './pages/User'
+import Login from './pages/Login'
 // นำเข้า CSS สำหรับ App component
 import './App.css'
 
@@ -18,18 +19,21 @@ function App() {
     <div className="app">
       {/* แสดง Navigation bar ที่ด้านบนของทุกหน้า */}
       {/* <Navigation /> */}
-      
+
       {/* กำหนด Routes สำหรับการนำทางระหว่างหน้า */}
       <Routes>
-        {/* Route หลัก (/) จะ redirect ไปที่หน้า Admin อัตโนมัติ */}
-        <Route path="/" element={<Navigate to="/user" replace />} />
-        
+        {/* Route หลัก (/) จะ redirect ไปที่หน้า Login แทน User */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* Route สำหรับหน้า Login */}
+        <Route path="/login" element={<Login />} />
+
         {/* Route สำหรับหน้า User */}
         <Route path="/user" element={<User />} />
-        
+
         {/* Route สำหรับหน้า Admin */}
         <Route path="/admin" element={<Admin />} />
-        
+
       </Routes>
     </div>
   )

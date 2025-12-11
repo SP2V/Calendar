@@ -79,7 +79,8 @@ const User = () => {
   const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
   const fullDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
   const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-  const duration = ['30 นาที', '1 ชั่วโมง', '1.5 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง', 'กำหนดเอง'];
+  const STANDARD_DURATIONS = ['30 นาที', '1 ชั่วโมง', '1.5 ชั่วโมง', '2 ชั่วโมง', '3 ชั่วโมง'];
+  const duration = [...STANDARD_DURATIONS, 'กำหนดเอง']; // Legacy support if needed, but we use displayDurations
   // เพิ่มจุด (.) ให้ตรงกับ Database
   const dayAbbreviations = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
 
@@ -113,19 +114,26 @@ const User = () => {
   // ฟังก์ชันแปลงข้อความระยะเวลาเป็นตัวเลขนาที (ใช้ร่วมกันหลายที่)
   const getDurationInMinutes = (durationStr, customVal, customUnit = 'นาที') => {
     if (!durationStr) return 0;
-    if (durationStr === '30 นาที') return 30;
-    if (durationStr === '1 ชั่วโมง') return 60;
-    if (durationStr === '1.5 ชั่วโมง') return 90;
-    if (durationStr === '2 ชั่วโมง') return 120;
-    if (durationStr === '3 ชั่วโมง') return 180;
+
+    // Robust parsing for strings like "30 นาที", "1 ชั่วโมง", "1.5 ชั่วโมง", etc.
     if (durationStr === 'กำหนดเอง') {
       const val = parseFloat(customVal) || 0;
       if (customUnit === 'ชั่วโมง') return val * 60;
-      return val; // นาที
+      return val;
     }
 
-    const cleanStr = durationStr.replace(/\D/g, '');
-    return parseInt(cleanStr) || 0;
+    // Try to parse number from string
+    const match = durationStr.match(/([\d\.]+)/);
+    if (!match) return 0;
+
+    const val = parseFloat(match[1]);
+
+    // Check for hour keywords
+    if (durationStr.includes('ชั่วโมง') || durationStr.includes('ชม.')) {
+      return val * 60;
+    }
+
+    return val; // Assume minutes if no hour keyword or just minutes
   };
 
   // แปลงนาที (นับจากเที่ยงคืน) กลับเป็นเวลา HH:MM
@@ -285,23 +293,43 @@ const User = () => {
     });
   };
 
-  // Handle when duration dropdown changes
   const handleDurationChange = (val) => {
-    if (val === 'กำหนดเอง') {
+    // If user selects "กำหนดเอง" OR selects a custom-like value that is not in standard list
+    // (In practice, if they click the already-selected custom value (e.g., "5 ชั่วโมง") in the dropdown,
+    // we want to let them edit it.
+    // However, typical dropdown logic: clicking the same value might just re-trigger onChange.
+
+    // Check if standard
+    const isStandard = STANDARD_DURATIONS.includes(val);
+
+    if (val === 'กำหนดเอง' || (!isStandard && val === formData.duration)) {
+      // If clicking "กำหนดเอง" OR re-clicking their custom value -> Open Modal
       setShowDurationModal(true);
+      // Important: if it's "กำหนดเอง", we don't set formData.duration yet until they confirm strings
+      // But if they clicked their existing custom value, we keep it as is until modal confirms
+    } else {
+      setFormData({ ...formData, duration: val });
+      // If they pick a standard one, clear custom duration/unit states? 
+      // Optional, but safer to keep them clean or just ignore them.
     }
-    setFormData({ ...formData, duration: val });
   };
 
   const handleCustomDurationConfirm = (val, unit) => {
     setCustomDuration(val);
     setCustomDurationUnit(unit);
     setShowDurationModal(false);
+
+    // Directly set the duration string to proper format
+    const newDurationStr = `${val} ${unit}`;
+    setFormData(prev => ({ ...prev, duration: newDurationStr }));
   };
 
   const handleCustomDurationCancel = () => {
     setShowDurationModal(false);
-    if (!customDuration) {
+    // If we were on "กำหนดเอง" but cancelled, and didn't have a previous custom value...
+    // logic is tricky. If formData.duration is "กำหนดเอง", we might want to revert?
+    // But here formData.duration is likely still the old value or empty.
+    if (!formData.duration || formData.duration === 'กำหนดเอง') {
       setFormData(prev => ({ ...prev, duration: '' }));
     }
   };
@@ -310,23 +338,17 @@ const User = () => {
     if (!formData.type || formData.type === 'เลือกกิจกรรม') { setPopupMessage({ type: 'error', message: 'กรุณาเลือกประเภทกิจกรรม' }); return; }
     if (!formData.subject || formData.subject.trim() === '') { setPopupMessage({ type: 'error', message: 'กรุณากรอกหัวข้อการประชุม' }); return; }
 
-    // Check if custom duration is selected but value is empty
-    if (formData.duration === 'กำหนดเอง') {
-      const val = parseFloat(customDuration);
-      let totalMinutes = val;
-      if (customDurationUnit === 'ชั่วโมง') totalMinutes = val * 60;
-
-      if (!val || val <= 0) {
-        setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลา (เลขจำนวนเต็ม/ทศนิยม)' });
-        return;
-      }
-      if (totalMinutes < 10) {
-        setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลาอย่างน้อย 10 นาที' });
-        return;
-      }
-    } else {
-      if (!formData.duration || formData.duration.trim() === '') { setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลา' }); return; }
+    // Check duration validity (generic)
+    const durationVal = getDurationInMinutes(formData.duration);
+    if (!durationVal || durationVal <= 0) {
+      setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลา' });
+      return;
     }
+    if (durationVal < 10) {
+      setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลาอย่างน้อย 10 นาที' });
+      return;
+    }
+
     if (formData.days.length === 0) { setPopupMessage({ type: 'error', message: 'กรุณาเลือกวันที่จากปฏิทิน' }); return; }
     if (!formData.startTime) { setPopupMessage({ type: 'error', message: 'กรุณาเลือกเวลาที่ต้องการจอง' }); return; }
     if (formData.meetingFormat === 'Online' && (!formData.location || formData.location.trim() === '')) { setPopupMessage({ type: 'error', message: 'กรุณากรอกลิงก์การประชุม' }); return; }
@@ -347,7 +369,7 @@ const User = () => {
 
       const startDateTime = new Date(year, month - 1, day, hour, minute);
 
-      const durationMins = getDurationInMinutes(formData.duration, customDuration, customDurationUnit);
+      const durationMins = getDurationInMinutes(formData.duration);
       const endDateTime = new Date(startDateTime.getTime() + durationMins * 60000);
 
       const eventPayload = {
@@ -491,6 +513,23 @@ const User = () => {
     return gridItems;
   };
 
+  // Calculate display duration options
+  let displayDurations = [...STANDARD_DURATIONS];
+
+  // Logic: 
+  // 1. If we have a custom duration that is NOT standard, we add it to the list so it can be shown/selected.
+  // 2. We ALWAYS show 'กำหนดเอง' at the end to allow user to pick it (or clear/reset).
+
+  // Note: if formData.duration is empty, includes returns false, so we check truthiness first
+  const isCustomActive = formData.duration && !STANDARD_DURATIONS.includes(formData.duration);
+
+  if (isCustomActive) {
+    // Show the custom value
+    displayDurations.push(formData.duration);
+  }
+  // Always show 'กำหนดเอง' option
+  displayDurations.push('กำหนดเอง');
+
   return (
     <div className="user-schedule-container">
       <div className="user-schedule-wrapper">
@@ -540,8 +579,9 @@ const User = () => {
                     <TimeDropdown
                       className="dropdown-time"
                       value={formData.duration} onChange={handleDurationChange}
-                      timeOptions={duration} placeholder="ระยะเวลา"
+                      timeOptions={displayDurations} placeholder="ระยะเวลา"
                     />
+                    {/* CUSTOM DISPLAY REMOVED IN FAVOR OF IN-DROPDOWN DISPLAY */}
                   </div>
                 </div>
               </div>

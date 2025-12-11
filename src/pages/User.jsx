@@ -793,7 +793,10 @@ const User = () => {
                     placeholder="ค้นหาการจอง..."
                     className="search-input"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1); // Reset to first page on search
+                    }}
                   />
                 </div>
                 <div className="filter-dropdown-wrapper">

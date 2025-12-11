@@ -334,21 +334,84 @@ const User = () => {
     }
   };
 
+
+
+  // Helper to match Hex to Google Color ID
+  const mapHexToGoogleColorId = (hex) => {
+    if (!hex) return '7'; // Default Peacock (Blue)
+
+    // Google Calendar Colors
+    const colors = {
+      1: '#7986cb', // Lavender
+      2: '#33b679', // Sage
+      3: '#8e24aa', // Grape
+      4: '#e67c73', // Flamingo
+      5: '#f6c026', // Banana
+      6: '#f5511d', // Tangerine
+      7: '#039be5', // Peacock
+      8: '#616161', // Graphite
+      9: '#3f51b5', // Blueberry
+      10: '#0b8043', // Basil
+      11: '#d50000'  // Tomato
+    };
+
+    const hexToRgb = (h) => {
+      let r = 0, g = 0, b = 0;
+      // 3 digits
+      if (h.length === 4) {
+        r = parseInt("0x" + h[1] + h[1]);
+        g = parseInt("0x" + h[2] + h[2]);
+        b = parseInt("0x" + h[3] + h[3]);
+      } else if (h.length === 7) {
+        r = parseInt("0x" + h[1] + h[2]);
+        g = parseInt("0x" + h[3] + h[4]);
+        b = parseInt("0x" + h[5] + h[6]);
+      }
+      return { r, g, b };
+    };
+
+    const target = hexToRgb(hex);
+    let minDiff = Infinity;
+    let bestId = '7';
+
+    Object.entries(colors).forEach(([id, cHex]) => {
+      const cRgb = hexToRgb(cHex);
+      // Euclidean distance usually sufficient for simple mapping
+      const diff = Math.sqrt(
+        Math.pow(target.r - cRgb.r, 2) +
+        Math.pow(target.g - cRgb.g, 2) +
+        Math.pow(target.b - cRgb.b, 2)
+      );
+      if (diff < minDiff) {
+        minDiff = diff;
+        bestId = id;
+      }
+    });
+
+    return bestId;
+  };
+
   const handleReview = () => {
     if (!formData.type || formData.type === 'เลือกกิจกรรม') { setPopupMessage({ type: 'error', message: 'กรุณาเลือกประเภทกิจกรรม' }); return; }
     if (!formData.subject || formData.subject.trim() === '') { setPopupMessage({ type: 'error', message: 'กรุณากรอกหัวข้อการประชุม' }); return; }
 
-    // Check duration validity (generic)
-    const durationVal = getDurationInMinutes(formData.duration);
-    if (!durationVal || durationVal <= 0) {
-      setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลา' });
-      return;
-    }
-    if (durationVal < 10) {
-      setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลาอย่างน้อย 10 นาที' });
-      return;
-    }
+    // Check if custom duration is selected but value is empty
+    if (formData.duration === 'กำหนดเอง') {
+      const val = parseFloat(customDuration);
+      let totalMinutes = val;
+      if (customDurationUnit === 'ชั่วโมง') totalMinutes = val * 60;
 
+      if (!val || val <= 0) {
+        setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลา (เลขจำนวนเต็ม/ทศนิยม)' });
+        return;
+      }
+      if (totalMinutes < 10) {
+        setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลาอย่างน้อย 10 นาที' });
+        return;
+      }
+    } else {
+      if (!formData.duration || formData.duration.trim() === '') { setPopupMessage({ type: 'error', message: 'กรุณาระบุระยะเวลา' }); return; }
+    }
     if (formData.days.length === 0) { setPopupMessage({ type: 'error', message: 'กรุณาเลือกวันที่จากปฏิทิน' }); return; }
     if (!formData.startTime) { setPopupMessage({ type: 'error', message: 'กรุณาเลือกเวลาที่ต้องการจอง' }); return; }
     if (formData.meetingFormat === 'Online' && (!formData.location || formData.location.trim() === '')) { setPopupMessage({ type: 'error', message: 'กรุณากรอกลิงก์การประชุม' }); return; }
@@ -369,15 +432,23 @@ const User = () => {
 
       const startDateTime = new Date(year, month - 1, day, hour, minute);
 
-      const durationMins = getDurationInMinutes(formData.duration);
+      const durationMins = getDurationInMinutes(formData.duration, customDuration, customDurationUnit);
       const endDateTime = new Date(startDateTime.getTime() + durationMins * 60000);
+
+      // Determine Color ID
+      const selectedActivity = activityTypes.find(t => t.name === formData.type);
+      let colorId = '7'; // Default Peacock (Blue)
+      if (selectedActivity && selectedActivity.color) {
+        colorId = mapHexToGoogleColorId(selectedActivity.color);
+      }
 
       const eventPayload = {
         title: `[${formData.type}] ${formData.subject}`,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
         description: `${formData.description || '-'}`,
-        location: formData.location
+        location: formData.location,
+        colorId: colorId
       };
 
       setPopupMessage({ type: 'success', message: 'กำลังบันทึก...' });

@@ -1,5 +1,5 @@
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbybTIrjr0ncGAPY2KaN14rZ0MDmvm9OupavwqYPPc216iCNqad06ZZTcGR2jrkV7hfw6Q/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbz7RLB3h1aNZMC-WawCiOhzX26Kjd_tLHpTsVYZnaY2Hd8P6YgcZ-pdnLiQzSZp2L-M_Q/exec';
 
 /**
  * Create a new event in Google Calendar

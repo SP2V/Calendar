@@ -735,6 +735,12 @@ textarea.user-custom-input {
 .card-subject {
   font-size: 0.9rem;
   color: #6b7280;
+  /* Truncation */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80%;
+  display: block;
 }
 
 .card-body {
@@ -887,7 +893,11 @@ textarea.user-custom-input {
   color: #374151;
   font-size: 0.95rem;
   vertical-align: middle;
+  /* Truncation Logic */
   max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .bookings-table tr:last-child td {

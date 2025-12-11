@@ -882,11 +882,12 @@ textarea.user-custom-input {
 }
 
 .bookings-table td {
-  padding: 1.25rem;
+  padding: 1rem;
   border-bottom: 1px solid #f3f4f6;
   color: #374151;
   font-size: 0.95rem;
   vertical-align: middle;
+  max-width: 200px;
 }
 
 .bookings-table tr:last-child td {

@@ -11,7 +11,9 @@ import {
   addBooking,
   subscribeBookings,
   deleteBooking,
+  auth, // Import auth
 } from '../services/firebase';
+import { onAuthStateChanged } from 'firebase/auth'; // Import auth listener
 import { useNavigate } from 'react-router-dom';
 import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarService';
 import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut } from 'lucide-react';
@@ -44,6 +46,7 @@ const User = () => {
   const [types, setTypes] = useState(['เลือกกิจกรรม']);
   const [activityTypes, setActivityTypes] = useState([]);
   const [bookings, setBookings] = useState([]); // New state for bookings
+  const [currentUser, setCurrentUser] = useState(null); // Auth State
 
   // Form State
   const [formData, setFormData] = useState({
@@ -64,6 +67,7 @@ const User = () => {
 
   // View/Delete State
   const [viewingBooking, setViewingBooking] = useState(null); // For Viewing Details
+  const [imgError, setImgError] = useState(false); // New state for image error handling
 
   // UI States
   const [isViewMode, setIsViewMode] = useState(false);
@@ -270,6 +274,20 @@ const User = () => {
     });
     const unsubBookings = subscribeBookings(setBookings);
     return () => { unsubSchedules(); unsubTypes(); unsubBookings(); };
+  }, []);
+
+  // Auth Listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user);
+        setImgError(false); // Reset error on new user
+      } else {
+        setCurrentUser(null);
+        // navigate('/login'); // Optional: Auto redirect if not logged in
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -633,22 +651,39 @@ const User = () => {
 
             {/* Profile Badge */}
             <div className="user-profile-container" style={{ position: 'relative', zIndex: 100 }}>
-              <div
+              <button
                 className="user-profile-badge"
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                style={{ position: 'relative', top: 0, right: 0 }} // Keep relative for dropdown positioning
+                style={{ position: 'relative', top: 0, right: 0, padding: 0, overflow: 'hidden', }}
               >
-                <div className="profile-avatar">SC</div>
-              </div>
+                {currentUser && currentUser.photoURL && !imgError ? (
+                  <img
+                    src={currentUser.photoURL}
+                    alt="Profile"
+                    className="profile-avatar"
+                    style={{ width: '90%', height: '90%', objectFit: 'cover', borderRadius: '50%' }}
+                    referrerPolicy="no-referrer"
+                    onError={(e) => setImgError(true)}
+                  />
+                ) : (
+                  <div className="profile-avatar">
+                    {currentUser && currentUser.displayName ? currentUser.displayName.charAt(0).toUpperCase() : 'SC'}
+                  </div>
+                )}
+              </button>
 
               {/* Dropdown Menu */}
               {isProfileOpen && (
                 <div className="profile-dropdown-menu">
                   <div className="dropdown-header-info">
-                    <div className="profile-avatar sm">SC</div>
+                    {currentUser && currentUser.photoURL ? (
+                      <img src={currentUser.photoURL} alt="Profile" className="profile-avatar sm" style={{ borderRadius: '50%' }} />
+                    ) : (
+                      <div className="profile-avatar sm">SC</div>
+                    )}
                     <div className="profile-info">
-                      <span className="profile-name">Som Chai</span>
-                      <span className="profile-email">somchai.j@gmail.com</span>
+                      <span className="profile-name">{currentUser ? currentUser.displayName : 'Guest'}</span>
+                      <span className="profile-email">{currentUser ? currentUser.email : '-'}</span>
                     </div>
                   </div>
 

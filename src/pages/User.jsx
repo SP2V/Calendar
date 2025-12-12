@@ -1011,31 +1011,38 @@ const User = () => {
                     )}
 
                     {/* Pagination Controls */}
-                    {totalPages > 1 && (
-                      <div className="pagination-controls">
-                        <button
-                          className="page-btn"
-                          disabled={currentPage === 1}
-                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        >
-                          <ChevronLeft size={16} />
-                        </button>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                          <button
-                            key={page}
-                            className={`page-btn ${currentPage === page ? 'active' : ''}`}
-                            onClick={() => setCurrentPage(page)}
-                          >
-                            {page}
-                          </button>
-                        ))}
-                        <button
-                          className="page-btn"
-                          disabled={currentPage === totalPages}
-                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        >
-                          <ChevronRight size={16} />
-                        </button>
+                    {totalPages > 0 && (
+                      <div className="pagination-metrics">
+                        <div className="pagination-text">
+                          แสดง {currentItems.length} รายการจากทั้งหมด {filtered.length} รายการ
+                        </div>
+                        {totalPages > 1 && (
+                          <div className="pagination-controls">
+                            <button
+                              className="page-btn"
+                              disabled={currentPage === 1}
+                              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            >
+                              <ChevronLeft size={16} />
+                            </button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                              <button
+                                key={page}
+                                className={`page-btn ${currentPage === page ? 'active' : ''}`}
+                                onClick={() => setCurrentPage(page)}
+                              >
+                                {page}
+                              </button>
+                            ))}
+                            <button
+                              className="page-btn"
+                              disabled={currentPage === totalPages}
+                              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            >
+                              <ChevronRight size={16} />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </>

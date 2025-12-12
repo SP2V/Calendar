@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../services/firebase';
 import './Login.css';
 
 const Login = () => {
@@ -9,10 +11,16 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleGoogleLogin = () => {
-        // Mock Google Login - In real app, use Firebase Auth popup
-        console.log("Logging in with Google...");
-        navigate('/user');
+    const handleGoogleLogin = async () => {
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+            console.log("Logged in as:", user.displayName);
+            navigate('/user');
+        } catch (error) {
+            console.error("Google Login Error:", error);
+            setError("Google Login Failed: " + error.message);
+        }
     };
 
     const handleEmailLogin = (e) => {

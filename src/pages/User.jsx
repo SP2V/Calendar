@@ -613,52 +613,7 @@ const User = () => {
 
   return (
     <div className="user-schedule-container">
-      {/* Profile Badge */}
-      <div className="user-profile-container" style={{ position: 'absolute', top: '1.5rem', right: '2rem', zIndex: 100 }}>
-        <div
-          className="user-profile-badge"
-          onClick={() => setIsProfileOpen(!isProfileOpen)}
-          style={{ position: 'relative', top: 0, right: 0 }}
-        >
-          <div className="profile-avatar">SC</div>
-          {/* <div className="profile-info">
-            <span className="profile-name">Som Chai</span>
-            <span className="profile-email">somchai.j@gmail.com</span>
-          </div> */}
-          {/* Chevron removed but clickable area remains */}
-        </div>
 
-        {/* Dropdown Menu */}
-        {isProfileOpen && (
-          <div className="profile-dropdown-menu">
-            <div className="dropdown-header-info">
-              <div className="profile-avatar sm">SC</div>
-              <div className="profile-info">
-                <span className="profile-name">Som Chai</span>
-                <span className="profile-email">somchai.j@gmail.com</span>
-              </div>
-            </div>
-
-            <div className="dropdown-divider"></div>
-
-            <button className="dropdown-item">
-              <UserIcon size={18} />
-              <span>โปรไฟล์</span>
-            </button>
-            <button className="dropdown-item">
-              <History size={18} />
-              <span>ประวัติการนัดหมาย</span>
-            </button>
-
-            <div className="dropdown-divider"></div>
-
-            <button className="dropdown-item logout" onClick={handleLogout}>
-              <LogOut size={18} />
-              <span>ออกจากระบบ</span>
-            </button>
-          </div>
-        )}
-      </div>
 
       <div className="user-schedule-wrapper">
 
@@ -671,9 +626,53 @@ const User = () => {
               <p>{isViewMode ? 'รายการจองนัดหมาย' : 'จองตารางนัดหมาย'}</p>
             </div>
           </div>
-          <button className="user-header-btn-back" onClick={() => setIsViewMode(!isViewMode)}>
-            {isViewMode ? '+ เพิ่มรายการ' : 'รายการนัดหมายของฉัน'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button className="user-header-btn-back" onClick={() => setIsViewMode(!isViewMode)}>
+              {isViewMode ? '+ เพิ่มรายการ' : 'รายการนัดหมายของฉัน'}
+            </button>
+
+            {/* Profile Badge */}
+            <div className="user-profile-container" style={{ position: 'relative', zIndex: 100 }}>
+              <div
+                className="user-profile-badge"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                style={{ position: 'relative', top: 0, right: 0 }} // Keep relative for dropdown positioning
+              >
+                <div className="profile-avatar">SC</div>
+              </div>
+
+              {/* Dropdown Menu */}
+              {isProfileOpen && (
+                <div className="profile-dropdown-menu">
+                  <div className="dropdown-header-info">
+                    <div className="profile-avatar sm">SC</div>
+                    <div className="profile-info">
+                      <span className="profile-name">Som Chai</span>
+                      <span className="profile-email">somchai.j@gmail.com</span>
+                    </div>
+                  </div>
+
+                  <div className="dropdown-divider"></div>
+
+                  <button className="dropdown-item">
+                    <UserIcon size={18} />
+                    <span>โปรไฟล์</span>
+                  </button>
+                  <button className="dropdown-item">
+                    <History size={18} />
+                    <span>ประวัติการนัดหมาย</span>
+                  </button>
+
+                  <div className="dropdown-divider"></div>
+
+                  <button className="dropdown-item logout" onClick={handleLogout}>
+                    <LogOut size={18} />
+                    <span>ออกจากระบบ</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* --- CONTENT --- */}

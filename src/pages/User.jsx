@@ -678,10 +678,11 @@ const User = () => {
         {/* --- CONTENT --- */}
         {!isViewMode ? (
           <div className="user-form-card">
+            <h2 className="user-section-title">รายละเอียดการนัดหมาย</h2>
 
             {/* Row 1: Activity */}
             <div className="form-section-Activity">
-              <label className="user-section-title">เลือกกิจกรรม <span className="required">*</span></label>
+              <label className="input-label">เลือกกิจกรรม <span className="required">*</span></label>
               <TimeDropdown
                 className="dropdown-full"
                 value={formData.type}
@@ -693,7 +694,6 @@ const User = () => {
 
             {/* Row 2: Details */}
             <div className="form-section">
-              <label className="user-section-title">รายละเอียดการนัดหมาย</label>
               <div className="flex-row-wrap">
                 <div className="col-2">
                   <label className="input-label">หัวข้อการประชุม (Subject) <span className="required">*</span></label>

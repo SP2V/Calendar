@@ -678,7 +678,10 @@ const User = () => {
         {/* --- CONTENT --- */}
         {!isViewMode ? (
           <div className="user-form-card">
-            <h2 className="user-section-title">รายละเอียดการนัดหมาย</h2>
+            <h2 className="user-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileTextIcon style={{ width: 30, height: 30, color: '#2563eb' }} />
+              รายละเอียดการนัดหมาย
+            </h2>
 
             {/* Row 1: Activity */}
             <div className="form-section-Activity">

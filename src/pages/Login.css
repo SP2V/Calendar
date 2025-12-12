@@ -9,7 +9,7 @@
   justify-content: center;
   align-items: center;
   /* Pastel Gradient: Light Blue/Purple to Pink */
-  background: linear-gradient(135deg, #eef2ff 0%, #fce7f3 100%);
+  background: linear-gradient(to bottom right, #87d1ff, #88a4ff, #ff88cb);
   position: relative;
   overflow: hidden;
 }

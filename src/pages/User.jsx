@@ -987,7 +987,13 @@ const User = () => {
                           const isOnline = item.meetingFormat === 'Online' || (item.location && item.location.includes('http'));
 
                           return (
-                            <div key={item.id} className="booking-card">
+                            <div key={item.id} className={`booking-card ${activeTab === 'completed' ? 'history-card' : ''}`}>
+                              {activeTab === 'completed' && (
+                                <div className="history-status-badge">
+                                  <span className="status-dot"></span> เสร็จสิ้นแล้ว
+                                </div>
+                              )}
+
                               <div className="card-header">
                                 <h3 className="card-type">{item.type || 'นัดหมาย'}</h3>
                                 <p className="card-subject">
@@ -996,17 +1002,17 @@ const User = () => {
                               </div>
                               <div className="card-body">
                                 <div className="card-row">
-                                  <CalendarIcon style={{ width: 16, height: 16 }} />
+                                  <CalendarIcon style={{ width: 18, height: 18 }} />
                                   <span>{dateStr}</span>
                                 </div>
                                 <div className="card-row">
-                                  <ClockIcon style={{ width: 16, height: 16 }} />
+                                  <ClockIcon style={{ width: 18, height: 18 }} />
                                   <span>{timeRange}</span>
                                 </div>
                                 <div className="card-row">
-                                  {isOnline ? <MonitorIcon style={{ width: 16, height: 16 }} /> : <MapPinIcon style={{ width: 16, height: 16 }} />}
-                                  <span className={`status-badge ${isOnline ? 'online' : 'onsite'}`}>
-                                    {isOnline ? 'Online' : 'On-site'}
+                                  {isOnline ? <MonitorIcon style={{ width: 18, height: 18 }} /> : <MapPinIcon style={{ width: 18, height: 18 }} />}
+                                  <span className={`status-badge-text ${isOnline ? 'online' : 'onsite'}`}>
+                                    {isOnline ? 'online' : 'on-site'}
                                   </span>
                                 </div>
                               </div>
@@ -1014,9 +1020,26 @@ const User = () => {
                                 <button className="btn-card-action view" onClick={() => handleViewBookingDetails(item)}>
                                   ดูรายละเอียด
                                 </button>
-                                <button className="btn-card-action cancel" onClick={() => handleDeleteBooking(item.id)}>
-                                  ยกเลิก
-                                </button>
+                                {activeTab === 'completed' ? (
+                                  <button className="btn-card-action rebook" onClick={() => {
+                                    // Logic to rebook: populate form with this item's details
+                                    setFormData({
+                                      ...formData,
+                                      type: item.type,
+                                      subject: item.subject || item.title.replace(/^\[.*?\]\s*/, ''),
+                                      meetingFormat: item.meetingFormat || (item.location && item.location.includes('http') ? 'Online' : 'On-site'),
+                                      location: item.location || '',
+                                      description: item.description || ''
+                                    });
+                                    setIsViewMode(false); // Switch to form view
+                                  }}>
+                                    จองอีกครั้ง
+                                  </button>
+                                ) : (
+                                  <button className="btn-card-action cancel" onClick={() => handleDeleteBooking(item.id)}>
+                                    ยกเลิก
+                                  </button>
+                                )}
                               </div>
                             </div>
                           );
@@ -1028,10 +1051,11 @@ const User = () => {
                           <thead>
                             <tr>
                               <th>หัวข้อ</th>
-                              <th>กิจกรรม</th>
+                              <th style={{ padding: '5px', width: '50px',}}>กิจกรรม</th>
                               <th>วันที่</th>
                               <th>เวลา</th>
                               <th>รูปแบบ</th>
+                              {activeTab === 'completed' && <th>สถานะ</th>}
                               <th>การดำเนินการ</th>
                             </tr>
                           </thead>
@@ -1045,25 +1069,48 @@ const User = () => {
 
                               return (
                                 <tr key={item.id}>
-                                  <td className="cell-subject">
+                                  <td className="cell-subject"style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     {item.subject || item.title.replace(/^\[.*?\]\s*/, '')}
                                   </td>
-                                  <td>{item.type || 'นัดหมาย'}</td>
-                                  <td>{dateStr}</td>
-                                  <td>{timeRange}</td>
-                                  <td>
-                                    <span className={`status-badge ${isOnline ? 'online' : 'onsite'}`}>
+                                  <td style={{ padding: '5px', width: '50px', textAlign: 'center' }}>{item.type || 'นัดหมาย'}</td>
+                                  <td style={{ padding: '5px', width: '120px', textAlign: 'center' }}>{dateStr}</td>
+                                  <td style={{ padding: '16px', width: '120px', textAlign: 'center' }}>{timeRange}</td>
+                                  <td style={{ padding: '5px', width: '100px', textAlign: 'center' }}>
+                                    <span className={`status-badge-text ${isOnline ? 'online' : 'onsite'}`}>
                                       {isOnline ? 'Online' : 'On-site'}
                                     </span>
                                   </td>
+                                  {activeTab === 'completed' && (
+                                    <td style={{ padding: '2px', width: '90px', textAlign: 'center' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#059669', fontWeight: 500, fontSize: '0.9rem',textAlign: 'center' }}>
+                                        <span className="status-dot"></span> เสร็จสิ้นแล้ว
+                                      </div>
+                                    </td>
+                                  )}
                                   <td>
                                     <div className="table-actions">
                                       <button className="btn-table-action view" onClick={() => handleViewBookingDetails(item)}>
                                         ดูรายละเอียด
                                       </button>
-                                      <button className="btn-table-action cancel" onClick={() => handleDeleteBooking(item.id)}>
-                                        ยกเลิก
-                                      </button>
+                                      {activeTab === 'completed' ? (
+                                        <button className="btn-table-action rebook" onClick={() => {
+                                          setFormData({
+                                            ...formData,
+                                            type: item.type,
+                                            subject: item.subject || item.title.replace(/^\[.*?\]\s*/, ''),
+                                            meetingFormat: item.meetingFormat || (item.location && item.location.includes('http') ? 'Online' : 'On-site'),
+                                            location: item.location || '',
+                                            description: item.description || ''
+                                          });
+                                          setIsViewMode(false);
+                                        }}>
+                                          จองอีกครั้ง
+                                        </button>
+                                      ) : (
+                                        <button className="btn-table-action cancel" onClick={() => handleDeleteBooking(item.id)}>
+                                          ยกเลิก
+                                        </button>
+                                      )}
                                     </div>
                                   </td>
                                 </tr>

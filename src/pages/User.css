@@ -723,7 +723,7 @@ textarea.user-custom-input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 200px;
+  max-width: 120px;
   display: block;
 }
 
@@ -889,11 +889,12 @@ textarea.user-custom-input {
 .bookings-table th {
   background-color: #f9fafb;
   color: #6b7280;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.9rem;
-  padding: 1rem 1.5rem;
+  padding: 1rem;
   border-bottom: 1px solid #e5e7eb;
   white-space: nowrap;
+  text-align: center;
 }
 
 .bookings-table td {
@@ -903,6 +904,7 @@ textarea.user-custom-input {
   font-size: 0.95rem;
   vertical-align: middle;
   /* Truncation Logic */
+  width: 200px;
   max-width: 200px;
   white-space: nowrap;
   overflow: hidden;
@@ -955,6 +957,16 @@ textarea.user-custom-input {
 
 .btn-table-action.cancel:hover {
   background-color: #fef2f2;
+}
+
+.btn-table-action.rebook {
+  background-color: white;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+}
+
+.btn-table-action.rebook:hover {
+  background-color: #eff6ff;
 }
 
 /* Profile Badge & Dropdown */
@@ -1172,6 +1184,63 @@ textarea.user-custom-input {
   height: 24px;
   background-color: #e5e7eb;
   margin: 0 4px;
+}
+
+/* History Card specific overrides */
+.history-card {
+  position: relative;
+  /* background-color: #fff; */
+  /* Default is white */
+}
+
+.history-status-badge {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #00A419;
+  /* Green-600 */
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #00A419;
+  /* Green-500 */
+  border-radius: 50%;
+}
+
+.status-badge-text {
+  display: inline-flex;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge-text.online {
+  background-color: #00A419;
+  color: white;
+}
+
+.status-badge-text.onsite {
+  background-color: #F55E00;
+  color: white;
+}
+
+.btn-card-action.rebook {
+  background-color: white;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+}
+
+.btn-card-action.rebook:hover {
+  background-color: #eff6ff;
 }
 
 .filter-actions-right {

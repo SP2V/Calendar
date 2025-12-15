@@ -651,30 +651,6 @@ textarea.user-custom-input {
   color: #374151;
 }
 
-.view-toggles {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.view-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0.5rem 1rem;
-  border: 1px solid #e5e7eb;
-  background: white;
-  border-radius: 6px;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.view-toggle-btn.active {
-  background-color: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
-}
-
 /* Grid Layout */
 .bookings-grid {
   display: grid;
@@ -1164,7 +1140,7 @@ textarea.user-custom-input {
 
 .tab-btn {
   border: none;
-  background: transparent;
+  background: #f3f4f6;
   padding: 8px 24px;
   font-size: 0.85rem;
   color: #9ca3af;
@@ -1237,7 +1213,7 @@ textarea.user-custom-input {
 .view-toggles {
   display: flex;
   background: #f3f4f6;
-  padding: 4px;
+  padding: 3px;
   border-radius: 8px;
   gap: 2px;
 }
@@ -1262,7 +1238,7 @@ textarea.user-custom-input {
 }
 
 .view-toggle-btn.active {
-  background: white;
-  color: #2563eb;
+  background: #3b82f6;
+  color: white;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }

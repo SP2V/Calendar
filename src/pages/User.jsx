@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './User.css';
 import TimeDropdown from "../components/AdminDropdown";
 import PopupModal from "../components/PopupModal";
@@ -68,6 +68,22 @@ const User = () => {
   // View/Delete State
   const [viewingBooking, setViewingBooking] = useState(null); // For Viewing Details
   const [imgError, setImgError] = useState(false); // New state for image error handling
+
+  const profileRef = useRef(null);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // UI States
   const [isViewMode, setIsViewMode] = useState(false);
@@ -651,7 +667,7 @@ const User = () => {
             </button>
 
             {/* Profile Badge */}
-            <div className="user-profile-container" style={{ position: 'relative', zIndex: 100 }}>
+            <div className="user-profile-container" ref={profileRef} style={{ position: 'relative', zIndex: 100 }}>
               <button
                 className="user-profile-badge"
                 onClick={() => setIsProfileOpen(!isProfileOpen)}

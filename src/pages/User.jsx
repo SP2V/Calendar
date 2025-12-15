@@ -499,7 +499,8 @@ const User = () => {
           status: 'confirmed',
           type: formData.type,
           subject: formData.subject, // Explicitly save subject
-          meetingFormat: formData.meetingFormat
+          meetingFormat: formData.meetingFormat,
+          email: currentUser ? currentUser.email : '' // Save User Email
         });
 
         setPopupMessage({ type: 'success', message: 'จองนัดหมายและบันทึกลงปฏิทินเรียบร้อยแล้ว' });
@@ -978,7 +979,10 @@ const User = () => {
                   const isCompleted = endTime < now;
                   const matchesTab = activeTab === 'upcoming' ? !isCompleted : isCompleted;
 
-                  return matchesSearch && matchesType && matchesTab;
+                  // User Logic
+                  const matchesUser = currentUser && b.email === currentUser.email;
+
+                  return matchesSearch && matchesType && matchesTab && matchesUser;
                 }).sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
 
                 if (filtered.length === 0) {

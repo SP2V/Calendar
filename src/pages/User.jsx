@@ -77,6 +77,7 @@ const User = () => {
   // Redesign: List View Filter & Pagination States
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('แสดงทั้งหมด');
+  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' | 'completed'
   const [viewLayout, setViewLayout] = useState('grid'); // 'grid' or 'list'
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -878,9 +879,26 @@ const User = () => {
           <div className="user-view-container">
             {/* Filter Bar */}
             <div className="filter-bar">
-              <div className="filter-left">
+              {/* Left: Tabs */}
+              <div className="filter-tabs">
+                <button
+                  className={`tab-btn ${activeTab === 'upcoming' ? 'active' : ''}`}
+                  onClick={() => { setActiveTab('upcoming'); setCurrentPage(1); }}
+                >
+                  กำลังดำเนินการ
+                </button>
+                <div className="tab-divider"></div>
+                <button
+                  className={`tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
+                  onClick={() => { setActiveTab('completed'); setCurrentPage(1); }}
+                >
+                  ประวัติการจอง
+                </button>
+              </div>
+
+              {/* Right: Actions */}
+              <div className="filter-actions-right">
                 <div className="search-wrapper">
-                  {/* <Search size={18} className="search-icon" /> */}
                   <input
                     type="text"
                     placeholder="ค้นหาการจอง..."
@@ -888,32 +906,33 @@ const User = () => {
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
-                      setCurrentPage(1); // Reset to first page on search
+                      setCurrentPage(1);
                     }}
                   />
                 </div>
                 <div className="filter-dropdown-wrapper">
                   <TimeDropdown
+                    className="compact-dropdown"
                     value={filterType}
                     onChange={(val) => setFilterType(val)}
                     timeOptions={['แสดงทั้งหมด', ...new Set(schedules.map(item => item.type))]}
-                    placeholder="กรองกิจกรรม"
+                    placeholder="เลือกกิจกรรมที่ต้องการ"
                   />
                 </div>
-              </div>
-              <div className="view-toggles">
-                <button
-                  className={`view-toggle-btn ${viewLayout === 'grid' ? 'active' : ''}`}
-                  onClick={() => setViewLayout('grid')}
-                >
-                  <LayoutGrid size={18} />
-                </button>
-                <button
-                  className={`view-toggle-btn ${viewLayout === 'list' ? 'active' : ''}`}
-                  onClick={() => setViewLayout('list')}
-                >
-                  <List size={18} />
-                </button>
+                <div className="view-toggles">
+                  <button
+                    className={`view-toggle-btn ${viewLayout === 'grid' ? 'active' : ''}`}
+                    onClick={() => setViewLayout('grid')}
+                  >
+                    <LayoutGrid size={18} />
+                  </button>
+                  <button
+                    className={`view-toggle-btn ${viewLayout === 'list' ? 'active' : ''}`}
+                    onClick={() => setViewLayout('list')}
+                  >
+                    <List size={18} />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -921,13 +940,21 @@ const User = () => {
             <div className="bookings-content">
               {(() => {
                 // Filter Logic
+                // Filter Logic
                 const filtered = bookings.filter(b => {
                   const sub = b.title || b.subject || ''; // Use title (which has subj) or subject
                   const desc = b.description || '';
                   const matchesSearch = sub.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     desc.toLowerCase().includes(searchQuery.toLowerCase());
                   const matchesType = filterType === 'แสดงทั้งหมด' || b.type === filterType;
-                  return matchesSearch && matchesType;
+
+                  // Tab Logic
+                  const now = new Date();
+                  const endTime = new Date(b.endTime);
+                  const isCompleted = endTime < now;
+                  const matchesTab = activeTab === 'upcoming' ? !isCompleted : isCompleted;
+
+                  return matchesSearch && matchesType && matchesTab;
                 });
 
                 if (filtered.length === 0) {

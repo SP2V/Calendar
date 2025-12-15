@@ -42,7 +42,7 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
     const handleInputChange = (e) => {
         const newValue = e.target.value;
         setInputValue(newValue);
-        
+
         if (!open) {
             setOpen(true);
         }
@@ -53,7 +53,7 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
                 const filtered = timeOptions.filter(option => {
                     const optionStr = typeof option === 'string' ? option : option.toString();
                     return optionStr.toLowerCase().includes(newValue.toLowerCase()) ||
-                           optionStr.toLowerCase().startsWith(newValue.toLowerCase());
+                        optionStr.toLowerCase().startsWith(newValue.toLowerCase());
                 });
                 setFilteredOptions(filtered);
             } else {
@@ -106,7 +106,7 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
                 onClick={() => {
                     if (!open) {
                         // แก้ไข 4: กดลูกศรก็ต้องแสดงทั้งหมด
-                        setFilteredOptions(timeOptions || []); 
+                        setFilteredOptions(timeOptions || []);
                         setOpen(true);
                         inputRef.current?.focus();
                         setTimeout(() => {
@@ -135,7 +135,7 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
                                 title={bookedSlots.includes(optionValue) ? 'เวลานี้ถูกจองแล้ว' : ''}
                             >
                                 {optionValue}
-                                {bookedSlots.includes(optionValue) && <span style={{marginLeft: '5px', color: '#666'}}>(จองแล้ว)</span>}
+                                {bookedSlots.includes(optionValue) && <span style={{ marginLeft: '5px', color: '#666' }}>(จองแล้ว)</span>}
                             </div>
                         );
                     })}

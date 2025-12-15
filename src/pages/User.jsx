@@ -988,11 +988,10 @@ const User = () => {
 
                           return (
                             <div key={item.id} className={`booking-card ${activeTab === 'completed' ? 'history-card' : ''}`}>
-                              {activeTab === 'completed' && (
-                                <div className="history-status-badge">
-                                  <span className="status-dot"></span> เสร็จสิ้นแล้ว
-                                </div>
-                              )}
+                              <div className={`history-status-badge ${activeTab === 'upcoming' ? 'upcoming' : ''}`}>
+                                <span className={`status-dot ${activeTab === 'upcoming' ? 'upcoming' : ''}`}></span>
+                                {activeTab === 'upcoming' ? 'กำลังดำเนินการ' : 'เสร็จสิ้นแล้ว'}
+                              </div>
 
                               <div className="card-header">
                                 <h3 className="card-type">{item.type || 'นัดหมาย'}</h3>
@@ -1051,11 +1050,11 @@ const User = () => {
                           <thead>
                             <tr>
                               <th>หัวข้อ</th>
-                              <th style={{ padding: '5px', width: '50px',}}>กิจกรรม</th>
+                              <th style={{ padding: '5px', width: '50px', }}>กิจกรรม</th>
                               <th>วันที่</th>
                               <th>เวลา</th>
                               <th>รูปแบบ</th>
-                              {activeTab === 'completed' && <th>สถานะ</th>}
+                              <th style={{ width: '90px', padding: '1rem', textAlign: 'center' }}>สถานะ</th>
                               <th>การดำเนินการ</th>
                             </tr>
                           </thead>
@@ -1069,7 +1068,7 @@ const User = () => {
 
                               return (
                                 <tr key={item.id}>
-                                  <td className="cell-subject"style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  <td className="cell-subject" style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     {item.subject || item.title.replace(/^\[.*?\]\s*/, '')}
                                   </td>
                                   <td style={{ padding: '5px', width: '50px', textAlign: 'center' }}>{item.type || 'นัดหมาย'}</td>
@@ -1080,13 +1079,12 @@ const User = () => {
                                       {isOnline ? 'Online' : 'On-site'}
                                     </span>
                                   </td>
-                                  {activeTab === 'completed' && (
-                                    <td style={{ padding: '2px', width: '90px', textAlign: 'center' }}>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#059669', fontWeight: 500, fontSize: '0.9rem',textAlign: 'center' }}>
-                                        <span className="status-dot"></span> เสร็จสิ้นแล้ว
-                                      </div>
-                                    </td>
-                                  )}
+                                  <td style={{ padding: '2px', width: '90px', textAlign: 'center' }}>
+                                    <div className={`history-status-badge ${activeTab === 'upcoming' ? 'upcoming' : ''}`} style={{ position: 'static', justifyContent: 'center' }}>
+                                      <span className={`status-dot ${activeTab === 'upcoming' ? 'upcoming' : ''}`}></span>
+                                      {activeTab === 'upcoming' ? 'กำลังดำเนินการ' : 'เสร็จสิ้นแล้ว'}
+                                    </div>
+                                  </td>
                                   <td>
                                     <div className="table-actions">
                                       <button className="btn-table-action view" onClick={() => handleViewBookingDetails(item)}>

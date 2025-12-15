@@ -5,6 +5,7 @@ import PopupModal from "../components/PopupModal";
 import ErrorPopup from "../components/ErrorPopup";
 import BookingPreviewModal from "../components/BookingPreviewModal";
 import CustomDurationModal from "../components/CustomDurationModal";
+import CancelBookingModal from "../components/CancelBookingModal";
 import {
   subscribeSchedules,
   subscribeActivityTypes,
@@ -16,7 +17,7 @@ import {
 import { onAuthStateChanged } from 'firebase/auth'; // Import auth listener
 import { useNavigate } from 'react-router-dom';
 import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarService';
-import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut } from 'lucide-react';
+import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut, SettingsIcon } from 'lucide-react';
 
 // --- ICONS (SVG) ---
 const CalendarIcon = ({ style }) => (
@@ -67,6 +68,7 @@ const User = () => {
 
   // View/Delete State
   const [viewingBooking, setViewingBooking] = useState(null); // For Viewing Details
+  const [cancellingBooking, setCancellingBooking] = useState(null); // For Cancel Modal
   const [imgError, setImgError] = useState(false); // New state for image error handling
 
   const profileRef = useRef(null);
@@ -530,29 +532,36 @@ const User = () => {
   };
 
   // --- ACTIONS ---
-  const handleDeleteBooking = async (id) => {
-    if (window.confirm('คุณต้องการลบรายการนัดหมายนี้ใช่หรือไม่?')) {
-      try {
-        // 1. Find the booking to get Google Calendar Event ID
-        const bookingToDelete = bookings.find(b => b.id === id);
+  // --- ACTIONS ---
+  const handleDeleteBooking = (id) => {
+    const bookingToDelete = bookings.find(b => b.id === id);
+    if (bookingToDelete) {
+      setCancellingBooking(bookingToDelete);
+    }
+  };
 
-        // 2. Delete from Google Calendar if linked
-        if (bookingToDelete && bookingToDelete.googleCalendarEventId) {
-          try {
-            await deleteCalendarEvent(bookingToDelete.googleCalendarEventId);
-          } catch (calError) {
-            console.warn("Failed to delete from Google Calendar:", calError);
-            // Continue to delete from local DB even if calendar fails
-          }
+  const confirmDeleteBooking = async (id) => {
+    setCancellingBooking(null); // Close modal
+    try {
+      // 1. Find the booking to get Google Calendar Event ID
+      const bookingToDelete = bookings.find(b => b.id === id);
+
+      // 2. Delete from Google Calendar if linked
+      if (bookingToDelete && bookingToDelete.googleCalendarEventId) {
+        try {
+          await deleteCalendarEvent(bookingToDelete.googleCalendarEventId);
+        } catch (calError) {
+          console.warn("Failed to delete from Google Calendar:", calError);
+          // Continue to delete from local DB even if calendar fails
         }
-
-        // 3. Delete from Firestore
-        await deleteBooking(id);
-        setPopupMessage({ type: 'success', message: 'ลบรายการเรียบร้อยแล้ว' });
-      } catch (error) {
-        console.error("Delete Error:", error);
-        setPopupMessage({ type: 'error', message: 'ลบรายการไม่สำเร็จ' });
       }
+
+      // 3. Delete from Firestore
+      await deleteBooking(id);
+      setPopupMessage({ type: 'success', message: 'ลบรายการเรียบร้อยแล้ว' });
+    } catch (error) {
+      console.error("Delete Error:", error);
+      setPopupMessage({ type: 'error', message: 'ลบรายการไม่สำเร็จ' });
     }
   };
 
@@ -707,10 +716,6 @@ const User = () => {
 
                   <div className="dropdown-divider"></div>
 
-                  <button className="dropdown-item">
-                    <UserIcon size={18} />
-                    <span>โปรไฟล์</span>
-                  </button>
                   <button
                     className={`dropdown-item ${activeTab === 'completed' ? 'active' : ''}`}
                     onClick={() => {
@@ -722,6 +727,12 @@ const User = () => {
                   >
                     <History size={18} />
                     <span>ประวัติการนัดหมาย</span>
+                  </button>
+
+
+                  <button className="dropdown-item">
+                    <SettingsIcon size={18} />
+                    <span>การตั้งค่า</span>
                   </button>
 
                   <div className="dropdown-divider"></div>
@@ -1018,7 +1029,7 @@ const User = () => {
                             <div key={item.id} className={`booking-card ${activeTab === 'completed' ? 'history-card' : ''}`}>
                               <div className={`history-status-badge ${activeTab === 'upcoming' ? 'upcoming' : ''}`}>
                                 <span className={`status-dot ${activeTab === 'upcoming' ? 'upcoming' : ''}`}></span>
-                                {activeTab === 'upcoming' ? 'กำลังดำเนินการ' : 'เสร็จสิ้นแล้ว'}
+                                {activeTab === 'upcoming' ? 'กำลังจะมาถึง' : 'เสร็จสิ้นแล้ว'}
                               </div>
 
                               <div className="card-header">
@@ -1110,7 +1121,7 @@ const User = () => {
                                   <td style={{ padding: '2px', width: '90px', textAlign: 'center' }}>
                                     <div className={`history-status-badge ${activeTab === 'upcoming' ? 'upcoming' : ''}`} style={{ position: 'static', justifyContent: 'center' }}>
                                       <span className={`status-dot ${activeTab === 'upcoming' ? 'upcoming' : ''}`}></span>
-                                      {activeTab === 'upcoming' ? 'กำลังดำเนินการ' : 'เสร็จสิ้นแล้ว'}
+                                      {activeTab === 'upcoming' ? 'กำลังจะมาถึง' : 'เสร็จสิ้นแล้ว'}
                                     </div>
                                   </td>
                                   <td>
@@ -1222,6 +1233,13 @@ const User = () => {
         onConfirm={handleCustomDurationConfirm}
         initialValue={customDuration}
         initialUnit={customDurationUnit}
+      />
+
+      <CancelBookingModal
+        isOpen={!!cancellingBooking}
+        booking={cancellingBooking}
+        onClose={() => setCancellingBooking(null)}
+        onConfirm={confirmDeleteBooking}
       />
 
       {popupMessage.type === 'success' && <PopupModal message={popupMessage.message} onClose={() => setPopupMessage({ type: '', message: '' })} />}

@@ -694,7 +694,15 @@ const User = () => {
                     <UserIcon size={18} />
                     <span>โปรไฟล์</span>
                   </button>
-                  <button className="dropdown-item">
+                  <button
+                    className={`dropdown-item ${activeTab === 'completed' ? 'active' : ''}`}
+                    onClick={() => {
+                      setActiveTab('completed');
+                      setCurrentPage(1);
+                      setIsViewMode(true);
+                      setIsProfileOpen(false);
+                    }}
+                  >
                     <History size={18} />
                     <span>ประวัติการนัดหมาย</span>
                   </button>

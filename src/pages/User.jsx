@@ -979,7 +979,7 @@ const User = () => {
                   const matchesTab = activeTab === 'upcoming' ? !isCompleted : isCompleted;
 
                   return matchesSearch && matchesType && matchesTab;
-                });
+                }).sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
 
                 if (filtered.length === 0) {
                   return (

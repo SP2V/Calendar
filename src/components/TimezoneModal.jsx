@@ -1,57 +1,16 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './TimezoneModal.css';
 import { Clock, ChevronDown, AlertCircle } from 'lucide-react';
+import { thaiTimezones } from '../constants/timezones';
 
 const TimezoneModal = ({ isOpen, onClose }) => {
     // State
-    const [selectedTimezoneLabel, setSelectedTimezoneLabel] = useState("(GMT+07:00) Asia/Bangkok");
+    const [selectedTimezoneLabel, setSelectedTimezoneLabel] = useState("(GMT+07:00) เวลาอินโดจีน - กรุงเทพ");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
 
     // Filter state
     const [filterText, setFilterText] = useState("");
-
-    // Memoize the timezone list generation
-    const timezoneList = useMemo(() => {
-        try {
-            const timeZones = Intl.supportedValuesOf('timeZone');
-
-            const list = timeZones.map(tz => {
-                try {
-                    const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'longOffset' }).formatToParts(new Date());
-                    const offsetPart = parts.find(p => p.type === 'timeZoneName');
-                    const offset = offsetPart ? offsetPart.value : 'GMT+00:00';
-
-                    let totalMinutes = 0;
-                    if (offset.includes('GMT')) {
-                        const raw = offset.replace('GMT', '').trim();
-                        if (raw !== '') {
-                            const sign = raw.startsWith('-') ? -1 : 1;
-                            const [h, m] = raw.substring(1).split(':').map(Number);
-                            totalMinutes = sign * ((h * 60) + (m || 0));
-                        }
-                    }
-
-                    return {
-                        label: `(${offset}) ${tz}`,
-                        offsetMinutes: totalMinutes,
-                        tz: tz
-                    };
-                } catch (e) {
-                    return null;
-                }
-            }).filter(Boolean);
-
-            list.sort((a, b) => a.offsetMinutes - b.offsetMinutes);
-
-            // Return full objects for rendering
-            return list;
-        } catch (error) {
-            console.error("Intl API not supported", error);
-            // Fallback
-            return [{ label: '(GMT+07:00) Asia/Bangkok', tz: 'Asia/Bangkok' }];
-        }
-    }, []);
 
     // Effect to prevent body scroll
     useEffect(() => {
@@ -68,14 +27,14 @@ const TimezoneModal = ({ isOpen, onClose }) => {
     // Effect to set default
     useEffect(() => {
         if (isOpen) {
-            const defaultTz = timezoneList.find(t => t.tz.includes('Bangkok'));
+            const defaultTz = thaiTimezones.find(t => t.label.includes('กรุงเทพ'));
             if (defaultTz) {
                 setSelectedTimezoneLabel(defaultTz.label);
-            } else if (timezoneList.length > 0) {
-                setSelectedTimezoneLabel(timezoneList[0].label);
+            } else if (thaiTimezones.length > 0) {
+                setSelectedTimezoneLabel(thaiTimezones[0].label);
             }
         }
-    }, [isOpen, timezoneList]);
+    }, [isOpen]);
 
     // Click outside handler
     useEffect(() => {
@@ -102,7 +61,7 @@ const TimezoneModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
     // Filtered options
-    const filteredOptions = timezoneList.filter(item =>
+    const filteredOptions = thaiTimezones.filter(item =>
         item.label.toLowerCase().includes(filterText.toLowerCase())
     );
 

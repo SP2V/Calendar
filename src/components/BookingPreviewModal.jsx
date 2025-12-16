@@ -95,7 +95,10 @@ const BookingPreviewModal = ({ isOpen, onClose, onConfirm, data, readOnly = fals
                 <div className="modal-footer">
                     {!readOnly && (
                         <>
-                            <button className="btn-modal btn-edit" onClick={onClose}>
+                            <button className="btn-modal btn-edit" onClick={() => {
+                                document.body.style.overflow = 'unset';
+                                onClose();
+                            }}>
                                 แก้ไข
                             </button>
                             <button className="btn-modal btn-confirm-modal" onClick={onConfirm}>

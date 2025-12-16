@@ -1,8 +1,3 @@
-/* Append strict max-height override */
-.timezone-dropdown .dropdown-list {
-    max-height: 200px !important;
-}
-
 .timezone-modal-overlay {
     position: fixed;
     top: 0;
@@ -18,100 +13,188 @@
 
 .timezone-modal-box {
     background: white;
-    width: 400px;
+    width: 480px;
+    /* Slightly wider for the card layout */
     max-width: 90%;
-    border-radius: 35px;
-    /* More rounded as per image */
+    border-radius: 24px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    padding: 0;
-    /* overflow: hidden; Removed to allow dropdown overflow */
+    padding: 32px;
     animation: fadeIn 0.2s ease-out;
     font-family: 'Kanit', sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
-.timezone-header {
-    padding: 24px;
-    text-align: center;
-    border-bottom: 1px solid #f1f5f9;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
+/* Header */
+.timezone-header-redesign {
+    text-align: left;
 }
 
-.timezone-title-row {
+.timezone-title-main {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.timezone-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+/* Selection Card */
+.timezone-selection-card {
+    background-color: #f8fafc;
+    /* Light gray/blue tint */
+    border-radius: 12px;
+    padding: 16px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
+    gap: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: relative;
+    /* For dropdown positioning */
 }
 
-.timezone-title-text {
-    font-size: 1.5rem;
-    font-weight: 500;
+.timezone-selection-card:hover {
+    background-color: #f1f5f9;
+}
+
+.timezone-icon-box {
+    width: 40px;
+    height: 40px;
+    background-color: #2563eb;
+    /* Blue */
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    color: white;
+}
+
+.timezone-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.timezone-info-label {
+    font-size: 0.85rem;
+    font-weight: 600;
     color: #111827;
 }
 
-.timezone-body {
-    padding: 34px;
-    padding-top: 24px;
+.timezone-info-value {
+    font-size: 0.9rem;
+    color: #4b5563;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.timezone-label {
-    display: block;
-    font-size: 1rem;
-    color: #1f2937;
-    margin-bottom: 8px;
-    font-weight: 500;
+.timezone-chevron {
+    color: #111827;
 }
 
-.timezone-select-wrapper {
-    position: relative;
-    margin-bottom: 16px;
-}
-
-.timezone-select {
-    width: 100%;
-    padding: 10px 12px;
+/* Custom Dropdown List overlapping */
+.timezone-dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-family: 'Kanit', sans-serif;
-    font-size: 0.95rem;
-    color: #374151;
-    appearance: none;
-    background-color: white;
-    cursor: pointer;
-    outline: none;
+    border-radius: 12px;
+    margin-top: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 50;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-/* Custom chevron if needed, but native is okay for now or we can use an icon overlay */
-
-.timezone-checkbox-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-top: 16px;
-    cursor: pointer;
-}
-
-.timezone-checkbox {
-    margin-top: 3px;
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-}
-
-.timezone-checkbox:hover {
-    border-color: #93c5fd;
-}
-
-.timezone-checkbox:checked {
-    background-color: #93c5fd;
-    border-color: #93c5fd;
-}   
-
-.timezone-checkbox-text {
+.timezone-dropdown-item {
+    padding: 10px 16px;
     font-size: 0.9rem;
     color: #374151;
+    cursor: pointer;
+}
+
+.timezone-dropdown-item:hover {
+    background-color: #f3f4f6;
+}
+
+.timezone-dropdown-item.active {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+/* Action Button */
+.timezone-action-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.timezone-action-btn:hover {
+    background-color: #1d4ed8;
+}
+
+/* Warning Box */
+.timezone-warning-box {
+    background-color: #fefce8;
+    /* Yellow/Orange tint */
+    border: 1px solid #fde047;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.timezone-warning-icon {
+    color: #d97706;
+    /* Dark orange */
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.timezone-warning-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.timezone-warning-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #92400e;
+}
+
+.timezone-warning-desc {
+    font-size: 0.8rem;
+    color: #92400e;
     line-height: 1.4;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }

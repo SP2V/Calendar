@@ -8,6 +8,7 @@ import BookingPreviewModal from "../components/BookingPreviewModal";
 import CustomDurationModal from "../components/CustomDurationModal";
 import CancelBookingModal from "../components/CancelBookingModal";
 import LogoutModal from "../components/LogoutModal";
+import TimezoneModal from "../components/TimezoneModal";
 import {
   subscribeSchedules,
   subscribeActivityTypes,
@@ -656,6 +657,8 @@ const User = () => {
 
   // Logout Logic
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  // Timezone Logic
+  const [showTimezoneModal, setShowTimezoneModal] = useState(false);
 
   const handleLogoutClick = () => {
     // Close dropdown and show modal
@@ -742,7 +745,7 @@ const User = () => {
                   </button>
 
 
-                  <button className="dropdown-item">
+                  <button className="dropdown-item" onClick={() => { setIsProfileOpen(false); setShowTimezoneModal(true); }}>
                     <img src={TimeZoneIcon} alt="Timezone" style={{ width: '18px', height: '18px' }} />
                     <span>เขตเวลา</span>
                   </button>
@@ -764,6 +767,10 @@ const User = () => {
           isOpen={showLogoutModal}
           onClose={() => setShowLogoutModal(false)}
           onConfirm={confirmLogout}
+        />
+        <TimezoneModal
+          isOpen={showTimezoneModal}
+          onClose={() => setShowTimezoneModal(false)}
         />
 
         {/* --- CONTENT --- */}

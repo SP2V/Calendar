@@ -1,0 +1,117 @@
+/* Append strict max-height override */
+.timezone-dropdown .dropdown-list {
+    max-height: 200px !important;
+}
+
+.timezone-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.timezone-modal-box {
+    background: white;
+    width: 400px;
+    max-width: 90%;
+    border-radius: 35px;
+    /* More rounded as per image */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 0;
+    /* overflow: hidden; Removed to allow dropdown overflow */
+    animation: fadeIn 0.2s ease-out;
+    font-family: 'Kanit', sans-serif;
+}
+
+.timezone-header {
+    padding: 24px;
+    text-align: center;
+    border-bottom: 1px solid #f1f5f9;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+.timezone-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.timezone-title-text {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #111827;
+}
+
+.timezone-body {
+    padding: 34px;
+    padding-top: 24px;
+}
+
+.timezone-label {
+    display: block;
+    font-size: 1rem;
+    color: #1f2937;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.timezone-select-wrapper {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.timezone-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 0.95rem;
+    color: #374151;
+    appearance: none;
+    background-color: white;
+    cursor: pointer;
+    outline: none;
+}
+
+/* Custom chevron if needed, but native is okay for now or we can use an icon overlay */
+
+.timezone-checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 16px;
+    cursor: pointer;
+}
+
+.timezone-checkbox {
+    margin-top: 3px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+}
+
+.timezone-checkbox:hover {
+    border-color: #93c5fd;
+}
+
+.timezone-checkbox:checked {
+    background-color: #93c5fd;
+    border-color: #93c5fd;
+}   
+
+.timezone-checkbox-text {
+    font-size: 0.9rem;
+    color: #374151;
+    line-height: 1.4;
+}

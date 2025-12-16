@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./AdminDropdown.css";
 
-const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลือกเวลา", bookedSlots = [] }) => {
+const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลือกเวลา", bookedSlots = [], className = "" }) => {
     const [open, setOpen] = useState(false);
     const [inputValue, setInputValue] = useState(value || "");
     const [filteredOptions, setFilteredOptions] = useState(timeOptions || []);
@@ -90,7 +90,7 @@ const TimeDropdown = ({ value, onChange, timeOptions, placeholder = "เลื�
     };
 
     return (
-        <div className="time-dropdown" ref={dropdownRef}>
+        <div className={`time-dropdown ${className}`} ref={dropdownRef}>
             <input
                 ref={inputRef}
                 type="text"

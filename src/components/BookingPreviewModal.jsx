@@ -13,6 +13,18 @@ const BookingPreviewModal = ({ isOpen, onClose, onConfirm, data, readOnly = fals
         return `${d} ${months[m - 1]} ${y + 543}`;
     };
 
+    // Prevent body scroll when modal is open
+    React.useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     return (
         <div className="preview-modal-overlay">
             <div className="preview-modal-container">

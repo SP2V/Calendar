@@ -13,6 +13,18 @@ const CustomDurationModal = ({ isOpen, onClose, onConfirm, initialValue, initial
         }
     }, [isOpen, initialValue, initialUnit]);
 
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const handleConfirm = () => {

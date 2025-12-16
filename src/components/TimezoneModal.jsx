@@ -53,6 +53,18 @@ const TimezoneModal = ({ isOpen, onClose }) => {
         }
     }, []);
 
+    // Effect to prevent body scroll
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     // Effect to set default
     useEffect(() => {
         if (isOpen) {

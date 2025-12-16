@@ -3,6 +3,18 @@ import './CancelBookingModal.css';
 import { CalendarX } from 'lucide-react';
 
 const CancelBookingModal = ({ isOpen, onClose, onConfirm, booking }) => {
+    // Prevent body scroll when modal is open
+    React.useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     if (!isOpen || !booking) return null;
 
     // Format date and time for display

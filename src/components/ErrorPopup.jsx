@@ -3,6 +3,14 @@ import { FaExclamationCircle } from "react-icons/fa";
 import "./ErrorPopup.css";
 
 const ErrorPopup = ({ message, onClose }) => {
+  // Prevent body scroll on mount
+  React.useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   return (
     <div className="error-popup-overlay">
       <div className="error-popup-box">

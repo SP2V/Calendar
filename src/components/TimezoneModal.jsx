@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './TimezoneModal.css';
-import { Clock, ChevronDown, AlertCircle } from 'lucide-react';
+import { Clock, ChevronDown, AlertCircle, X } from 'lucide-react';
 import { thaiTimezones } from '../constants/timezones';
+import { TbTimezone } from "react-icons/tb";
 
-const TimezoneModal = ({ isOpen, onClose }) => {
+const TimezoneModal = ({ isOpen, onClose, onSuccess }) => {
     // State
     const [selectedTimezoneLabel, setSelectedTimezoneLabel] = useState("(GMT+07:00) เวลาอินโดจีน - กรุงเทพ");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -66,19 +67,22 @@ const TimezoneModal = ({ isOpen, onClose }) => {
     );
 
     return (
-        <div className="timezone-modal-overlay" onClick={onClose}>
+        <div className="timezone-modal-overlay">
             <div className="timezone-modal-box" onClick={e => e.stopPropagation()}>
 
                 {/* Header */}
                 <div className="timezone-header-redesign">
                     <div className="timezone-title-main">การตั้งค่าเขตเวลา</div>
                     <div className="timezone-subtitle">จัดการเขตเวลาสำหรับการแสดงผลและการแจ้งเตือน</div>
+                    <button className="timezone-close-btn" onClick={onClose}>
+                        <X size={24} />
+                    </button>
                 </div>
 
                 {/* Selection Card */}
                 <div className="timezone-selection-card" ref={dropdownRef} onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
                     <div className="timezone-icon-box">
-                        <Clock size={20} />
+                        <TbTimezone size={20} />
                     </div>
                     <div className="timezone-info">
                         <span className="timezone-info-label">เขตเวลาปัจจุบัน</span>
@@ -119,7 +123,7 @@ const TimezoneModal = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Action Button */}
-                <button className="timezone-action-btn" onClick={onClose}>
+                <button className="timezone-action-btn" onClick={() => onSuccess && onSuccess(selectedTimezoneLabel)}>
                     เปลี่ยนเขตเวลา
                 </button>
 

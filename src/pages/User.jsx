@@ -9,6 +9,7 @@ import CustomDurationModal from "../components/CustomDurationModal";
 import CancelBookingModal from "../components/CancelBookingModal";
 import LogoutModal from "../components/LogoutModal";
 import TimezoneModal from "../components/TimezoneModal";
+import TimezoneSuccessModal from "../components/TimezoneSuccessModal";
 import {
   subscribeSchedules,
   subscribeActivityTypes,
@@ -21,6 +22,7 @@ import { onAuthStateChanged } from 'firebase/auth'; // Import auth listener
 import { useNavigate } from 'react-router-dom';
 import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarService';
 import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut, SettingsIcon } from 'lucide-react';
+import { TbTimezone } from "react-icons/tb";
 
 // --- ICONS (SVG) ---
 const CalendarIcon = ({ style }) => (
@@ -659,6 +661,19 @@ const User = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   // Timezone Logic
   const [showTimezoneModal, setShowTimezoneModal] = useState(false);
+  const [showTimezoneSuccessModal, setShowTimezoneSuccessModal] = useState(false);
+  const [successTimezoneInfo, setSuccessTimezoneInfo] = useState('');
+
+  const handleTimezoneSuccess = (tzLabel) => {
+    setShowTimezoneModal(false);
+    setSuccessTimezoneInfo(tzLabel);
+    setShowTimezoneSuccessModal(true);
+
+    // Auto close success modal after 3 seconds (optional)
+    setTimeout(() => {
+      setShowTimezoneSuccessModal(false);
+    }, 3000);
+  };
 
   const handleLogoutClick = () => {
     // Close dropdown and show modal
@@ -746,7 +761,7 @@ const User = () => {
 
 
                   <button className="dropdown-item" onClick={() => { setIsProfileOpen(false); setShowTimezoneModal(true); }}>
-                    <img src={TimeZoneIcon} alt="Timezone" style={{ width: '18px', height: '18px' }} />
+                    <TbTimezone style={{ width: '18px', height: '18px' }} />
                     <span>เขตเวลา</span>
                   </button>
 
@@ -771,6 +786,12 @@ const User = () => {
         <TimezoneModal
           isOpen={showTimezoneModal}
           onClose={() => setShowTimezoneModal(false)}
+          onSuccess={handleTimezoneSuccess}
+        />
+        <TimezoneSuccessModal
+          isOpen={showTimezoneSuccessModal}
+          onClose={() => setShowTimezoneSuccessModal(false)}
+          timezoneLabel={successTimezoneInfo}
         />
 
         {/* --- CONTENT --- */}

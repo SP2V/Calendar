@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './User.css';
+import TimeZoneIcon from '../assets/TimeZone.jpg';
 import TimeDropdown from "../components/AdminDropdown";
 import PopupModal from "../components/PopupModal";
 import ErrorPopup from "../components/ErrorPopup";
 import BookingPreviewModal from "../components/BookingPreviewModal";
 import CustomDurationModal from "../components/CustomDurationModal";
 import CancelBookingModal from "../components/CancelBookingModal";
+import LogoutModal from "../components/LogoutModal";
 import {
   subscribeSchedules,
   subscribeActivityTypes,
@@ -652,7 +654,17 @@ const User = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  // Logout Logic
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleLogoutClick = () => {
+    // Close dropdown and show modal
+    setIsProfileOpen(false);
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
     navigate('/login');
   };
 
@@ -731,13 +743,13 @@ const User = () => {
 
 
                   <button className="dropdown-item">
-                    <SettingsIcon size={18} />
-                    <span>การตั้งค่า</span>
+                    <img src={TimeZoneIcon} alt="Timezone" style={{ width: '18px', height: '18px' }} />
+                    <span>เขตเวลา</span>
                   </button>
 
                   <div className="dropdown-divider"></div>
 
-                  <button className="dropdown-item logout" onClick={handleLogout}>
+                  <button className="dropdown-item logout" onClick={handleLogoutClick}>
                     <LogOut size={18} />
                     <span>ออกจากระบบ</span>
                   </button>
@@ -746,6 +758,13 @@ const User = () => {
             </div>
           </div>
         </div>
+
+        {/* --- MODALS --- */}
+        <LogoutModal
+          isOpen={showLogoutModal}
+          onClose={() => setShowLogoutModal(false)}
+          onConfirm={confirmLogout}
+        />
 
         {/* --- CONTENT --- */}
         {!isViewMode ? (

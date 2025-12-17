@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './User.css';
-import TimeZoneIcon from '../assets/TimeZone.jpg';
 import TimeDropdown from "../components/AdminDropdown";
 import PopupModal from "../components/PopupModal";
 import ErrorPopup from "../components/ErrorPopup";

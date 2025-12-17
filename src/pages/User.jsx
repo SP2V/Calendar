@@ -104,9 +104,9 @@ const User = () => {
       .filter(b => {
         if (b.status === 'cancelled') return false;
         const start = new Date(b.startTime);
-        // Show if started within last 1 hour OR starts in next 30 mins
-        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-        return start > oneHourAgo && start <= next30Minutes;
+        // Show if started within last 7 days OR starts in next 30 mins
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return start > oneWeekAgo && start <= next30Minutes && (currentUser && b.email === currentUser.email);
       })
       .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
@@ -145,7 +145,7 @@ const User = () => {
     });
 
     setNotifications(newNotifications);
-  }, [bookings, readNotificationIds]);
+  }, [bookings, readNotificationIds, currentUser]);
 
   // Persist read status
   useEffect(() => {

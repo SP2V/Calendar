@@ -8,6 +8,7 @@ import CustomDurationModal from "../components/CustomDurationModal";
 import CancelBookingModal from "../components/CancelBookingModal";
 import LogoutModal from "../components/LogoutModal";
 import TimezoneModal from "../components/TimezoneModal";
+import NotificationView from "../components/NotificationView";
 import TimezoneSuccessModal from "../components/TimezoneSuccessModal";
 import {
   subscribeSchedules,
@@ -20,7 +21,7 @@ import {
 import { onAuthStateChanged } from 'firebase/auth'; // Import auth listener
 import { useNavigate } from 'react-router-dom';
 import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarService';
-import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut, SettingsIcon } from 'lucide-react';
+import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut, SettingsIcon, Bell, Calendar as CalendarLucide, Clock as ClockLucide } from 'lucide-react';
 import { TbTimezone } from "react-icons/tb";
 
 // --- ICONS (SVG) ---
@@ -78,10 +79,92 @@ const User = () => {
   const profileRef = useRef(null);
 
   // Close profile dropdown when clicking outside
+  const notificationRef = useRef(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [activeNotificationTab, setActiveNotificationTab] = useState('All');
+
+  const [notifications, setNotifications] = useState([]);
+  const [readNotificationIds, setReadNotificationIds] = useState(() => {
+    const saved = localStorage.getItem('readNotificationIds');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    // Generate notifications from bookings
+    if (!bookings || bookings.length === 0) {
+      setNotifications([]);
+      return;
+    }
+
+    const now = new Date();
+    // Notify only 30 minutes before
+    const next30Minutes = new Date(now.getTime() + 30 * 60 * 1000);
+
+    const upcomingBookings = bookings
+      .filter(b => {
+        if (b.status === 'cancelled') return false;
+        const start = new Date(b.startTime);
+        // Show if started within last 1 hour OR starts in next 30 mins
+        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+        return start > oneHourAgo && start <= next30Minutes;
+      })
+      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+    const newNotifications = upcomingBookings.map(b => {
+      const start = new Date(b.startTime);
+      // const diffMs = start - now;
+      const end = new Date(b.endTime);
+
+      let timeDesc = '';
+      if (now > end) {
+        timeDesc = 'กิจกรรมจบไปแล้ว';
+      } else if (now >= start) {
+        timeDesc = 'กำลังดำเนินอยู่';
+      } else {
+        timeDesc = `จะเริ่มในอีก 30 นาที`;
+      }
+
+      // Thai Date
+      const dateThai = start.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+      const timeThai = start.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+      // Eng Date
+      const dateEng = start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      const timeEng = start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+      return {
+        id: b.id,
+        type: 'booking',
+        title: b.subject || 'การประชุมกำลังจะเริ่ม',
+        desc: timeDesc,
+        fullThaiInfo: `${dateThai} เวลา ${timeThai} (GMT+7)`,
+        footerTime: `${dateEng} · ${timeEng} (GMT+7)`,
+        dayOfMonth: start.getDate(),
+        read: readNotificationIds.includes(b.id) // Check if read
+      };
+    });
+
+    setNotifications(newNotifications);
+  }, [bookings, readNotificationIds]);
+
+  // Persist read status
+  useEffect(() => {
+    localStorage.setItem('readNotificationIds', JSON.stringify(readNotificationIds));
+  }, [readNotificationIds]);
+
+
+  const handleMarkAllAsRead = () => {
+    const allIds = notifications.map(n => n.id);
+    setReadNotificationIds(prev => [...new Set([...prev, ...allIds])]);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setIsProfileOpen(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false);
       }
     };
 
@@ -92,7 +175,12 @@ const User = () => {
   }, []);
 
   // UI States
-  const [isViewMode, setIsViewMode] = useState(false);
+  const [currentView, setCurrentView] = useState('form'); // 'form', 'list', 'notifications'
+
+  // Mapping for backward compatibility
+  const isViewMode = currentView === 'list';
+  const setIsViewMode = (mode) => setCurrentView(mode ? 'list' : 'form');
+
   const [popupMessage, setPopupMessage] = useState({ type: '', message: '' });
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -377,7 +465,6 @@ const User = () => {
   };
 
 
-
   // Helper to match Hex to Google Color ID
   const mapHexToGoogleColorId = (hex) => {
     if (!hex) return '7'; // Default Peacock (Blue)
@@ -535,7 +622,6 @@ const User = () => {
     }
   };
 
-  // --- ACTIONS ---
   // --- ACTIONS ---
   const handleDeleteBooking = (id) => {
     const bookingToDelete = bookings.find(b => b.id === id);
@@ -697,13 +783,124 @@ const User = () => {
             <div className="user-header-icon-box"><CalendarIcon /></div>
             <div className="user-header-info">
               <h1>Book an Appointment</h1>
-              <p>{isViewMode ? 'รายการจองนัดหมาย' : 'จองตารางนัดหมาย'}</p>
+              <p>
+                {currentView === 'list' ? 'รายการจองนัดหมาย' :
+                  currentView === 'notifications' ? 'การแจ้งเตือนทั้งหมด' :
+                    'จองตารางนัดหมาย'}
+              </p>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <button className="user-header-btn-back" onClick={() => setIsViewMode(!isViewMode)}>
-              {isViewMode ? '+ เพิ่มรายการ' : 'รายการนัดหมายของฉัน'}
+            <button className="user-header-btn-back" onClick={() => {
+              if (currentView === 'notifications') setCurrentView('form');
+              else if (currentView === 'list') setCurrentView('form');
+              else setCurrentView('list');
+            }}>
+              {currentView === 'list' ? '+ เพิ่มรายการ' :
+                currentView === 'notifications' ? 'รายการนัดหมายของฉัน' :
+                  'รายการนัดหมายของฉัน'}
             </button>
+
+            {/* Notification Bell */}
+            <div className="user-notification-container" ref={notificationRef} style={{ position: 'relative' }}>
+              <button
+                className="user-header-bell-btn"
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
+                <Bell size={25} />
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span className="notification-badge-count">{notifications.filter(n => !n.read).length}</span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="profile-dropdown-menu notification-dropdown-override" style={{ width: '380px', right: '-80px' }}>
+                  <div className="dropdown-header-info" style={{ flexDirection: 'column', alignItems: 'flex-start', background: 'white', padding: '10px 16px 0 16px' }}>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem' }}>การแจ้งเตือน</h3>
+                    <div className="filter-tabs" style={{ marginBottom: '10px', width: '100%', padding: 0 }}>
+                      {['All', 'Booking', 'Timezone'].map(tab => (
+                        <button
+                          key={tab}
+                          className={`tab-btn ${activeNotificationTab === tab ? 'active' : ''}`}
+                          style={{ flex: 1, padding: '6px' }}
+                          onClick={() => setActiveNotificationTab(tab)}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="dropdown-divider"></div>
+
+                  <div className="notification-list-scroll" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                    {notifications.length === 0 ? (
+                      <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>ไม่มีการแจ้งเตือน</div>
+                    ) : (
+                      notifications
+                        .filter(n => activeNotificationTab === 'All' ? true : n.type === activeNotificationTab.toLowerCase())
+                        .map(item => (
+                          <div key={item.id} className={`dropdown-item ${!item.read ? 'unread' : ''}`} style={{ alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #f3f4f6', backgroundColor: '#fff', cursor: 'default' }}>
+                            <div style={{ position: 'relative', marginRight: '12px' }}>
+                              <div style={{
+                                width: '40px', height: '40px', borderRadius: '10px',
+                                background: item.type === 'timezone' ? '#fef2f2' : '#f0f9ff',
+                                color: item.type === 'timezone' ? '#ef4444' : '#3b82f6',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                                border: '1px solid white',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                              }}>
+                                {item.type === 'timezone' ? <ClockLucide size={20} /> : (
+                                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <CalendarLucide size={20} strokeWidth={2} />
+                                    <span style={{ position: 'absolute', top: '5px', fontSize: '8px', fontWeight: 'bold' }}>{item.dayOfMonth}</span>
+                                  </div>
+                                )}
+                              </div>
+                              {!item.read && (
+                                <span style={{
+                                  position: 'absolute', top: '-2px', right: '-2px',
+                                  width: '10px', height: '10px', borderRadius: '50%',
+                                  background: '#2563eb', border: '2px solid white'
+                                }}></span>
+                              )}
+                            </div>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '2px' }}>
+                                <span style={{
+                                  fontWeight: 600, fontSize: '0.95rem', color: '#1f2937', marginBottom: '2px',
+                                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block'
+                                }}>{item.title}</span>
+                                <span style={{ fontSize: '0.85rem', color: '#6b7280', lineHeight: '1.4', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                                  {item.desc} {item.fullThaiInfo}
+                                </span>
+                              </div>
+                              <span style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>{item.footerTime}</span>
+                            </div>
+                          </div>
+                        ))
+                    )}
+                  </div>
+
+                  <div className="dropdown-divider"></div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px' }}>
+                    <button
+                      style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '0.85rem', cursor: 'pointer' }}
+                      onClick={handleMarkAllAsRead}
+                    >
+                      ทำเครื่องหมายอ่านทั้งหมด
+                    </button>
+                    <button
+                      style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500 }}
+                      onClick={() => { setShowNotifications(false); setCurrentView('notifications'); }}
+                    >
+                      ดูการแจ้งเตือนทั้งหมด
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Profile Badge */}
             <div className="user-profile-container" ref={profileRef} style={{ position: 'relative', zIndex: 100 }}>
@@ -794,7 +991,9 @@ const User = () => {
         />
 
         {/* --- CONTENT --- */}
-        {!isViewMode ? (
+        {currentView === 'notifications' ? (
+          <NotificationView notifications={notifications} onMarkAllRead={handleMarkAllAsRead} />
+        ) : !isViewMode ? (
           <div className="user-form-card">
             <h2 className="user-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <FileTextIcon style={{ width: 30, height: 30, color: '#2563eb' }} />
@@ -957,6 +1156,7 @@ const User = () => {
             </div>
 
           </div>
+
         ) : (
           <div className="user-view-container">
             {/* Filter Bar */}
@@ -1264,14 +1464,16 @@ const User = () => {
       />
 
       {/* View Details Modal */}
-      {viewingBooking && (
-        <BookingPreviewModal
-          isOpen={!!viewingBooking}
-          onClose={() => setViewingBooking(null)}
-          readOnly={true}
-          data={viewingBooking}
-        />
-      )}
+      {
+        viewingBooking && (
+          <BookingPreviewModal
+            isOpen={!!viewingBooking}
+            onClose={() => setViewingBooking(null)}
+            readOnly={true}
+            data={viewingBooking}
+          />
+        )
+      }
 
       <CustomDurationModal
         isOpen={showDurationModal}
@@ -1290,7 +1492,7 @@ const User = () => {
 
       {popupMessage.type === 'success' && <PopupModal message={popupMessage.message} onClose={() => setPopupMessage({ type: '', message: '' })} />}
       {popupMessage.type === 'error' && <ErrorPopup message={popupMessage.message} onClose={() => setPopupMessage({ type: '', message: '' })} />}
-    </div>
+    </div >
   );
 };
 export default User;

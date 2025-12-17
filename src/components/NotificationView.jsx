@@ -44,7 +44,7 @@ const NotificationView = ({ notifications, onMarkAllRead }) => {
                                 {item.type === 'timezone' ? <ClockLucide size={24} /> : (
                                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <CalendarLucide size={24} strokeWidth={2} />
-                                        <span style={{ position: 'absolute', top: '6px', fontSize: '10px', fontWeight: 'bold' }}>{item.dayOfMonth}</span>
+                                        {/* <span style={{ position: 'absolute', top: '6px', fontSize: '10px', fontWeight: 'bold' }}>{item.dayOfMonth}</span> */}
                                     </div>
                                 )}
                                 {!item.read && <div className="nv-unread-dot"></div>}
@@ -67,9 +67,9 @@ const NotificationView = ({ notifications, onMarkAllRead }) => {
 
             <div className="nv-footer">
                 <span className="nv-footer-count">แสดง {filteredNotifications.length} รายการจากทั้งหมด {notifications.length} รายการ</span>
-                <button className="nv-mark-all-btn" onClick={onMarkAllRead}>
+                {/* <button className="nv-mark-all-btn" onClick={onMarkAllRead}>
                     ทำเครื่องหมายอ่านทั้งหมด
-                </button>
+                </button> */}
             </div>
         </div>
     );

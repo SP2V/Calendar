@@ -1129,7 +1129,7 @@ textarea.user-custom-input {
 }
 
 .dropdown-divider {
-  height: 1px;
+  height: 0.5px;
   background-color: #e5e7eb;
   margin: 4px 0;
 }

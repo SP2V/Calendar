@@ -108,7 +108,7 @@ const User = () => {
         const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         return start > oneWeekAgo && start <= next30Minutes && (currentUser && b.email === currentUser.email);
       })
-      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const newNotifications = upcomingBookings.map(b => {
       const start = new Date(b.startTime);
@@ -138,8 +138,9 @@ const User = () => {
         title: b.subject || 'การประชุมกำลังจะเริ่ม',
         desc: timeDesc,
         fullThaiInfo: `${dateThai} เวลา ${timeThai} (GMT+7)`,
-        footerTime: `${dateEng} · ${timeEng} (GMT+7)`,
         dayOfMonth: start.getDate(),
+        footerTime: `${dateEng}, ${timeEng}`,
+        startTime: b.startTime, // Add raw start time for filtering
         read: readNotificationIds.includes(b.id) // Check if read
       };
     });
@@ -817,7 +818,7 @@ const User = () => {
                 <div className="profile-dropdown-menu notification-dropdown-override" style={{ width: '380px', right: '-80px' }}>
                   <div className="dropdown-header-info" style={{ flexDirection: 'column', alignItems: 'flex-start', background: 'white', padding: '10px 16px 0 16px' }}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem' }}>การแจ้งเตือน</h3>
-                    <div className="filter-tabs" style={{ marginBottom: '10px', width: '100%', padding: 0 }}>
+                    {/* <div className="filter-tabs" style={{ marginBottom: '10px', width: '100%', padding: 0 }}>
                       {['All', 'Booking', 'Timezone'].map(tab => (
                         <button
                           key={tab}
@@ -828,7 +829,7 @@ const User = () => {
                           {tab}
                         </button>
                       ))}
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="dropdown-divider"></div>
@@ -838,7 +839,14 @@ const User = () => {
                       <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>ไม่มีการแจ้งเตือน</div>
                     ) : (
                       notifications
-                        .filter(n => activeNotificationTab === 'All' ? true : n.type === activeNotificationTab.toLowerCase())
+                        .filter(n => {
+                          if (!n.startTime) return false;
+                          const nDate = new Date(n.startTime);
+                          const today = new Date();
+                          return nDate.getDate() === today.getDate() &&
+                            nDate.getMonth() === today.getMonth() &&
+                            nDate.getFullYear() === today.getFullYear();
+                        })
                         .map(item => (
                           <div key={item.id} className={`dropdown-item ${!item.read ? 'unread' : ''}`} style={{ alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #f3f4f6', backgroundColor: '#fff', cursor: 'default' }}>
                             <div style={{ position: 'relative', marginRight: '12px' }}>
@@ -852,8 +860,8 @@ const User = () => {
                               }}>
                                 {item.type === 'timezone' ? <ClockLucide size={20} /> : (
                                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <CalendarLucide size={20} strokeWidth={2} />
-                                    <span style={{ position: 'absolute', top: '5px', fontSize: '8px', fontWeight: 'bold' }}>{item.dayOfMonth}</span>
+                                    <CalendarIcon size={20} strokeWidth={2} />
+                                    {/* <span style={{ position: 'absolute', top: '5px', fontSize: '8px', fontWeight: 'bold' }}>{item.dayOfMonth}</span> */}
                                   </div>
                                 )}
                               </div>
@@ -861,7 +869,7 @@ const User = () => {
                                 <span style={{
                                   position: 'absolute', top: '-2px', right: '-2px',
                                   width: '10px', height: '10px', borderRadius: '50%',
-                                  background: '#2563eb', border: '2px solid white'
+                                  background: '#ef4444', border: '2px solid white'
                                 }}></span>
                               )}
                             </div>
@@ -884,13 +892,7 @@ const User = () => {
 
                   <div className="dropdown-divider"></div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px' }}>
-                    <button
-                      style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '0.85rem', cursor: 'pointer' }}
-                      onClick={handleMarkAllAsRead}
-                    >
-                      ทำเครื่องหมายอ่านทั้งหมด
-                    </button>
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 16px' }}>
                     <button
                       style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500 }}
                       onClick={() => { setShowNotifications(false); setCurrentView('notifications'); }}

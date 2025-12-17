@@ -806,7 +806,7 @@ const User = () => {
             <div className="user-notification-container" ref={notificationRef} style={{ position: 'relative' }}>
               <button
                 className="user-header-bell-btn"
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={() => { setShowNotifications(!showNotifications); handleMarkAllAsRead(); }}
               >
                 <Bell size={25} />
                 {notifications.filter(n => !n.read).length > 0 && (

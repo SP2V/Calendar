@@ -89,10 +89,23 @@ const User = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [timezoneNotifications, setTimezoneNotifications] = useState(() => {
-    const saved = localStorage.getItem('timezoneNotifications');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Initial state empty, loaded via effect when user is known
+  const [timezoneNotifications, setTimezoneNotifications] = useState([]);
+
+  // Load timezone notifications for specific user
+  useEffect(() => {
+    if (currentUser && currentUser.email) {
+      const key = `timezoneNotifications_${currentUser.email}`;
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        setTimezoneNotifications(JSON.parse(saved));
+      } else {
+        setTimezoneNotifications([]);
+      }
+    } else {
+      setTimezoneNotifications([]);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     // Generate notifications from bookings
@@ -788,7 +801,10 @@ const User = () => {
     // Update State & LocalStorage
     const updatedTzNotifs = [newNotification, ...timezoneNotifications];
     setTimezoneNotifications(updatedTzNotifs);
-    localStorage.setItem('timezoneNotifications', JSON.stringify(updatedTzNotifs));
+
+    if (currentUser && currentUser.email) {
+      localStorage.setItem(`timezoneNotifications_${currentUser.email}`, JSON.stringify(updatedTzNotifs));
+    }
 
     // Auto close success modal after 3 seconds (optional)
     setTimeout(() => {

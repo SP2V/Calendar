@@ -44,7 +44,7 @@ const NotificationView = ({ notifications, onMarkAllRead }) => {
                                 {item.type === 'timezone' ? <ClockLucide size={24} /> : (
                                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <CalendarLucide size={24} strokeWidth={2} />
-                                        {/* <span style={{ position: 'absolute', top: '6px', fontSize: '10px', fontWeight: 'bold' }}>{item.dayOfMonth}</span> */}
+                                        <span style={{ position: 'absolute', top: '9px', fontSize: '9px', fontWeight: 'bold' }}>{item.dayOfMonth}</span>
                                     </div>
                                 )}
                                 {!item.read && <div className="nv-unread-dot"></div>}

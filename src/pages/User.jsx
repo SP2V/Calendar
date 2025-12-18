@@ -835,59 +835,61 @@ const User = () => {
                   <div className="dropdown-divider"></div>
 
                   <div className="notification-list-scroll" style={{ maxHeight: '350px', overflowY: 'auto' }}>
-                    {notifications.length === 0 ? (
-                      <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>ไม่มีการแจ้งเตือน</div>
-                    ) : (
-                      notifications
-                        .filter(n => {
-                          if (!n.startTime) return false;
-                          const nDate = new Date(n.startTime);
-                          const today = new Date();
-                          return nDate.getDate() === today.getDate() &&
-                            nDate.getMonth() === today.getMonth() &&
-                            nDate.getFullYear() === today.getFullYear();
-                        })
-                        .map(item => (
-                          <div key={item.id} className={`dropdown-item ${!item.read ? 'unread' : ''}`} style={{ alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #f3f4f6', backgroundColor: '#fff', cursor: 'default' }}>
-                            <div style={{ position: 'relative', marginRight: '12px' }}>
-                              <div style={{
-                                width: '40px', height: '40px', borderRadius: '10px',
-                                background: item.type === 'timezone' ? '#fef2f2' : '#f0f9ff',
-                                color: item.type === 'timezone' ? '#ef4444' : '#3b82f6',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                border: '1px solid white',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                              }}>
-                                {item.type === 'timezone' ? <ClockLucide size={20} /> : (
-                                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <CalendarIcon size={20} strokeWidth={2} />
-                                    {/* <span style={{ position: 'absolute', top: '5px', fontSize: '8px', fontWeight: 'bold' }}>{item.dayOfMonth}</span> */}
-                                  </div>
-                                )}
-                              </div>
-                              {!item.read && (
-                                <span style={{
-                                  position: 'absolute', top: '-2px', right: '-2px',
-                                  width: '10px', height: '10px', borderRadius: '50%',
-                                  background: '#ef4444', border: '2px solid white'
-                                }}></span>
+                    {(() => {
+                      const todayNotifications = notifications.filter(n => {
+                        if (!n.startTime) return false;
+                        const nDate = new Date(n.startTime);
+                        const today = new Date();
+                        return nDate.getDate() === today.getDate() &&
+                          nDate.getMonth() === today.getMonth() &&
+                          nDate.getFullYear() === today.getFullYear();
+                      });
+
+                      if (todayNotifications.length === 0) {
+                        return <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>ไม่มีการแจ้งเตือน</div>;
+                      }
+
+                      return todayNotifications.map(item => (
+                        <div key={item.id} className={`dropdown-item ${!item.read ? 'unread' : ''}`} style={{ alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #f3f4f6', backgroundColor: '#fff', cursor: 'default' }}>
+                          <div style={{ position: 'relative', marginRight: '12px' }}>
+                            <div style={{
+                              width: '40px', height: '40px', borderRadius: '10px',
+                              background: item.type === 'timezone' ? '#fef2f2' : '#f0f9ff',
+                              color: item.type === 'timezone' ? '#ef4444' : '#3b82f6',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                              border: '1px solid white',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                            }}>
+                              {item.type === 'timezone' ? <ClockLucide size={20} /> : (
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <CalendarIcon size={20} strokeWidth={2} />
+                                  <span style={{ position: 'absolute', top: '9px', fontSize: '8px', fontWeight: 'bold' }}>{item.dayOfMonth}</span>
+                                </div>
                               )}
                             </div>
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '2px' }}>
-                                <span style={{
-                                  fontWeight: 600, fontSize: '0.95rem', color: '#1f2937', marginBottom: '2px',
-                                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block'
-                                }}>{item.title}</span>
-                                <span style={{ fontSize: '0.85rem', color: '#6b7280', lineHeight: '1.4', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                                  {item.desc} {item.fullThaiInfo}
-                                </span>
-                              </div>
-                              <span style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>{item.footerTime}</span>
-                            </div>
+                            {!item.read && (
+                              <span style={{
+                                position: 'absolute', top: '-2px', right: '-2px',
+                                width: '10px', height: '10px', borderRadius: '50%',
+                                background: '#ef4444', border: '2px solid white'
+                              }}></span>
+                            )}
                           </div>
-                        ))
-                    )}
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '2px' }}>
+                              <span style={{
+                                fontWeight: 600, fontSize: '0.95rem', color: '#1f2937', marginBottom: '2px',
+                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block'
+                              }}>{item.title}</span>
+                              <span style={{ fontSize: '0.85rem', color: '#6b7280', lineHeight: '1.4', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                                {item.desc} {item.fullThaiInfo}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>{item.footerTime}</span>
+                          </div>
+                        </div>
+                      ));
+                    })()}
                   </div>
 
                   <div className="dropdown-divider"></div>

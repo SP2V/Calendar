@@ -89,9 +89,15 @@ const User = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [timezoneNotifications, setTimezoneNotifications] = useState(() => {
+    const saved = localStorage.getItem('timezoneNotifications');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   useEffect(() => {
     // Generate notifications from bookings
-    if (!bookings || bookings.length === 0) {
+    // Generate notifications from bookings & timezone changes
+    if ((!bookings || bookings.length === 0) && timezoneNotifications.length === 0) {
       setNotifications([]);
       return;
     }
@@ -145,8 +151,19 @@ const User = () => {
       };
     });
 
-    setNotifications(newNotifications);
-  }, [bookings, readNotificationIds, currentUser]);
+
+
+    const combinedNotifications = [...newNotifications, ...timezoneNotifications.map(tz => ({
+      ...tz,
+      read: readNotificationIds.includes(tz.id)
+    }))].sort((a, b) => {
+      const timeA = a.startTime ? new Date(a.startTime).getTime() : 0;
+      const timeB = b.startTime ? new Date(b.startTime).getTime() : 0;
+      return timeB - timeA; // Newest first
+    });
+
+    setNotifications(combinedNotifications);
+  }, [bookings, timezoneNotifications, readNotificationIds, currentUser]);
 
   // Persist read status
   useEffect(() => {
@@ -755,6 +772,24 @@ const User = () => {
     setSuccessTimezoneInfo(tzLabel);
     setShowTimezoneSuccessModal(true);
 
+    // Create Notification Object
+    const newNotification = {
+      id: `tz-${Date.now()}`,
+      type: 'timezone',
+      title: 'เปลี่ยนเขตเวลาเรียบร้อย',
+      desc: `ระบบตั้งค่าเป็น ${tzLabel}`,
+      fullThaiInfo: '',
+      dayOfMonth: new Date().getDate(),
+      footerTime: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+      startTime: new Date().toISOString(), // Use current time for sorting
+      read: false
+    };
+
+    // Update State & LocalStorage
+    const updatedTzNotifs = [newNotification, ...timezoneNotifications];
+    setTimezoneNotifications(updatedTzNotifs);
+    localStorage.setItem('timezoneNotifications', JSON.stringify(updatedTzNotifs));
+
     // Auto close success modal after 3 seconds (optional)
     setTimeout(() => {
       setShowTimezoneSuccessModal(false);
@@ -817,7 +852,8 @@ const User = () => {
               {showNotifications && (
                 <div className="profile-dropdown-menu notification-dropdown-override" style={{ width: '380px', right: '-80px' }}>
                   <div className="dropdown-header-info" style={{ flexDirection: 'column', alignItems: 'flex-start', background: 'white', padding: '10px 16px 0 16px' }}>
-                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem' }}>การแจ้งเตือน</h3>
+                    <h3 style={{ margin: '0', fontSize: '1.1rem' }}>การแจ้งเตือน</h3>
+                    <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '0' }}>อัปเดตเกี่ยวกับการจองและเขตเวลาของคุณ</p>
                     {/* <div className="filter-tabs" style={{ marginBottom: '10px', width: '100%', padding: 0 }}>
                       {['All', 'Booking', 'Timezone'].map(tab => (
                         <button
@@ -834,7 +870,7 @@ const User = () => {
 
                   <div className="dropdown-divider"></div>
 
-                  <div className="notification-list-scroll" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                  <div className="notification-list-scroll" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                     {(() => {
                       const todayNotifications = notifications.filter(n => {
                         if (!n.startTime) return false;
@@ -878,7 +914,7 @@ const User = () => {
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '2px' }}>
                               <span style={{
-                                fontWeight: 600, fontSize: '0.95rem', color: '#1f2937', marginBottom: '2px',
+                                fontWeight: 500, fontSize: '0.9rem', color: '#1f2937', marginBottom: '2px',
                                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block'
                               }}>{item.title}</span>
                               <span style={{ fontSize: '0.85rem', color: '#6b7280', lineHeight: '1.4', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>

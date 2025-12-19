@@ -34,7 +34,7 @@ body {
   padding: 2rem 1rem;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .user-schedule-wrapper {
@@ -1402,6 +1402,11 @@ textarea.user-custom-input {
     /* Stack vertically on tablet */
     gap: 1rem;
   }
+
+  .tab-btn {
+    font-size: 0.6rem;
+    padding: 6px 12px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1410,6 +1415,8 @@ textarea.user-custom-input {
   /* 1. Main Container & Spacing */
   .user-schedule-container {
     padding: 1rem 0.5rem;
+    justify-content: center;
+    align-items: center;
   }
 
   .user-header-right {

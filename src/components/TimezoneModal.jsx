@@ -6,7 +6,7 @@ import { TbTimezone } from "react-icons/tb";
 
 const TimezoneModal = ({ isOpen, onClose, onSuccess }) => {
     // State
-    const [selectedTimezoneLabel, setSelectedTimezoneLabel] = useState("(GMT+07:00) เวลาอินโดจีน - กรุงเทพ");
+    const [selectedTimezone, setSelectedTimezone] = useState({ label: "(GMT+07:00) เวลาอินโดจีน - กรุงเทพ", value: "Asia/Bangkok" });
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
 
@@ -28,11 +28,23 @@ const TimezoneModal = ({ isOpen, onClose, onSuccess }) => {
     // Effect to set default
     useEffect(() => {
         if (isOpen) {
-            const defaultTz = thaiTimezones.find(t => t.label.includes('กรุงเทพ'));
+            const defaultTz = thaiTimezones.find(t => t.value === 'Asia/Bangkok');
             if (defaultTz) {
-                setSelectedTimezoneLabel(defaultTz.label);
+                // If we want to persist previous selection in modal, we might need to pass it in prop. 
+                // For now, let's keep it resetting to Bangkok or use local state if we want better UX later.
+                // But the requirement says "Change timezone", so starting from Bangkok (or current) is fine.
+                // Let's try to load from localStorage if available to show current status?
+                // Actually the parent should probably pass "currentValue". 
+                // But for now, let's just default to Bangkok or what is in state if we want simple.
+                const savedK = localStorage.getItem('userTimezone');
+                const found = thaiTimezones.find(t => t.value === savedK);
+                if (found) {
+                    setSelectedTimezone(found);
+                } else {
+                    setSelectedTimezone(defaultTz);
+                }
             } else if (thaiTimezones.length > 0) {
-                setSelectedTimezoneLabel(thaiTimezones[0].label);
+                setSelectedTimezone(thaiTimezones[0]);
             }
         }
     }, [isOpen]);
@@ -53,8 +65,8 @@ const TimezoneModal = ({ isOpen, onClose, onSuccess }) => {
         };
     }, [isDropdownOpen]);
 
-    const handleSelect = (label) => {
-        setSelectedTimezoneLabel(label);
+    const handleSelect = (item) => {
+        setSelectedTimezone(item);
         setIsDropdownOpen(false);
         setFilterText("");
     };
@@ -86,7 +98,7 @@ const TimezoneModal = ({ isOpen, onClose, onSuccess }) => {
                     </div>
                     <div className="timezone-info">
                         <span className="timezone-info-label">เขตเวลาปัจจุบัน</span>
-                        <span className="timezone-info-value">{selectedTimezoneLabel}</span>
+                        <span className="timezone-info-value">{selectedTimezone.label}</span>
                     </div>
                     <div className="timezone-chevron">
                         <ChevronDown size={20} />
@@ -110,8 +122,8 @@ const TimezoneModal = ({ isOpen, onClose, onSuccess }) => {
                             {filteredOptions.length > 0 ? filteredOptions.map((item, index) => (
                                 <div
                                     key={index}
-                                    className={`timezone-dropdown-item ${selectedTimezoneLabel === item.label ? 'active' : ''}`}
-                                    onClick={() => handleSelect(item.label)}
+                                    className={`timezone-dropdown-item ${selectedTimezone.value === item.value ? 'active' : ''}`}
+                                    onClick={() => handleSelect(item)}
                                 >
                                     {item.label}
                                 </div>
@@ -123,7 +135,7 @@ const TimezoneModal = ({ isOpen, onClose, onSuccess }) => {
                 </div>
 
                 {/* Action Button */}
-                <button className="timezone-action-btn" onClick={() => onSuccess && onSuccess(selectedTimezoneLabel)}>
+                <button className="timezone-action-btn" onClick={() => onSuccess && onSuccess(selectedTimezone)}>
                     เปลี่ยนเขตเวลา
                 </button>
 

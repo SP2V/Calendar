@@ -92,6 +92,11 @@ const User = () => {
   // Initial state empty, loaded via effect when user is known
   const [timezoneNotifications, setTimezoneNotifications] = useState([]);
 
+  // Timezone State
+  const [selectedTimezone, setSelectedTimezone] = useState(() => {
+    return localStorage.getItem('userTimezone') || 'Asia/Bangkok';
+  });
+
   // Load timezone notifications for specific user
   useEffect(() => {
     if (currentUser && currentUser.email) {
@@ -144,21 +149,21 @@ const User = () => {
       }
 
       // Thai Date
-      const dateThai = start.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-      const timeThai = start.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      const dateThai = start.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: selectedTimezone });
+      const timeThai = start.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: selectedTimezone });
 
       // Eng Date
-      const dateEng = start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-      const timeEng = start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      const dateEng = start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: selectedTimezone });
+      const timeEng = start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: selectedTimezone });
 
       return {
         id: b.id,
         type: 'booking',
         title: b.subject || 'การประชุมกำลังจะเริ่ม',
         desc: timeDesc,
-        fullThaiInfo: `${dateThai} เวลา ${timeThai} (GMT+7)`,
+        fullThaiInfo: `${dateThai} เวลา ${timeThai}`,
         dayOfMonth: start.getDate(),
-        footerTime: `${dateEng}, ${timeEng}`,
+        footerTime: `${dateEng}, ${timeEng} (${selectedTimezone})`,
         startTime: b.startTime, // Add raw start time for filtering
         read: readNotificationIds.includes(b.id) // Check if read
       };
@@ -176,7 +181,7 @@ const User = () => {
     });
 
     setNotifications(combinedNotifications);
-  }, [bookings, timezoneNotifications, readNotificationIds, currentUser]);
+  }, [bookings, timezoneNotifications, readNotificationIds, currentUser, selectedTimezone]);
 
   // Persist read status
   useEffect(() => {
@@ -694,8 +699,15 @@ const User = () => {
     // Format Date: YYYY-MM-DD
     const dateStr = start.getFullYear() + '-' + String(start.getMonth() + 1).padStart(2, '0') + '-' + String(start.getDate()).padStart(2, '0');
 
-    // Format Time: HH:MM - HH:MM
-    const timeStr = `${start.getHours().toString().padStart(2, '0')}:${start.getMinutes().toString().padStart(2, '0')} - ${end.getHours().toString().padStart(2, '0')}:${end.getMinutes().toString().padStart(2, '0')} น.`;
+    // Format Time: HH:MM - HH:MM with Timezone
+    // Use selectedTimezone for display
+    const formatTimeTz = (date) => date.toLocaleTimeString('th-TH', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: selectedTimezone
+    });
+
+    const timeStr = `${formatTimeTz(start)} - ${formatTimeTz(end)} น. (${selectedTimezone})`;
 
     // Calculate Duration
     const diffMs = end - start;
@@ -780,10 +792,20 @@ const User = () => {
   const [showTimezoneSuccessModal, setShowTimezoneSuccessModal] = useState(false);
   const [successTimezoneInfo, setSuccessTimezoneInfo] = useState('');
 
-  const handleTimezoneSuccess = (tzLabel) => {
+  const handleTimezoneSuccess = (tzData) => {
+    // tzData should be the object { label, value } or just value if we changed it differently.
+    // Based on TimezoneModal update: onSuccess(selectedTimezone) -> which is entire object.
+
+    const tzLabel = tzData.label || tzData; // Fallback if just string
+    const tzValue = tzData.value || 'Asia/Bangkok';
+
     setShowTimezoneModal(false);
     setSuccessTimezoneInfo(tzLabel);
     setShowTimezoneSuccessModal(true);
+
+    // Update State & Persistent Storage
+    setSelectedTimezone(tzValue);
+    localStorage.setItem('userTimezone', tzValue);
 
     // Create Notification Object
     const newNotification = {
@@ -793,7 +815,7 @@ const User = () => {
       desc: `ระบบตั้งค่าเป็น ${tzLabel}`,
       fullThaiInfo: '',
       dayOfMonth: new Date().getDate(),
-      footerTime: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+      footerTime: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: tzValue }),
       startTime: new Date().toISOString(), // Use current time for sorting
       read: false
     };

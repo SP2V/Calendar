@@ -4,7 +4,7 @@ import { Clock, ChevronDown, AlertCircle, X } from 'lucide-react';
 import { thaiTimezones } from '../constants/timezones';
 import { TbTimezone } from "react-icons/tb";
 
-const TimezoneModal = ({ isOpen, onClose, onSuccess }) => {
+const TimezoneModal = ({ isOpen, onClose, onSuccess, currentTimezone }) => {
     // State
     const [selectedTimezone, setSelectedTimezone] = useState({ label: "(GMT+07:00) เวลาอินโดจีน - กรุงเทพ", value: "Asia/Bangkok" });
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -28,26 +28,30 @@ const TimezoneModal = ({ isOpen, onClose, onSuccess }) => {
     // Effect to set default
     useEffect(() => {
         if (isOpen) {
-            const defaultTz = thaiTimezones.find(t => t.value === 'Asia/Bangkok');
-            if (defaultTz) {
-                // If we want to persist previous selection in modal, we might need to pass it in prop. 
-                // For now, let's keep it resetting to Bangkok or use local state if we want better UX later.
-                // But the requirement says "Change timezone", so starting from Bangkok (or current) is fine.
-                // Let's try to load from localStorage if available to show current status?
-                // Actually the parent should probably pass "currentValue". 
-                // But for now, let's just default to Bangkok or what is in state if we want simple.
+            // Priority: currentTimezone passed prop -> localStorage -> Default 'Asia/Bangkok'
+            let initialValue = 'Asia/Bangkok';
+
+            if (typeof currentTimezone === 'string') {
+                initialValue = currentTimezone;
+            } else if (currentTimezone && currentTimezone.value) {
+                initialValue = currentTimezone.value;
+            } else {
                 const savedK = localStorage.getItem('userTimezone');
-                const found = thaiTimezones.find(t => t.value === savedK);
-                if (found) {
-                    setSelectedTimezone(found);
-                } else {
-                    setSelectedTimezone(defaultTz);
-                }
-            } else if (thaiTimezones.length > 0) {
-                setSelectedTimezone(thaiTimezones[0]);
+                if (savedK) initialValue = savedK;
+            }
+
+            const found = thaiTimezones.find(t => t.value === initialValue);
+
+            if (found) {
+                setSelectedTimezone(found);
+            } else {
+                // Fallback to Bangkok if not found
+                const defaultTz = thaiTimezones.find(t => t.value === 'Asia/Bangkok');
+                if (defaultTz) setSelectedTimezone(defaultTz);
+                else if (thaiTimezones.length > 0) setSelectedTimezone(thaiTimezones[0]);
             }
         }
-    }, [isOpen]);
+    }, [isOpen, currentTimezone]);
 
     // Click outside handler
     useEffect(() => {

@@ -97,6 +97,19 @@ const User = () => {
     return localStorage.getItem('userTimezone') || 'Asia/Bangkok';
   });
 
+  // Re-apply Isolation: Load user-specific timezone
+  useEffect(() => {
+    if (currentUser?.email) {
+      const saved = localStorage.getItem(`userTimezone_${currentUser.email}`);
+      if (saved) {
+        setSelectedTimezone(saved);
+      } else {
+        // Fallback to default if no specific setting for this user
+        setSelectedTimezone('Asia/Bangkok');
+      }
+    }
+  }, [currentUser]);
+
   // Load timezone notifications for specific user
   useEffect(() => {
     if (currentUser && currentUser.email) {
@@ -863,7 +876,14 @@ const User = () => {
     setShowTimezoneSuccessModal(true);
 
     // Update State & Persistent Storage
+    // Update State & Persistent Storage
     setSelectedTimezone(tzValue);
+
+    // Save per user if logged in
+    if (currentUser && currentUser.email) {
+      localStorage.setItem(`userTimezone_${currentUser.email}`, tzValue);
+    }
+    // Also update global default for this device/browser preference
     localStorage.setItem('userTimezone', tzValue);
 
     // Create Notification Object
@@ -1630,6 +1650,13 @@ const User = () => {
         onConfirm={handleCustomDurationConfirm}
         initialValue={customDuration}
         initialUnit={customDurationUnit}
+      />
+
+      <TimezoneModal
+        isOpen={showTimezoneModal}
+        onClose={() => setShowTimezoneModal(false)}
+        onSuccess={handleTimezoneSuccess}
+        currentTimezone={selectedTimezone}
       />
 
       <CancelBookingModal

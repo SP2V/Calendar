@@ -363,36 +363,65 @@ textarea.user-custom-input {
 .time-slot-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 12px;
   max-height: 300px;
   overflow-y: auto;
-  padding-right: 5px;
+  /* padding-right: 5px; */
 }
 
-.time-btn {
-  padding: 8px 16px;
+.time-slot-btn {
+  width: 100%;
+  padding: 10px;
   background: white;
-  border: 1px solid #bfdbfe;
-  color: var(--primary);
+  border: 1px solid #e5e7eb;
+  color: var(--text-hover);
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
-  min-width: 80px;
   transition: all 0.2s;
   font-family: 'Kanit', sans-serif;
+  text-align: center;
+  /* box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); */
 }
 
-.time-btn:hover {
-  background-color: #eff6ff;
+.time-slot-btn:hover:not(:disabled) {
   border-color: var(--primary);
-}
-
-.time-btn.active {
   background-color: var(--primary);
   color: white;
-  border-color: var(--primary);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.time-slot-btn.active {
+  background-color: var(--primary);
+  color: white;
+  border: 2px solid var(--primary);
+  /* Black border for active */
+  font-weight: 600;
+  box-shadow: none;
+}
+
+/* Specific styling from user image request */
+/* It seems they want simple white pill-like or rounded rect buttons */
+/* Active state in image isn't shown, but usually it's darker border or filled */
+
+/* Make disabled look like the user provided example (lighter text) */
+.time-slot-btn:disabled,
+.time-slot-btn.booked {
+  background-color: transparent;
+  color: #d1d5db;
+  /* Light gray text */
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+}
+
+/* Adjust scrollbar if needed */
+.time-slot-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+.time-slot-container::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 4px;
 }
 
 .empty-state-text {

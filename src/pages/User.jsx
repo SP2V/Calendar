@@ -323,8 +323,13 @@ const User = () => {
     const [year, month, day] = dateStr.split('-').map(Number);
 
     // Parse Slot Start Time
-    const [h, m] = timeStr.split(':').map(Number);
-    const slotStart = new Date(year, month - 1, day, h, m);
+    // FIX: checking against local timezone is wrong if browser != Bangkok
+    // Construct checkDate using explicit +07:00
+    // const [h, m] = timeStr.split(':').map(Number);
+    // const slotStart = new Date(year, month - 1, day, h, m);
+
+    // Improved Logic:
+    const slotStart = new Date(Date.parse(`${dateStr}T${timeStr}:00+07:00`));
 
     // Calculate Slot End Time
     const durationMins = getDurationInMinutes(formData.duration, customDuration, customDurationUnit);
@@ -406,8 +411,60 @@ const User = () => {
       }
     });
 
-    // แปลงกลับเป็น Array และเรียงลำดับ
-    return Array.from(generatedSlots).sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+    // Helper to format display time in selected timezone
+    // Assumes base time is today/given day in Bangkok (+07:00)
+    // We treat 'timeStr' (e.g. "09:00") as Bangkok Time.
+    const formatDisplayTime = (originalTimeStr) => {
+      if (!originalTimeStr) return '';
+      // Construct ISO string for Bangkok Time on the selected date
+      // Note: formData.days[0] is YYYY-MM-DD
+      const datePart = formData.days[0];
+      const isoString = `${datePart}T${originalTimeStr}:00+07:00`;
+      const dateObj = new Date(Date.parse(isoString));
+
+      return dateObj.toLocaleTimeString('th-TH', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: selectedTimezone
+      });
+    };
+
+    // แปลงกลับเป็น Array และเรียงลำดับ แล้ว map เป็น object
+    return Array.from(generatedSlots)
+      .sort((a, b) => timeToMinutes(a) - timeToMinutes(b))
+      .map(original => {
+        // Calculate Start DateObj (Bangkok Time +07:00)
+        const datePart = formData.days[0];
+        const startIso = `${datePart}T${original}:00+07:00`;
+        const startObj = new Date(Date.parse(startIso));
+
+        // Calculate End DateObj
+        // Use the same duration logic as generation (durationCheck was calculating logic, but here we want what the user SEE)
+        // If userDurationMins > 0, we use it. If not, maybe we shouldn't show a range?
+        // But the design requires a range. Let's assume default 60 or 30 same as generation interval?
+        // Actually, if duration is not selected, we might just show start time?
+        // But the user usually selects duration first (required).
+        // Let's fallback to 60 mins if unknown, just for display.
+        const dMins = userDurationMins > 0 ? userDurationMins : 30;
+        const endObj = new Date(startObj.getTime() + dMins * 60000);
+
+        const displayStart = startObj.toLocaleTimeString('th-TH', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: selectedTimezone
+        });
+
+        const displayEnd = endObj.toLocaleTimeString('th-TH', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: selectedTimezone
+        });
+
+        return {
+          original: original,
+          display: `${displayStart} - ${displayEnd}`
+        };
+      });
   };
 
   const availableTimeSlots = getAvailableTimeSlots();
@@ -593,9 +650,11 @@ const User = () => {
       const dateStr = formData.days[0];
       const timeStr = formData.startTime;
       const [year, month, day] = dateStr.split('-').map(Number);
-      const [hour, minute] = timeStr.split(':').map(Number);
+      // const [hour, minute] = timeStr.split(':').map(Number);
 
-      const startDateTime = new Date(year, month - 1, day, hour, minute);
+      // FIX: Create Start Time explicitly in Bangkok Time (+07:00)
+      // This ensures that "09:00" selected means "09:00 Bangkok", regardless of browser timezone.
+      const startDateTime = new Date(Date.parse(`${dateStr}T${timeStr}:00+07:00`));
 
       const durationMins = getDurationInMinutes(formData.duration, customDuration, customDurationUnit);
       const endDateTime = new Date(startDateTime.getTime() + durationMins * 60000);
@@ -1138,16 +1197,18 @@ const User = () => {
                       : formData.days.length === 0 ?
                         <div className="empty-state-text">กรุณาเลือกวันที่จากปฏิทิน</div>
                         : availableTimeSlots.length > 0 ?
-                          availableTimeSlots.map((slot, idx) => {
-                            const isBooked = isTimeSlotBooked(slot);
+                          availableTimeSlots.map((slotObj, index) => {
+                            const isBooked = isTimeSlotBooked(slotObj.original);
+                            const isSelected = formData.startTime === slotObj.original;
                             return (
-                              <button key={idx}
-                                onClick={() => !isBooked && setFormData(prev => ({ ...prev, startTime: slot, endTime: '' }))}
+                              <button
+                                key={index}
+                                type="button"
                                 disabled={isBooked}
-                                className={`time-btn ${formData.startTime === slot ? 'active' : ''} ${isBooked ? 'booked' : ''}`}
-                                title={isBooked ? "เวลานี้ถูกจองแล้ว" : ""}
+                                className={`time-slot-btn ${isSelected ? 'active' : ''} ${isBooked ? 'booked' : ''}`}
+                                onClick={() => setFormData({ ...formData, startTime: slotObj.original })}
                               >
-                                {calculateEndTime(slot, formData.duration).replace('-', ' - ')}
+                                {slotObj.display}
                               </button>
                             );
                           })
@@ -1215,7 +1276,20 @@ const User = () => {
                   </div>
                   <div className="summary-item">
                     <div className="summary-label"><ClockIcon style={{ width: '14px' }} /> เวลา</div>
-                    <p className="summary-value">{formData.startTime ? calculateEndTime(formData.startTime, formData.duration) + ' น.' : '-'}</p>
+                    <p className="summary-value">
+                      {formData.startTime
+                        ? (() => {
+                          // Display confirm time in correct timezone
+                          const startObj = new Date(Date.parse(`${formData.days[0]}T${formData.startTime}:00+07:00`));
+                          const endObj = new Date(startObj.getTime() + (getDurationInMinutes(formData.duration, customDuration, customDurationUnit) * 60000));
+
+                          const s = startObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: selectedTimezone });
+                          const e = endObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: selectedTimezone });
+                          return `${s} - ${e} น.`;
+                        })()
+                        : '-'
+                      }
+                    </p>
                   </div>
                   <div className="summary-item span-2">
                     <div className="summary-label">{formData.meetingFormat === 'Online' ? <MonitorIcon style={{ width: '14px' }} /> : <MapPinIcon style={{ width: '14px' }} />} รูปแบบ</div>

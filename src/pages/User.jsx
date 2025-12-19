@@ -825,10 +825,7 @@ const User = () => {
 
   return (
     <div className="user-schedule-container">
-
-
       <div className="user-schedule-wrapper">
-
         {/* --- HEADER --- */}
         <div className="user-header-card">
           <div className="user-header-left">
@@ -842,7 +839,7 @@ const User = () => {
               </p>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="user-header-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <button className="user-header-btn-back" onClick={() => {
               if (currentView === 'notifications') setCurrentView('form');
               else if (currentView === 'list') setCurrentView('form');
@@ -866,7 +863,7 @@ const User = () => {
               </button>
 
               {showNotifications && (
-                <div className="profile-dropdown-menu notification-dropdown-override" style={{ width: '380px', right: '-80px' }}>
+                <div className="profile-dropdown-menu notification-dropdown-override" style={{ width: '380px', right: '-70px' }}>
                   <div className="dropdown-header-info" style={{ flexDirection: 'column', alignItems: 'flex-start', background: 'white', padding: '10px 16px 0 16px' }}>
                     <h3 style={{ margin: '0', fontSize: '1.1rem' }}>การแจ้งเตือน</h3>
                     <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '0' }}>อัปเดตเกี่ยวกับการจองและเขตเวลาของคุณ</p>

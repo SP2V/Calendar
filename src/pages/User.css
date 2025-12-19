@@ -34,7 +34,7 @@ body {
   padding: 2rem 1rem;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .user-schedule-wrapper {
@@ -427,11 +427,12 @@ textarea.user-custom-input {
 
 .format-section {
   flex: 1;
+  width: 100%;
   min-width: 300px;
 }
 
 .input-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0;
 }
 
 /* Toggle Buttons (Modern Choice) */
@@ -475,13 +476,14 @@ textarea.user-custom-input {
 /* Summary Box */
 .summary-box {
   flex: 1;
-  min-width: 300px;
+  width: 100%;
   background-color: #eff6ff;
   /* ฟ้าอ่อน */
   border: 1px solid #bfdbfe;
   border-radius: 12px;
   padding: 1.1rem;
   padding-left: 2rem;
+  margin-bottom: 1rem;
 }
 
 .summary-title {
@@ -1205,6 +1207,7 @@ textarea.user-custom-input {
 .filter-tabs {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   background-color: white;
   padding: 6px;
   /* border-radius: 100px; */
@@ -1383,4 +1386,220 @@ textarea.user-custom-input {
   background: #3b82f6;
   color: white;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* --- RESPONSIVE DESIGN (ADDED) --- */
+
+@media (max-width: 1024px) {
+
+  /* Tablet Adjustments */
+  .user-schedule-wrapper {
+    max-width: 95%;
+  }
+
+  .user-grid-layout {
+    grid-template-columns: 1fr;
+    /* Stack vertically on tablet */
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Mobile Adjustments */
+
+  /* 1. Main Container & Spacing */
+  .user-schedule-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .user-header-right {
+    justify-content: center;
+    align-items: center;
+  }
+
+  .user-form-card {
+    padding: 1rem;
+  }
+
+  .user-header-card {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .user-header-left {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .user-header-btn-back {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .profile-dropdown-menu,
+  .notification-dropdown-override {
+    width: 100%;
+    max-width: 200px !important;
+    right: -100px !important;
+  }
+
+  .profile-dropdown-menu {
+    width: 100%;
+    max-width: 200px !important;
+    right: 0 !important;
+  }
+
+  .notification-dropdown-override {
+    width: 100%;
+    max-width: 200px !important;
+    right: -100px !important;
+  }
+
+  .dropdown-header-info {
+    padding: 0.5rem !important;
+  }
+
+  .notification-list-scroll {
+    width: 100%;
+    max-height: 200px !important;
+    overflow-y: auto;
+  }
+
+  .dropdown-item {
+    padding: 0.5rem !important;
+  }
+
+  /* 2. Form Layout - Force full width */
+  .flex-row-wrap {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .col-1,
+  .col-2 {
+    width: 100%;
+    min-width: 0;
+    /* Prevents overflow */
+  }
+
+  /* 3. Calendar Grid */
+  .user-calendar-grid {
+    gap: 4px;
+  }
+
+  .user-day-btn {
+    font-size: 0.85rem;
+    border-radius: 6px;
+  }
+
+  .calendar-nav {
+    font-size: 0.85rem;
+  }
+
+  /* 4. Time Slot Grid */
+  .time-slot-container {
+    max-height: 200px;
+    grid-template-columns: repeat(2, 1fr);
+    /* Keep 2 cols but smaller */
+  }
+
+  .time-btn {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+
+  .time-input {
+    width: 100%;
+    /* max-width: 200px; */
+  }
+
+  .form-section-Activity {
+    width: 100%;
+    max-width: 307.64px;
+  }
+
+  /* 5. Bottom Section (Duration & Buttons) */
+  .bottom-layout {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .toggle-container {
+    flex-direction: row;
+    /* Keep toggles side-by-side but smaller */
+  }
+
+  .toggle-btn {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .summary-box {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+    /* Stack summary items */
+  }
+
+  .summary-item.span-2 {
+    grid-column: span 1;
+  }
+
+  .user-action-footer .btn-confirm {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  /* 6. List View / Filter Bar */
+  .filter-bar {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .filter-left,
+  .filter-actions-right {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search-wrapper,
+  .filter-dropdown-wrapper {
+    width: 100%;
+  }
+
+  .search-wrapper .search-input {
+    width: 100%;
+  }
+
+  .compact-dropdown select {
+    width: 100%;
+  }
+
+  .view-toggles {
+    display: none;
+    /* Hide Grid/List toggle on mobile */
+  }
+
+  /* 7. History Table (Horizontal Scroll) */
+  .bookings-list-container {
+    overflow-x: auto;
+  }
+
+  .bookings-table th,
+  .bookings-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  /* Badge adjustments */
+  .status-badge {
+    padding: 2px 6px;
+    font-size: 0.7rem;
+  }
 }

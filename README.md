@@ -63,76 +63,73 @@ If you are developing a production application, we recommend using TypeScript wi
   This script acts as a Web App to interface with Google Calendar.
 */
 
+// Google Apps Script Code
+// แก้ไขเพื่อให้รองรับการเพิ่ม User เป็นผู้เข้าร่วม (Attendees)
+
 function doPost(e) {
-  try {
-    // 1. Parse Request
-    // Web App sends data as text/plain to avoid preflight complications
-    var requestData = JSON.parse(e.postData.contents);
-    
-    var calendar = CalendarApp.getDefaultCalendar();
-    
-    // 2. Determine Action
-    if (requestData.action === 'delete') {
-      return handleDelete(calendar, requestData);
-    } else {
-      return handleCreate(calendar, requestData);
+    try {
+        var data = JSON.parse(e.postData.contents);
+        var action = data.action;
+        
+        if (action === 'delete') {
+            return deleteEvent(data.eventId);
+        } else {
+            return createEvent(data);
+        }
+    } catch (error) {
+        return ContentService.createTextOutput(JSON.stringify({
+            status: 'error',
+            message: error.toString()
+        })).setMimeType(ContentService.MimeType.JSON);
     }
-    
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ 
-      status: 'error', 
-      message: error.toString() 
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
 }
 
-function handleCreate(calendar, data) {
-  // Required: title, startTime (ISO), endTime (ISO)
-  // Optional: description, location, userEmail (for guest), colorId
-  
-  var startTime = new Date(data.startTime);
-  var endTime = new Date(data.endTime);
-  
-  var options = {
-    description: data.description || '',
-    location: data.location || ''
-  };
-  
-  // Add User as Guest if provided
-  if (data.userEmail) {
-    options.guests = data.userEmail;
-  }
-  
-  var event = calendar.createEvent(data.title, startTime, endTime, options);
-  
-  // Set Color if provided
-  if (data.colorId) {
-    event.setColor(data.colorId);
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({ 
-    status: 'success', 
-    eventId: event.getId(),
-    message: 'Event created successfully'
-  })).setMimeType(ContentService.MimeType.JSON);
+function createEvent(data) {
+    var calendar = CalendarApp.getCalendarById('primary'); // หรือใส่ Email ของ Admin
+    if (!calendar) {
+        throw new Error('Calendar not found');
+    }
+
+    var startTime = new Date(data.startTime);
+    var endTime = new Date(data.endTime);
+
+    // --- ส่วนที่แก้ไข: เพิ่ม guests และ sendInvites ---
+    var options = {
+        description: data.description || '',
+        location: data.location || '',
+        guests: data.userEmail || '', // อีเมลของ User ที่ส่งมาจาก Frontend
+        sendInvites: true             // ส่งอีเมลเชิญเพื่อให้ Sync ลงปฏิทินของ User อัตโนมัติ
+    };
+    // -------------------------------------------
+
+    var event = calendar.createEvent(data.title, startTime, endTime, options);
+
+    // กำหนดสีถ้ามีการส่งมา
+    if (data.colorId) {
+        event.setColor(data.colorId);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        eventId: event.getId()
+    })).setMimeType(ContentService.MimeType.JSON);
 }
 
-function handleDelete(calendar, data) {
-  var eventId = data.eventId;
-  var event = calendar.getEventById(eventId);
-  
-  if (event) {
-    event.deleteEvent();
-    return ContentService.createTextOutput(JSON.stringify({ 
-      status: 'success', 
-      message: 'Event deleted successfully'
-    })).setMimeType(ContentService.MimeType.JSON);
-  } else {
-     return ContentService.createTextOutput(JSON.stringify({ 
-      status: 'error', 
-      message: 'Event not found'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
+function deleteEvent(eventId) {
+    var calendar = CalendarApp.getCalendarById('primary');
+    var event = calendar.getEventById(eventId);
+    if (event) {
+        event.deleteEvent();
+        return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
+            .setMimeType(ContentService.MimeType.JSON);
+    } else {
+        return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'Event not found' }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+}
+
+function doGet(e) {
+    return ContentService.createTextOutput("Calendar API is active with Attendee Support");
 }
 ```
 

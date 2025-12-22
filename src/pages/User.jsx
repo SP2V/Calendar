@@ -70,6 +70,14 @@ const User = () => {
   const [customDurationUnit, setCustomDurationUnit] = useState('นาที'); // New state for unit
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showDurationModal, setShowDurationModal] = useState(false);
+  const [isTimeExpanded, setIsTimeExpanded] = useState(false); // State for Show More functionality
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Responsive state
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // View/Delete State
   const [viewingBooking, setViewingBooking] = useState(null); // For Viewing Details
@@ -1210,7 +1218,7 @@ const User = () => {
               {/* Time Panel */}
               <div className="user-gray-panel">
                 <div className="user-section-title" style={{ marginBottom: '10px' }}>เลือกเวลา</div>
-                <div className="time-slot-container">
+                <div className={`time-slot-container ${isTimeExpanded ? 'expanded' : ''}`}>
                   {(!formData.type || formData.type === 'เลือกกิจกรรม') ?
                     <div className="empty-state-text">กรุณาเลือกประเภทกิจกรรมก่อน</div>
                     : (!formData.duration) ?
@@ -1218,23 +1226,40 @@ const User = () => {
                       : formData.days.length === 0 ?
                         <div className="empty-state-text">กรุณาเลือกวันที่จากปฏิทิน</div>
                         : availableTimeSlots.length > 0 ?
-                          availableTimeSlots.map((slotObj, index) => {
-                            const isBooked = isTimeSlotBooked(slotObj.original);
-                            const isSelected = formData.startTime === slotObj.original;
-                            return (
-                              <button
-                                key={index}
-                                type="button"
-                                disabled={isBooked}
-                                className={`time-slot-btn ${isSelected ? 'active' : ''} ${isBooked ? 'booked' : ''}`}
-                                onClick={() => setFormData({ ...formData, startTime: slotObj.original })}
-                              >
-                                {slotObj.display}
-                              </button>
-                            );
-                          })
+                          (
+                            <>
+                              {/* Slicing Logic: On Mobile, if not expanded, show only 8. On Desktop, show all. */}
+                              {availableTimeSlots.slice(0, (isMobile && !isTimeExpanded) ? 8 : availableTimeSlots.length).map((slotObj, index) => {
+                                const isBooked = isTimeSlotBooked(slotObj.original);
+                                const isSelected = formData.startTime === slotObj.original;
+                                return (
+                                  <button
+                                    key={index}
+                                    type="button"
+                                    disabled={isBooked}
+                                    className={`time-slot-btn ${isSelected ? 'active' : ''} ${isBooked ? 'booked' : ''}`}
+                                    onClick={() => setFormData({ ...formData, startTime: slotObj.original })}
+                                  >
+                                    {slotObj.display}
+                                  </button>
+                                );
+                              })}
+                            </>
+                          )
                           : <div className="error-state-box">ไม่มีรอบเวลาว่าง</div>}
                 </div>
+                {/* Show More Button: Only on Mobile and if plenty of slots */}
+                {isMobile && availableTimeSlots.length > 8 && (
+                  <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      className="show-more-time-btn"
+                      onClick={() => setIsTimeExpanded(!isTimeExpanded)}
+                    >
+                      {isTimeExpanded ? 'ดูน้อยลง' : 'ดูเวลาเพิ่มเติม'} <ChevronDown size={16} style={{ transform: isTimeExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <div className="bottom-layout">

@@ -150,3 +150,39 @@ function doGet(e) {
     const API_URL = 'https://script.google.com/macros/s/......./exec';
     ```
 3.  บันทึกไฟล์และทดสอบการจอง
+
+## การตั้งค่า Firebase / Firebase Configuration
+
+ระบบจองห้องประชุมนี้ใช้ Firebase สำหรับระบบสมาชิก (Authentication) และฐานข้อมูล (Firestore)
+หากมีการเปลี่ยนโปรเจกต์ Firebase จำเป็นต้องอัปเดตค่า Config ในโค้ด
+
+### 1. สร้างโปรเจกต์ Firebase ใหม่
+1. ไปที่ [Firebase Console](https://console.firebase.google.com/)
+2. คลิก **Add project** และทำตามขั้นตอนจนเสร็จสิ้น
+3. เข้าไปที่โปรเจกต์ที่เพิ่งสร้าง คลิกไอคอน **Web (</>)** เพื่อ Register App
+4. ตั้งชื่อ App (เช่น `Meeting Room`) และคลิก **Register app**
+5. คุณจะได้รับ `const firebaseConfig = { ... };` ให้คัดลอกค่านี้เก็บไว้
+
+### 2. ตั้งค่า Authentication และ Database
+1.  **Authentication**:
+    -   เมนู Build > Authentication > **Get started**
+    -   แท็บ **Sign-in method** > เปิดใช้งาน **Google** และ **Email/Password**
+2.  **Firestore Database**:
+    -   เมนู Build > Firestore Database > **Create database**
+    -   เลือก Location (เช่น `asia-southeast1`)
+    -   Start in **Test mode** (หรือ Production mode แล้วแก้ Rules ทีหลัง)
+
+### 3. อัปเดต Config ในโปรเจกต์
+1.  เปิดไฟล์ `src/services/firebase.js`
+2.  หาตัวแปร `firebaseConfig` และแทนที่ด้วยค่าใหม่ที่คุณคัดลอกมา:
+    ```javascript
+    const firebaseConfig = {
+      apiKey: "AIzaSy...",
+      authDomain: "...",
+      projectId: "...",
+      storageBucket: "...",
+      messagingSenderId: "...",
+      appId: "..."
+    };
+    ```
+3.  บันทึกไฟล์

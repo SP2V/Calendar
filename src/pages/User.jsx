@@ -1436,8 +1436,20 @@ const User = () => {
                         {currentItems.map(item => {
                           const starT = new Date(item.startTime);
                           const endT = new Date(item.endTime);
-                          const dateStr = starT.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
-                          const timeRange = `${starT.getHours().toString().padStart(2, '0')}:${starT.getMinutes().toString().padStart(2, '0')} - ${endT.getHours().toString().padStart(2, '0')}:${endT.getMinutes().toString().padStart(2, '0')} น.`;
+                          // Use selectedTimezone for Date
+                          const dateStr = starT.toLocaleDateString('th-TH', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                            timeZone: selectedTimezone
+                          });
+                          // Use selectedTimezone for Time
+                          const formatTime = (d) => d.toLocaleTimeString('th-TH', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: selectedTimezone
+                          });
+                          const timeRange = `${formatTime(starT)} - ${formatTime(endT)} น.`;
                           const isOnline = item.meetingFormat === 'Online' || (item.location && item.location.includes('http'));
 
                           return (
@@ -1516,8 +1528,20 @@ const User = () => {
                             {currentItems.map(item => {
                               const starT = new Date(item.startTime);
                               const endT = new Date(item.endTime);
-                              const dateStr = starT.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
-                              const timeRange = `${starT.getHours().toString().padStart(2, '0')}:${starT.getMinutes().toString().padStart(2, '0')} - ${endT.getHours().toString().padStart(2, '0')}:${endT.getMinutes().toString().padStart(2, '0')} น.`;
+                              // Use selectedTimezone for Date
+                              const dateStr = starT.toLocaleDateString('th-TH', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric',
+                                timeZone: selectedTimezone
+                              });
+                              // Use selectedTimezone for Time
+                              const formatTime = (d) => d.toLocaleTimeString('th-TH', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                timeZone: selectedTimezone
+                              });
+                              const timeRange = `${formatTime(starT)} - ${formatTime(endT)} น.`;
                               const isOnline = item.meetingFormat === 'Online' || (item.location && item.location.includes('http'));
 
                               return (

@@ -1,9 +1,9 @@
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbz7RLB3h1aNZMC-WawCiOhzX26Kjd_tLHpTsVYZnaY2Hd8P6YgcZ-pdnLiQzSZp2L-M_Q/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxaVbYNgh7BS7lshJ_dsyWdPpC_7yuAQ2eInDopPE8rdCjdIOJm06gcm9tWEB2hP_wFPQ/exec';
 
 /**
  * Create a new event in Google Calendar
- * @param {Object} eventData - { title, startTime, endTime, description, location }
+ * @param {Object} eventData - { title, startTime, endTime, description, location, userEmail }
  * @returns {Promise<Object>} - Response from GAS
  */
 export const createCalendarEvent = async (eventData) => {

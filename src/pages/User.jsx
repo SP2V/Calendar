@@ -685,7 +685,8 @@ const User = () => {
         endTime: endDateTime.toISOString(),
         description: `${formData.description || '-'}`,
         location: formData.location,
-        colorId: colorId
+        colorId: colorId,
+        userEmail: currentUser ? currentUser.email : '' // Send User Email for Guest Sync
       };
 
       setPopupMessage({ type: 'success', message: 'กำลังบันทึก...' });

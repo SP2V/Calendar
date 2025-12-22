@@ -1249,6 +1249,10 @@ textarea.user-custom-input {
     width: fit-content;
   }
 
+  .empty-state-text {
+    margin-top: 1rem;
+  }
+
   .user-schedule-container {
     flex-direction: column;
     padding-top: 1rem;
@@ -1589,7 +1593,7 @@ textarea.user-custom-input {
 
   .form-section-Activity {
     width: 100%;
-    max-width: 307.64px;
+    max-width: 350px;
   }
 
   /* 5. Bottom Section (Duration & Buttons) */

@@ -53,3 +53,14 @@ export const deleteCustomNotification = async (notificationId) => {
     const docRef = doc(db, COLLECTION_NAME, notificationId);
     await deleteDoc(docRef);
 };
+
+// Update a custom notification
+export const updateCustomNotification = async (notificationId, updatedData) => {
+    if (!db) throw new Error('Firestore not initialized');
+
+    // Remove id from data if present to avoid overwriting document ID with itself
+    const { id, ...data } = updatedData;
+
+    const docRef = doc(db, COLLECTION_NAME, notificationId);
+    await import('firebase/firestore').then(({ updateDoc }) => updateDoc(docRef, data));
+};

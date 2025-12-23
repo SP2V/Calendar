@@ -22,7 +22,7 @@ import {
 import { onAuthStateChanged } from 'firebase/auth'; // Import auth listener
 import { useNavigate } from 'react-router-dom';
 import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarService';
-import { subscribeCustomNotifications, addCustomNotification, deleteCustomNotification } from '../services/customNotificationService';
+import { subscribeCustomNotifications, addCustomNotification, deleteCustomNotification, updateCustomNotification } from '../services/customNotificationService';
 import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut, SettingsIcon, Bell, Calendar as CalendarLucide, Clock as ClockLucide, AlarmClock } from 'lucide-react';
 import { TbTimezone } from "react-icons/tb";
 
@@ -837,10 +837,16 @@ const User = () => {
   const handleSaveCustomNotification = async (data) => {
     if (!currentUser) return;
     try {
-      await addCustomNotification(currentUser.uid, data);
-      setPopupMessage({ type: 'success', message: 'บันทึกการแจ้งเตือนเรียบร้อยแล้ว' });
+      if (data.id) {
+        await updateCustomNotification(data.id, data);
+        setPopupMessage({ type: 'success', message: 'แก้ไขการแจ้งเตือนเรียบร้อยแล้ว' });
+      } else {
+        await addCustomNotification(currentUser.uid, data);
+        // Only show popup for Edit, not Add, as per user request
+        // setPopupMessage({ type: 'success', message: 'บันทึกการแจ้งเตือนเรียบร้อยแล้ว' });
+      }
     } catch (error) {
-      console.error("Failed to add custom notification", error);
+      console.error("Failed to save custom notification", error);
       setPopupMessage({ type: 'error', message: 'เกิดข้อผิดพลาดในการบันทึก' });
     }
   };

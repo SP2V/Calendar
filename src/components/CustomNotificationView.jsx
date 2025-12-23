@@ -9,6 +9,7 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeMenuId, setActiveMenuId] = useState(null);
     const [deleteItem, setDeleteItem] = useState(null);
+    const [editItem, setEditItem] = useState(null);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -108,7 +109,7 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                                             <button
                                                 className="cn-menu-item"
                                                 onClick={() => {
-                                                    // TODO: Handle edit
+                                                    setEditItem(item);
                                                     setActiveMenuId(null);
                                                 }}
                                                 style={{
@@ -184,9 +185,13 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
             </div>
 
             <AddNotificationModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                isOpen={isModalOpen || !!editItem}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setEditItem(null);
+                }}
                 onSave={handleSaveNotification}
+                initialData={editItem}
             />
 
             <DeleteNotificationModal

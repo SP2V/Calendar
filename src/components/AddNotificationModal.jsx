@@ -4,7 +4,7 @@ import { AlarmClock } from 'lucide-react';
 import { thaiTimezones } from '../constants/timezones';
 import './AddNotificationModal.css';
 
-const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '' }) => {
+const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '', initialData = null }) => {
     const [title, setTitle] = useState('');
     const [date, setDate] = useState(initialDate);
     const [time, setTime] = useState('');
@@ -16,7 +16,23 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '' }) => 
     const dropdownRef = useRef(null);
 
     // Initial value effect or when opening
-    // (timezone state is already set)
+    useEffect(() => {
+        if (isOpen) {
+            if (initialData) {
+                // Edit Mode
+                setTitle(initialData.title || '');
+                setDate(initialData.date || '');
+                setTime(initialData.time || '');
+                setTimezone(initialData.timezoneRef || initialData.timezone || 'Asia/Bangkok');
+            } else {
+                // Add Mode
+                setTitle('');
+                setDate(initialDate || '');
+                setTime('');
+                setTimezone('Asia/Bangkok');
+            }
+        }
+    }, [isOpen, initialDate, initialData]);
 
     // Prevent background scroll when modal is open
     useEffect(() => {
@@ -51,8 +67,22 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '' }) => 
     const handleSave = () => {
         if (!title || !date || !time) return;
         const selectedTz = thaiTimezones.find(tz => tz.value === timezone);
-        onSave({ title, date, time, timezoneRef: timezone, timezone: selectedTz ? selectedTz.label : timezone });
-        handleClose();
+
+        const saveData = {
+            title,
+            date,
+            time,
+            timezoneRef: timezone,
+            timezone: selectedTz ? selectedTz.label : timezone
+        };
+
+        if (initialData && initialData.id) {
+            saveData.id = initialData.id;
+        }
+
+        onSave(saveData);
+        if (!initialData) handleClose();
+        else onClose();
     };
 
     const handleClose = () => {
@@ -87,7 +117,7 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '' }) => 
                 <div className="an-modal-header">
                     <div className="an-title-box">
                         <AlarmClock size={28} strokeWidth={2.5} color="#2563eb" />
-                        <span>ตั้งนาฬิกาเตือน</span>
+                        <span>{initialData ? 'แก้ไขการแจ้งเตือน' : 'ตั้งนาฬิกาเตือน'}</span>
                     </div>
                 </div>
 

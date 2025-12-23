@@ -9,6 +9,7 @@ import CancelBookingModal from "../components/CancelBookingModal";
 import LogoutModal from "../components/LogoutModal";
 import TimezoneModal from "../components/TimezoneModal";
 import NotificationView from "../components/NotificationView";
+import CustomNotificationView from "../components/CustomNotificationView";
 import TimezoneSuccessModal from "../components/TimezoneSuccessModal";
 import {
   subscribeSchedules,
@@ -21,7 +22,7 @@ import {
 import { onAuthStateChanged } from 'firebase/auth'; // Import auth listener
 import { useNavigate } from 'react-router-dom';
 import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarService';
-import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut, SettingsIcon, Bell, Calendar as CalendarLucide, Clock as ClockLucide } from 'lucide-react';
+import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut, SettingsIcon, Bell, Calendar as CalendarLucide, Clock as ClockLucide, AlarmClock } from 'lucide-react';
 import { TbTimezone } from "react-icons/tb";
 
 // --- ICONS (SVG) ---
@@ -945,7 +946,8 @@ const User = () => {
               <p>
                 {currentView === 'list' ? 'รายการจองนัดหมาย' :
                   currentView === 'notifications' ? 'การแจ้งเตือนทั้งหมด' :
-                    'จองตารางนัดหมาย'}
+                    currentView === 'custom_notifications' ? 'ตั้งค่าการแจ้งเตือนสำหรับกิจกรรมของฉัน' :
+                      'จองตารางนัดหมาย'}
               </p>
             </div>
           </div>
@@ -953,11 +955,13 @@ const User = () => {
             <button className="user-header-btn-back" onClick={() => {
               if (currentView === 'notifications') setCurrentView('form');
               else if (currentView === 'list') setCurrentView('form');
+              else if (currentView === 'custom_notifications') setCurrentView('form');
               else setCurrentView('list');
             }}>
               {currentView === 'list' ? '+ เพิ่มรายการ' :
                 currentView === 'notifications' ? 'รายการนัดหมายของฉัน' :
-                  'รายการนัดหมายของฉัน'}
+                  currentView === 'custom_notifications' ? 'กลับไปหน้าหลัก' :
+                    'รายการนัดหมายของฉัน'}
             </button>
 
             {/* Notification Bell */}
@@ -1118,6 +1122,10 @@ const User = () => {
                     <span>ประวัติการนัดหมาย</span>
                   </button>
 
+                  <button className="dropdown-item" onClick={() => { setIsProfileOpen(false); setCurrentView('custom_notifications'); }}>
+                    <AlarmClock size={18} />
+                    <span>เพิ่มการแจ้งเตือน</span>
+                  </button>
 
                   <button className="dropdown-item" onClick={() => { setIsProfileOpen(false); setShowTimezoneModal(true); }}>
                     <TbTimezone style={{ width: '18px', height: '18px' }} />
@@ -1156,6 +1164,11 @@ const User = () => {
         {/* --- CONTENT --- */}
         {currentView === 'notifications' ? (
           <NotificationView notifications={notifications} onMarkAllRead={handleMarkAllAsRead} />
+        ) : currentView === 'custom_notifications' ? (
+          <CustomNotificationView
+            notifications={[]} // Pass empty or state if available
+            onAddClick={() => { /* Open Add Notification Modal (Future) */ }}
+          />
         ) : !isViewMode ? (
           <div className="user-form-card">
             <h2 className="user-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

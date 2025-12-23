@@ -1,0 +1,264 @@
+.an-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.an-modal-container {
+    background: white;
+    width: 480px;
+    max-width: 90%;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Ensure modal doesn't get cut off if dropdown expands */
+    max-height: 90vh;
+}
+
+.an-modal-header {
+    padding: 24px 24px 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.an-title-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.an-close-btn {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.an-close-btn:hover {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.an-modal-body {
+    padding: 16px 24px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: visible;
+    /* Allow dropdown to overflow if needed, but container has max-height */
+}
+
+.an-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.an-label {
+    font-family: 'Kanit', sans-serif;
+    font-size: 0.95rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.an-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.an-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 1rem;
+    color: #1f2937;
+    outline: none;
+    transition: all 0.2s;
+    background: white;
+}
+
+.an-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Icon inside input */
+.an-input-icon-left {
+    position: absolute;
+    left: 14px;
+    color: #111827;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.an-input.with-icon {
+    padding-left: 44px;
+    cursor: pointer;
+}
+
+.an-select-wrapper {
+    position: relative;
+}
+
+.an-select-chevron {
+    color: #6b7280;
+    pointer-events: none;
+}
+
+/* Custom Dropdown Styling */
+.an-dropdown-list {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    max-height: 200px;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.an-search-box {
+    padding: 10px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    align-items: center;
+}
+
+.an-search-input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-family: 'Kanit', sans-serif;
+    font-size: 0.95rem;
+    color: #374151;
+}
+
+.an-list-items {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.an-dropdown-item {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    color: #374151;
+    cursor: pointer;
+    font-family: 'Kanit', sans-serif;
+    border-bottom: 1px solid #f9fafb;
+}
+
+.an-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.an-dropdown-item:hover {
+    background-color: #f3f4f6;
+}
+
+.an-dropdown-item.active {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.an-no-results {
+    padding: 16px;
+    text-align: center;
+    color: #9ca3af;
+    font-family: 'Kanit', sans-serif;
+    font-size: 0.9rem;
+}
+
+.an-modal-footer {
+    padding: 16px 24px 24px 24px;
+    display: flex;
+    gap: 12px;
+    border-top: 1px solid #f3f4f6;
+    margin-top: auto;
+}
+
+.an-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.an-btn.cancel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+}
+
+.an-btn.cancel:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.an-btn.save {
+    background: #2563eb;
+    border: 1px solid #2563eb;
+    color: white;
+}
+
+.an-btn.save:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

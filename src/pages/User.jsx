@@ -22,7 +22,7 @@ import {
 import { onAuthStateChanged } from 'firebase/auth'; // Import auth listener
 import { useNavigate } from 'react-router-dom';
 import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarService';
-import { subscribeCustomNotifications, addCustomNotification } from '../services/customNotificationService';
+import { subscribeCustomNotifications, addCustomNotification, deleteCustomNotification } from '../services/customNotificationService';
 import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut, SettingsIcon, Bell, Calendar as CalendarLucide, Clock as ClockLucide, AlarmClock } from 'lucide-react';
 import { TbTimezone } from "react-icons/tb";
 
@@ -848,7 +848,7 @@ const User = () => {
   // Handle deleting custom notification
   const handleDeleteCustomNotification = async (id) => {
     if (!currentUser) return;
-    if (!window.confirm("คุณแน่ใจว่าต้องการลบการแจ้งเตือนนี้?")) return;
+    // if (!window.confirm("คุณแน่ใจว่าต้องการลบการแจ้งเตือนนี้?")) return;
     try {
       await deleteCustomNotification(id);
       setPopupMessage({ type: 'success', message: 'ลบการแจ้งเตือนเรียบร้อยแล้ว' });

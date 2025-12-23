@@ -22,6 +22,7 @@ import {
 import { onAuthStateChanged } from 'firebase/auth'; // Import auth listener
 import { useNavigate } from 'react-router-dom';
 import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarService';
+import { subscribeCustomNotifications, addCustomNotification } from '../services/customNotificationService';
 import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut, SettingsIcon, Bell, Calendar as CalendarLucide, Clock as ClockLucide, AlarmClock } from 'lucide-react';
 import { TbTimezone } from "react-icons/tb";
 
@@ -97,6 +98,22 @@ const User = () => {
     const saved = localStorage.getItem('readNotificationIds');
     return saved ? JSON.parse(saved) : [];
   });
+
+  // Custom Notifications State
+  const [customNotifications, setCustomNotifications] = useState([]);
+
+  useEffect(() => {
+    if (currentUser) {
+      console.log("User.jsx: Subscribing to notifications for", currentUser.uid);
+      const unsub = subscribeCustomNotifications(currentUser.uid, (data) => {
+        console.log("User.jsx: Received custom notifications update:", data);
+        setCustomNotifications(data);
+      });
+      return () => unsub();
+    } else {
+      setCustomNotifications([]);
+    }
+  }, [currentUser]);
 
   // Initial state empty, loaded via effect when user is known
   const [timezoneNotifications, setTimezoneNotifications] = useState([]);
@@ -816,6 +833,31 @@ const User = () => {
     });
   };
 
+  // Handle saving custom notification
+  const handleSaveCustomNotification = async (data) => {
+    if (!currentUser) return;
+    try {
+      await addCustomNotification(currentUser.uid, data);
+      setPopupMessage({ type: 'success', message: 'บันทึกการแจ้งเตือนเรียบร้อยแล้ว' });
+    } catch (error) {
+      console.error("Failed to add custom notification", error);
+      setPopupMessage({ type: 'error', message: 'เกิดข้อผิดพลาดในการบันทึก' });
+    }
+  };
+
+  // Handle deleting custom notification
+  const handleDeleteCustomNotification = async (id) => {
+    if (!currentUser) return;
+    if (!window.confirm("คุณแน่ใจว่าต้องการลบการแจ้งเตือนนี้?")) return;
+    try {
+      await deleteCustomNotification(id);
+      setPopupMessage({ type: 'success', message: 'ลบการแจ้งเตือนเรียบร้อยแล้ว' });
+    } catch (error) {
+      console.error("Failed to delete custom notification", error);
+      setPopupMessage({ type: 'error', message: 'ลบการไม่สำเร็จ' });
+    }
+  };
+
   // --- RENDER HELPERS ---
   const renderCalendarGrid = () => {
     const daysInMonth = getDaysInMonth(currentDate);
@@ -1166,8 +1208,9 @@ const User = () => {
           <NotificationView notifications={notifications} onMarkAllRead={handleMarkAllAsRead} />
         ) : currentView === 'custom_notifications' ? (
           <CustomNotificationView
-            notifications={[]} // Pass empty or state if available
-            onAddClick={() => { /* Open Add Notification Modal (Future) */ }}
+            notifications={customNotifications}
+            onSaveNotification={handleSaveCustomNotification}
+            onDeleteNotification={handleDeleteCustomNotification}
           />
         ) : !isViewMode ? (
           <div className="user-form-card">

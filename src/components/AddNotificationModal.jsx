@@ -73,12 +73,9 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '' }) => 
                 {/* Header */}
                 <div className="an-modal-header">
                     <div className="an-title-box">
-                        <AlarmClock size={28} strokeWidth={2.5} color="#111827" />
+                        <AlarmClock size={28} strokeWidth={2.5} color="#2563eb" />
                         <span>ตั้งนาฬิกาเตือน</span>
                     </div>
-                    <button className="an-close-btn" onClick={handleClose}>
-                        <X size={20} />
-                    </button>
                 </div>
 
                 {/* Body */}
@@ -88,7 +85,7 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '' }) => 
                         <label className="an-label">ชื่อการเตือน</label>
                         <input
                             type="text"
-                            className="an-input"
+                            className="an-input-name"
                             placeholder="ระบุชื่อการแจ้งเตือน"
                             value={title}
                             onChange={e => setTitle(e.target.value)}
@@ -101,11 +98,28 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '' }) => 
                         <div className="an-input-wrapper">
                             <Calendar className="an-input-icon-left" size={20} strokeWidth={2} />
                             <input
-                                type="date"
+                                type="text"
                                 className="an-input with-icon"
+                                value={date ? date.split('-').reverse().join('/') : ''}
+                                placeholder="dd/mm/yyyy"
+                                readOnly
+                                style={{ color: date ? '#1f2937' : '#9ca3af' }}
+                            />
+                            <input
+                                type="date"
+                                className="an-input"
                                 value={date}
                                 onChange={e => setDate(e.target.value)}
-                                style={{ color: date ? '#1f2937' : '#9ca3af' }}
+                                style={{
+                                    position: 'absolute',
+                                    left: 0,
+                                    top: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    opacity: 0,
+                                    cursor: 'pointer',
+                                    zIndex: 10
+                                }}
                             />
                             <ChevronDown className="an-select-chevron" size={16} />
                         </div>

@@ -18,6 +18,18 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '' }) => 
     // Initial value effect or when opening
     // (timezone state is already set)
 
+    // Prevent background scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     // Click outside handler
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -47,6 +59,7 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '' }) => 
         setTitle('');
         setDate('');
         setTime('');
+        setTimezone('Asia/Bangkok');
         onClose();
     };
 

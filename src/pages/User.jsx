@@ -1002,7 +1002,7 @@ const User = () => {
             }}>
               {currentView === 'list' ? '+ เพิ่มรายการ' :
                 currentView === 'notifications' ? 'รายการนัดหมายของฉัน' :
-                  currentView === 'custom_notifications' ? 'กลับไปหน้าหลัก' :
+                  currentView === 'custom_notifications' ? '+ เพิ่มการนัดหมาย' :
                     'รายการนัดหมายของฉัน'}
             </button>
 

@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
-import { Calendar, Clock, Globe, MoreVertical, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Clock, Globe, MoreVertical, Plus, ChevronLeft, ChevronRight, Trash, SquarePen } from 'lucide-react';
 import { AlarmClock } from 'lucide-react';
 import AddNotificationModal from './AddNotificationModal';
+import DeleteNotificationModal from './DeleteNotificationModal';
 import './CustomNotificationView.css';
 
 const CustomNotificationView = ({ notifications = [], onSaveNotification, onDeleteNotification }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeMenuId, setActiveMenuId] = useState(null);
+    const [deleteItem, setDeleteItem] = useState(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (activeMenuId && !event.target.closest('.cn-card-menu') && !event.target.closest('.cn-menu-btn')) {
+                setActiveMenuId(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [activeMenuId]);
 
     // Use passed notifications or empty array
     const displayData = notifications;
@@ -38,7 +53,7 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
             <div className="cn-header">
                 <div className="cn-header-left">
                     <AlarmClock size={30} strokeWidth={2.5} color="#2563eb" />
-                    <h2 className="cn-title">การแจ้งเตือนของคุณ</h2>
+                    <h2 className="cn-title">การแจ้งเตือนของฉัน</h2>
                 </div>
                 <button className="cn-add-btn" onClick={() => setIsModalOpen(true)}>
                     <Plus size={24} strokeWidth={2.5} />
@@ -80,32 +95,68 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                                             right: 0,
                                             top: '100%',
                                             background: 'white',
-                                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                            borderRadius: '8px',
-                                            padding: '4px',
+                                            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                                            borderRadius: '12px',
+                                            padding: '8px',
                                             zIndex: 10,
-                                            minWidth: '100px',
-                                            border: '1px solid #e5e7eb'
+                                            minWidth: '120px',
+                                            border: 'none',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '4px'
                                         }}>
                                             <button
+                                                className="cn-menu-item"
+                                                onClick={() => {
+                                                    // TODO: Handle edit
+                                                    setActiveMenuId(null);
+                                                }}
                                                 style={{
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                    gap: '8px',
+                                                    gap: '10px',
                                                     width: '100%',
-                                                    padding: '8px',
+                                                    padding: '8px 12px',
+                                                    color: '#374151',
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.95rem',
+                                                    borderRadius: '8px',
+                                                    transition: 'background 0.2s'
+                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                                                onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                                            >
+                                                <SquarePen size={18} strokeWidth={2.5} />
+                                                <span style={{ fontWeight: 500 }}>แก้ไข</span>
+                                            </button>
+
+                                            <button
+                                                className="cn-menu-item"
+                                                onClick={() => {
+                                                    setDeleteItem(item);
+                                                    setActiveMenuId(null);
+                                                }}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '10px',
+                                                    width: '100%',
+                                                    padding: '8px 12px',
                                                     color: '#ef4444',
                                                     background: 'none',
                                                     border: 'none',
                                                     cursor: 'pointer',
-                                                    fontSize: '0.875rem'
+                                                    fontSize: '0.95rem',
+                                                    borderRadius: '8px',
+                                                    transition: 'background 0.2s'
                                                 }}
-                                                onClick={() => {
-                                                    if (onDeleteNotification) onDeleteNotification(item.id);
-                                                    setActiveMenuId(null);
-                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.background = '#fee2e2'}
+                                                onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                                             >
-                                                <span>ลบรายการ</span>
+                                                <Trash size={18} strokeWidth={2.5} />
+                                                <span style={{ fontWeight: 500 }}>ลบ</span>
                                             </button>
                                         </div>
                                     )}
@@ -136,6 +187,18 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveNotification}
+            />
+
+            <DeleteNotificationModal
+                isOpen={!!deleteItem}
+                onClose={() => setDeleteItem(null)}
+                onConfirm={() => {
+                    if (onDeleteNotification && deleteItem) {
+                        onDeleteNotification(deleteItem.id);
+                    }
+                    setDeleteItem(null);
+                }}
+                notification={deleteItem}
             />
         </div>
     );

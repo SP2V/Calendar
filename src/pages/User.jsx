@@ -11,6 +11,7 @@ import TimezoneModal from "../components/TimezoneModal";
 import NotificationView from "../components/NotificationView";
 import CustomNotificationView from "../components/CustomNotificationView";
 import TimezoneSuccessModal from "../components/TimezoneSuccessModal";
+import SuccessToast from "../components/SuccessToast";
 import {
   subscribeSchedules,
   subscribeActivityTypes,
@@ -55,6 +56,7 @@ const User = () => {
   const [activityTypes, setActivityTypes] = useState([]);
   const [bookings, setBookings] = useState([]); // New state for bookings
   const [currentUser, setCurrentUser] = useState(null); // Auth State
+  const [successToast, setSuccessToast] = useState({ isOpen: false, title: '', subTitle: '' });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -839,11 +841,14 @@ const User = () => {
     try {
       if (data.id) {
         await updateCustomNotification(data.id, data);
-        setPopupMessage({ type: 'success', message: 'แก้ไขการแจ้งเตือนเรียบร้อยแล้ว' });
+        // Show Success Toast
+        setSuccessToast({ isOpen: true, title: 'แก้ไขการแจ้งเตือนสำเร็จ', subTitle: 'บันทึกการแก้ไขเรียบร้อยแล้ว' });
+        setTimeout(() => setSuccessToast(prev => ({ ...prev, isOpen: false })), 3000);
       } else {
         await addCustomNotification(currentUser.uid, data);
-        // Only show popup for Edit, not Add, as per user request
-        // setPopupMessage({ type: 'success', message: 'บันทึกการแจ้งเตือนเรียบร้อยแล้ว' });
+        // Show Success Toast
+        setSuccessToast({ isOpen: true, title: 'สร้างการแจ้งเตือนสำเร็จ', subTitle: 'เพิ่มรายการแจ้งเตือนเรียบร้อยแล้ว' });
+        setTimeout(() => setSuccessToast(prev => ({ ...prev, isOpen: false })), 3000);
       }
     } catch (error) {
       console.error("Failed to save custom notification", error);
@@ -1769,6 +1774,13 @@ const User = () => {
         onClose={() => setShowTimezoneModal(false)}
         onSuccess={handleTimezoneSuccess}
         currentTimezone={selectedTimezone}
+      />
+
+      <SuccessToast
+        isOpen={successToast.isOpen}
+        onClose={() => setSuccessToast(prev => ({ ...prev, isOpen: false }))}
+        title={successToast.title}
+        subTitle={successToast.subTitle}
       />
 
       <CancelBookingModal

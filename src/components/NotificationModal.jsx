@@ -18,8 +18,7 @@ const NotificationModal = ({ isOpen, onClose, title, time }) => {
                     </div>
                 </div>
 
-                <h2 className="notif-modal-header">ถึงเวลาแล้ว!</h2>
-                <p className="notif-modal-title">{title}</p>
+                <h2 className="notif-modal-header">ถึงเวลาต้อง "{title}" แล้ว!</h2>
                 <p className="notif-modal-time">
                     นาฬิกาตั้งไว้เวลา <span className="notif-modal-time-value">{time}</span>
                 </p>

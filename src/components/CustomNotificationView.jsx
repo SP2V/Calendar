@@ -24,8 +24,17 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
         };
     }, [activeMenuId]);
 
-    // Use passed notifications or empty array
-    const displayData = notifications;
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+
+    // Calculate pagination properties
+    const totalPages = Math.ceil(notifications.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+    // Use passed notifications
+    const displayData = notifications.slice(indexOfFirstItem, indexOfLastItem);
 
     const handleSaveNotification = (data) => {
         if (onSaveNotification) {
@@ -174,14 +183,35 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
 
             <div className="cn-footer">
                 <div className="cn-footer-text">
-                    แสดง {displayData.length} รายการจากทั้งหมด {displayData.length} รายการ
+                    แสดง {displayData.length } รายการจากทั้งหมด {notifications.length} รายการ
                 </div>
-                <div className="cn-pagination">
-                    <button className="cn-page-btn"><ChevronLeft size={18} /></button>
-                    <button className="cn-page-btn active">1</button>
-                    <button className="cn-page-btn" disabled style={{ opacity: 0.5 }}>2</button>
-                    <button className="cn-page-btn"><ChevronRight size={18} /></button>
-                </div>
+                {totalPages > 1 && (
+                    <div className="cn-pagination">
+                        <button
+                            className="cn-page-btn"
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        >
+                            <ChevronLeft size={16} />
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                                key={page}
+                                className={`cn-page-btn ${currentPage === page ? 'active' : ''}`}
+                                onClick={() => setCurrentPage(page)}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                        <button
+                            className="cn-page-btn"
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        >
+                            <ChevronRight size={16} />
+                        </button>
+                    </div>
+                )}
             </div>
 
             <AddNotificationModal

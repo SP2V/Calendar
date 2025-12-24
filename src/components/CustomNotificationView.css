@@ -41,7 +41,7 @@
 .cn-add-btn {
     width: 70px;
     height: 45px;
-    background-color: #2563eb;
+    background-color: #3b82f6;
     color: white;
     border: none;
     border-radius: 30px;
@@ -181,7 +181,7 @@
 }
 
 .cn-page-btn.active {
-    background-color: #2563eb;
+    background-color: #3b82f6;
     color: white;
     border-color: #2563eb;
     box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);

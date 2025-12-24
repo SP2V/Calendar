@@ -908,9 +908,9 @@ textarea.user-custom-input {
 }
 
 .btn-card-action.view {
-  background-color: #2563eb;
+  background-color: #3b82f6;
   color: white;
-  border: 1px solid #2563eb;
+  border: 1px solid #3b82f6;
 }
 
 .btn-card-action.view:hover {
@@ -971,9 +971,9 @@ textarea.user-custom-input {
 }
 
 .page-btn.active {
-  background-color: #2563eb;
+  background-color: #3b82f6;
   color: white;
-  border-color: #2563eb;
+  border-color: #3b82f6;
   box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
 }
 

@@ -12,6 +12,8 @@ import NotificationView from "../components/NotificationView";
 import CustomNotificationView from "../components/CustomNotificationView";
 import TimezoneSuccessModal from "../components/TimezoneSuccessModal";
 import SuccessToast from "../components/SuccessToast";
+import NotificationModal from "../components/NotificationModal";
+import { thaiTimezones } from "../constants/timezones";
 import {
   subscribeSchedules,
   subscribeActivityTypes,
@@ -56,6 +58,7 @@ const User = () => {
   const [activityTypes, setActivityTypes] = useState([]);
   const [bookings, setBookings] = useState([]); // New state for bookings
   const [currentUser, setCurrentUser] = useState(null); // Auth State
+  const [notificationPopup, setNotificationPopup] = useState({ isOpen: false, title: '', time: '' });
   const [successToast, setSuccessToast] = useState({ isOpen: false, title: '', subTitle: '' });
 
   // Form State
@@ -272,7 +275,11 @@ const User = () => {
         dayOfMonth: notifDate.getDate(),
         footerTime: `${dateEng}, ${timeEng} (${n.timezoneRef || n.timezone})`, // Show declared TZ
         startTime: notifDate.toISOString(),
-        read: readNotificationIds.includes(n.id)
+        read: readNotificationIds.includes(n.id),
+        // Data for Sorting
+        date: n.date,
+        time: n.time,
+        timezoneRef: n.timezoneRef || n.timezone
       };
     });
 
@@ -287,9 +294,31 @@ const User = () => {
       })),
       ...activeCustomNotifications
     ].sort((a, b) => {
-      const timeA = a.startTime ? new Date(a.startTime).getTime() : 0;
-      const timeB = b.startTime ? new Date(b.startTime).getTime() : 0;
-      return timeB - timeA; // Newest first
+      // Calculate "Notification Time" (When did it pop up?)
+      // For Bookings: Start Time - 30 Minutes
+      // For Custom/Timezone: Start Time (Immediate)
+
+      const getNotifTime = (item) => {
+        if (item.type === 'custom') {
+          const tzItem = thaiTimezones.find(z => z.value === (item.timezoneRef || 'Asia/Bangkok'));
+          const offsetMatch = tzItem ? tzItem.label.match(/\(GMT([+-]\d{2}:\d{2})\)/) : null;
+          const offset = offsetMatch ? offsetMatch[1] : '+07:00';
+          // Construct ISO string with offset to get absolute timestamp
+          const isoString = `${item.date}T${item.time}:00${offset}`;
+          return Date.parse(isoString);
+        }
+
+        let t = item.startTime ? new Date(item.startTime).getTime() : 0;
+        if (item.type === 'booking') {
+          t -= 30 * 60 * 1000;
+        }
+        return t;
+      };
+
+      const timeA = getNotifTime(a);
+      const timeB = getNotifTime(b);
+
+      return timeB - timeA; // Newest Notification First
     });
 
     setNotifications(combinedNotifications);
@@ -299,14 +328,28 @@ const User = () => {
 
   // Alert Trigger Logic
   const shownNotificationIds = useRef(new Set()); // Track shown toasts to prevent duplicates
+  const latestNotificationsRef = useRef(customNotifications); // Ref to access latest state in interval
+
+  // Keep ref updated
+  useEffect(() => {
+    latestNotificationsRef.current = customNotifications;
+  }, [customNotifications]);
 
   useEffect(() => {
-    if (!customNotifications.length) return;
+    // We don't depend on customNotifications here anymore for the interval-creation,
+    // getting rid of constant re-creation of interval.
+    // Instead we start ONE interval and read from Ref.
+
+    // Actually, if we want to run interval always, we can just mount it once.
+    // But let's keep it simple.
 
     const interval = setInterval(() => {
       const now = new Date();
+      const currentNotifs = latestNotificationsRef.current;
 
-      customNotifications.forEach(n => {
+      if (!currentNotifs || currentNotifs.length === 0) return;
+
+      currentNotifs.forEach(n => {
         if (!n.date || !n.time) return;
 
         // Timezone Check
@@ -320,22 +363,22 @@ const User = () => {
         const targetDate = n.date;
         const targetTime = n.time;
 
-        // Logic:
-        // Trigger if Date matches AND Time matches (minute precision)
-        // AND not shown.
-        // Note: This matches "Current Minute". 
-        // If we want "Within last 1 minute" logic like before:
-        /*
-           Logic with Strings is harder for "diff". 
-           But if we check every 1 second, matching exact HH:mm is sufficient effectively.
-           Unless the user opens the app 30 seconds into the minute.
-        */
+        // Logic: Exact Minute Match
+        const isExactMatch = (nowDateInTz === targetDate && nowTimeInTz === targetTime);
 
+        if (isExactMatch && !shownNotificationIds.current.has(n.id)) {
+          setNotificationPopup({
+            isOpen: true,
+            title: n.title,
+            time: n.time
+          });
+          shownNotificationIds.current.add(n.id);
+        }
       });
-    }, 500); // Check every 1 second
+    }, 1000); // Check every 1 second
 
     return () => clearInterval(interval);
-  }, [customNotifications]);
+  }, []); // Mount once!
 
   // Persist read status
   useEffect(() => {
@@ -1894,6 +1937,13 @@ const User = () => {
         onClose={() => setSuccessToast(prev => ({ ...prev, isOpen: false }))}
         title={successToast.title}
         subTitle={successToast.subTitle}
+      />
+
+      <NotificationModal
+        isOpen={notificationPopup.isOpen}
+        onClose={() => setNotificationPopup(prev => ({ ...prev, isOpen: false }))}
+        title={notificationPopup.title}
+        time={notificationPopup.time}
       />
 
       <CancelBookingModal

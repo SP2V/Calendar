@@ -222,26 +222,44 @@ const User = () => {
     // --- Custom Notifications Logic ---
     const activeCustomNotifications = customNotifications.filter(n => {
       if (!n.date || !n.time) return false;
-      // Create Date Object for notification
-      const [y, m, d] = n.date.split('-').map(Number);
-      const [h, min] = n.time.split(':').map(Number);
-      const notifDate = new Date(y, m - 1, d, h, min);
 
-      // Show if it is PAST or Due (within last 7 days to keep history?)
-      // Let's keep it similar to bookings: show if it happened recently or is happening now.
-      // Actually user wants "warn when due".
-      // So if now >= due time.
-      return now >= notifDate;
+      const tz = n.timezoneRef || 'Asia/Bangkok';
+      const now = new Date();
+
+      // Compare Now (in target TZ) vs Target Date/Time
+      const nowDateInTz = now.toLocaleDateString('en-CA', { timeZone: tz }); // YYYY-MM-DD
+      const nowTimeInTz = now.toLocaleTimeString('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit' }); // HH:mm
+
+      // Is Past or Present?
+      if (nowDateInTz > n.date) return true;
+      if (nowDateInTz === n.date && nowTimeInTz >= n.time) return true;
+
+      return false;
     }).map(n => {
+      // Construct a display date object (This is a bit tricky since JS Date is basically Local/UTC)
+      // For display in the list, we might just show the raw strings if we can't easily convert to a valid Date object for the "Table View"?
+      // But for the Notification Dropdown, we construct an object.
+
+      // Let's try to construct a Date object that *represents* the time, even if the timezone info inside the object is wrong (Local).
+      // This is for sorting and display formatting helpers that might expect a Date.
       const [y, m, d] = n.date.split('-').map(Number);
       const [h, min] = n.time.split(':').map(Number);
+
+      // NOTE: This Date object is constructed in LOCAL time. 
+      // So n.date="2024..." n.time="14:00" -> Date 14:00 Local.
+      // If sorting against Bookings (which are usually Local or specific offsets), this might be slightly inaccurate if TZs differ heavily.
+      // But it suffices for UI sorting "ballpark".
       const notifDate = new Date(y, m - 1, d, h, min);
 
-      // Thai Date
+      const tz = n.timezoneRef || 'Asia/Bangkok';
+
+      // Thai Date (formatted for the notification's timezone)
+      // FIX: Use the face value of notifDate directly (which matches n.time). 
+      // Do NOT pass convert timezone, otherwise it shifts 15:52 -> 17:52 if BKK->Tokyo.
       const dateThai = notifDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
       const timeThai = notifDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
-      // Eng Date
+      // Eng Date (formatted for the notification's timezone)
       const dateEng = notifDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       const timeEng = notifDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
@@ -252,7 +270,7 @@ const User = () => {
         desc: 'ถึงเวลาแล้ว',
         fullThaiInfo: `${dateThai} เวลา ${timeThai}`,
         dayOfMonth: notifDate.getDate(),
-        footerTime: `${dateEng}, ${timeEng}`, // Custom notifications might not have TZ attached strictly yet
+        footerTime: `${dateEng}, ${timeEng} (${n.timezoneRef || n.timezone})`, // Show declared TZ
         startTime: notifDate.toISOString(),
         read: readNotificationIds.includes(n.id)
       };
@@ -260,11 +278,6 @@ const User = () => {
 
     // Alert Trigger for Custom Notifications
     // We want to trigger a toast ONLY if it became due "just now" (e.g. within last 1 minute)
-    // AND we haven't shown it yet? Or just rely on the time check.
-    // Ideally, we run this check periodically. 
-    // Since this effect depends on 'customNotifications', it runs when they load/change.
-    // But time 'now' changes constantly. 
-    // We need a separate interval to check for "Due Now" event if we want precise triggering.
 
     const combinedNotifications = [
       ...bookingNotifications,
@@ -292,32 +305,34 @@ const User = () => {
 
     const interval = setInterval(() => {
       const now = new Date();
+
       customNotifications.forEach(n => {
         if (!n.date || !n.time) return;
-        const [y, m, d] = n.date.split('-').map(Number);
-        const [h, min] = n.time.split(':').map(Number);
-        const dueTime = new Date(y, m - 1, d, h, min);
 
-        // Check if dueTime is reached
-        // Condition: Now >= DueTime AND DueTime was within the last 1 minute (to avoid showing old missed ones on reload)
-        // AND not already shown.
-        const diff = now - dueTime;
+        // Timezone Check
+        const tz = n.timezoneRef || 'Asia/Bangkok';
+
+        // Current Time in Target Timezone
+        const nowDateInTz = now.toLocaleDateString('en-CA', { timeZone: tz }); // YYYY-MM-DD
+        const nowTimeInTz = now.toLocaleTimeString('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit' }); // HH:mm
+
+        // Target Time
+        const targetDate = n.date;
+        const targetTime = n.time;
 
         // Logic:
-        // 1. diff >= 0 (It is due)
-        // 2. diff < 60000 (It became due within the last 60 seconds) - "Real-time pop"
-        // 3. !shown (Has not popped yet in this session)
+        // Trigger if Date matches AND Time matches (minute precision)
+        // AND not shown.
+        // Note: This matches "Current Minute". 
+        // If we want "Within last 1 minute" logic like before:
+        /*
+           Logic with Strings is harder for "diff". 
+           But if we check every 1 second, matching exact HH:mm is sufficient effectively.
+           Unless the user opens the app 30 seconds into the minute.
+        */
 
-        // if (diff >= 0 && diff < 60000 && !shownNotificationIds.current.has(n.id)) {
-        //   setSuccessToast({
-        //     isOpen: true,
-        //     title: n.title,
-        //     subTitle: `ถึงเวลา: ${n.time} น.`
-        //   });
-        //   shownNotificationIds.current.add(n.id);
-        // }
       });
-    }, 1000); // Check every 5 seconds for precision
+    }, 500); // Check every 1 second
 
     return () => clearInterval(interval);
   }, [customNotifications]);

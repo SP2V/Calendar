@@ -153,10 +153,19 @@ const User = () => {
     }
   }, [currentUser]);
 
+  // Real-time ticker to update notifications every 30 seconds
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTick(t => t + 1);
+    }, 30000); // Update UI every 30 seconds
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     // Generate notifications from bookings
-    // Generate notifications from bookings & timezone changes
-    if ((!bookings || bookings.length === 0) && timezoneNotifications.length === 0) {
+    // Generate notifications from bookings & timezone changes & custom notifications
+    if ((!bookings || bookings.length === 0) && timezoneNotifications.length === 0 && customNotifications.length === 0) {
       setNotifications([]);
       return;
     }
@@ -175,7 +184,7 @@ const User = () => {
       })
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    const newNotifications = upcomingBookings.map(b => {
+    const bookingNotifications = upcomingBookings.map(b => {
       const start = new Date(b.startTime);
       // const diffMs = start - now;
       const end = new Date(b.endTime);
@@ -210,19 +219,108 @@ const User = () => {
       };
     });
 
+    // --- Custom Notifications Logic ---
+    const activeCustomNotifications = customNotifications.filter(n => {
+      if (!n.date || !n.time) return false;
+      // Create Date Object for notification
+      const [y, m, d] = n.date.split('-').map(Number);
+      const [h, min] = n.time.split(':').map(Number);
+      const notifDate = new Date(y, m - 1, d, h, min);
 
+      // Show if it is PAST or Due (within last 7 days to keep history?)
+      // Let's keep it similar to bookings: show if it happened recently or is happening now.
+      // Actually user wants "warn when due".
+      // So if now >= due time.
+      return now >= notifDate;
+    }).map(n => {
+      const [y, m, d] = n.date.split('-').map(Number);
+      const [h, min] = n.time.split(':').map(Number);
+      const notifDate = new Date(y, m - 1, d, h, min);
 
-    const combinedNotifications = [...newNotifications, ...timezoneNotifications.map(tz => ({
-      ...tz,
-      read: readNotificationIds.includes(tz.id)
-    }))].sort((a, b) => {
+      // Thai Date
+      const dateThai = notifDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+      const timeThai = notifDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+      // Eng Date
+      const dateEng = notifDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      const timeEng = notifDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+      return {
+        id: n.id,
+        type: 'custom',
+        title: n.title,
+        desc: 'ถึงเวลาแล้ว',
+        fullThaiInfo: `${dateThai} เวลา ${timeThai}`,
+        dayOfMonth: notifDate.getDate(),
+        footerTime: `${dateEng}, ${timeEng}`, // Custom notifications might not have TZ attached strictly yet
+        startTime: notifDate.toISOString(),
+        read: readNotificationIds.includes(n.id)
+      };
+    });
+
+    // Alert Trigger for Custom Notifications
+    // We want to trigger a toast ONLY if it became due "just now" (e.g. within last 1 minute)
+    // AND we haven't shown it yet? Or just rely on the time check.
+    // Ideally, we run this check periodically. 
+    // Since this effect depends on 'customNotifications', it runs when they load/change.
+    // But time 'now' changes constantly. 
+    // We need a separate interval to check for "Due Now" event if we want precise triggering.
+
+    const combinedNotifications = [
+      ...bookingNotifications,
+      ...timezoneNotifications.map(tz => ({
+        ...tz,
+        read: readNotificationIds.includes(tz.id)
+      })),
+      ...activeCustomNotifications
+    ].sort((a, b) => {
       const timeA = a.startTime ? new Date(a.startTime).getTime() : 0;
       const timeB = b.startTime ? new Date(b.startTime).getTime() : 0;
       return timeB - timeA; // Newest first
     });
 
     setNotifications(combinedNotifications);
-  }, [bookings, timezoneNotifications, readNotificationIds, currentUser, selectedTimezone]);
+  }, [bookings, timezoneNotifications, customNotifications, readNotificationIds, currentUser, selectedTimezone, tick]);
+
+
+
+  // Alert Trigger Logic
+  const shownNotificationIds = useRef(new Set()); // Track shown toasts to prevent duplicates
+
+  useEffect(() => {
+    if (!customNotifications.length) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      customNotifications.forEach(n => {
+        if (!n.date || !n.time) return;
+        const [y, m, d] = n.date.split('-').map(Number);
+        const [h, min] = n.time.split(':').map(Number);
+        const dueTime = new Date(y, m - 1, d, h, min);
+
+        // Check if dueTime is reached
+        // Condition: Now >= DueTime AND DueTime was within the last 1 minute (to avoid showing old missed ones on reload)
+        // AND not already shown.
+        const diff = now - dueTime;
+
+        // Logic:
+        // 1. diff >= 0 (It is due)
+        // 2. diff < 60000 (It became due within the last 60 seconds) - "Real-time pop"
+        // 3. !shown (Has not popped yet in this session)
+
+        // if (diff >= 0 && diff < 60000 && !shownNotificationIds.current.has(n.id)) {
+        //   setSuccessToast({
+        //     isOpen: true,
+        //     title: n.title,
+        //     subTitle: `ถึงเวลา: ${n.time} น.`
+        //   });
+        //   shownNotificationIds.current.add(n.id);
+        // }
+      });
+    }, 1000); // Check every 5 seconds for precision
+
+    return () => clearInterval(interval);
+  }, [customNotifications]);
 
   // Persist read status
   useEffect(() => {

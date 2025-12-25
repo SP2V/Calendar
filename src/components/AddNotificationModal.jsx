@@ -4,9 +4,167 @@ import { AlarmClock } from 'lucide-react';
 import { thaiTimezones } from '../constants/timezones';
 import './AddNotificationModal.css';
 
+// --- Time Wheel Picker Component ---
+const TimeWheelPickerModal = ({ isOpen, onClose, onConfirm, initialValue }) => {
+    if (!isOpen) return null;
+
+    const [selectedHour, setSelectedHour] = useState('09');
+    const [selectedMinute, setSelectedMinute] = useState('00');
+
+    const hourListRef = useRef(null);
+    const minuteListRef = useRef(null);
+    const isScrollingRef = useRef(false);
+
+    const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+    const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+
+    // Initial setup
+    useEffect(() => {
+        if (isOpen) {
+            let initialH = '09';
+            let initialM = '00';
+
+            if (initialValue) {
+                const [h, m] = initialValue.split(':');
+                initialH = h;
+                initialM = m;
+            } else {
+                const now = new Date();
+                initialH = String(now.getHours()).padStart(2, '0');
+                initialM = String(now.getMinutes()).padStart(2, '0');
+            }
+
+            setSelectedHour(initialH);
+            setSelectedMinute(initialM);
+
+            // Scroll to initial position after render
+            setTimeout(() => {
+                if (hourListRef.current) {
+                    hourListRef.current.scrollTop = parseInt(initialH) * 40;
+                }
+                if (minuteListRef.current) {
+                    minuteListRef.current.scrollTop = parseInt(initialM) * 40;
+                }
+            }, 0);
+        }
+    }, [isOpen, initialValue]);
+
+    const handleConfirm = () => {
+        onConfirm(`${selectedHour}:${selectedMinute}`);
+        onClose();
+    };
+
+    const scrollTimeoutRef = useRef(null);
+
+    const handleScroll = (e, type) => {
+        if (isScrollingRef.current) return;
+
+        // Clear previous timeout to debounce the state update
+        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+
+        scrollTimeoutRef.current = setTimeout(() => {
+            const itemHeight = 40;
+            const index = Math.round(e.target.scrollTop / itemHeight);
+
+            if (type === 'hour') {
+                const val = hours[index];
+                if (val && val !== selectedHour) setSelectedHour(val);
+            } else {
+                const val = minutes[index];
+                if (val && val !== selectedMinute) setSelectedMinute(val);
+            }
+        }, 50); // Small delay to allow smooth scrolling without constant re-renders
+    };
+
+    const handleItemClick = (val, type) => {
+        isScrollingRef.current = true;
+        const itemHeight = 40;
+
+        if (type === 'hour') {
+            setSelectedHour(val);
+            if (hourListRef.current) {
+                hourListRef.current.scrollTo({
+                    top: hours.indexOf(val) * itemHeight,
+                    behavior: 'smooth'
+                });
+            }
+        } else {
+            setSelectedMinute(val);
+            if (minuteListRef.current) {
+                minuteListRef.current.scrollTo({
+                    top: minutes.indexOf(val) * itemHeight,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Reset scrolling lock after animation
+        setTimeout(() => {
+            isScrollingRef.current = false;
+        }, 500);
+    };
+
+    return (
+        <div className="an-modal-overlay" style={{ zIndex: 1001 }} onClick={onClose}>
+            <div className="time-picker-card" onClick={e => e.stopPropagation()}>
+                <div className="time-picker-header">
+                    <span className="time-picker-label">ชั่วโมง</span>
+                    <span className="time-picker-label">นาที</span>
+                </div>
+                <div className="time-picker-body">
+                    {/* Visual Highlight Bar */}
+                    <div className="time-selection-bar"></div>
+
+                    {/* Hours Column */}
+                    <div className="time-column">
+                        <div
+                            className="time-scroll-container"
+                            ref={hourListRef}
+                            onScroll={(e) => handleScroll(e, 'hour')}
+                        >
+                            {hours.map(h => (
+                                <div
+                                    key={h}
+                                    className={`time-item ${selectedHour === h ? 'selected' : ''}`}
+                                    onClick={() => handleItemClick(h, 'hour')}
+                                >
+                                    {h}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="time-separator">:</div>
+
+                    {/* Minutes Column */}
+                    <div className="time-column">
+                        <div
+                            className="time-scroll-container"
+                            ref={minuteListRef}
+                            onScroll={(e) => handleScroll(e, 'minute')}
+                        >
+                            {minutes.map(m => (
+                                <div
+                                    key={m}
+                                    className={`time-item ${selectedMinute === m ? 'selected' : ''}`}
+                                    onClick={() => handleItemClick(m, 'minute')}
+                                >
+                                    {m}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                <button className="time-confirm-btn" onClick={handleConfirm}>ตกลง</button>
+            </div>
+        </div>
+    );
+};
+
 const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) => {
     const [title, setTitle] = useState('');
     const [time, setTime] = useState('');
+    const [isTimePickerOpen, setIsTimePickerOpen] = useState(false); // New State
     const [date, setDate] = useState('');
     const [timezone, setTimezone] = useState('Asia/Bangkok');
 
@@ -221,16 +379,16 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
                     <div style={{ display: 'flex', gap: '12px' }}>
                         <div className="an-input-group" style={{ flex: 1 }}>
                             <label className="an-label">เวลา</label>
-                            <div className="an-input-wrapper">
+                            <div className="an-input-wrapper" onClick={() => setIsTimePickerOpen(true)} style={{ cursor: 'pointer' }}>
                                 <Clock className="an-input-icon-left" size={20} strokeWidth={2} />
                                 <input
-                                    type="time"
+                                    type="text"
                                     className="an-input with-icon"
-                                    value={time}
-                                    onChange={e => setTime(e.target.value)}
-                                    style={{ color: time ? '#1f2937' : '#9ca3af' }}
+                                    value={time || '--:--'}
+                                    readOnly
+                                    style={{ color: time ? '#1f2937' : '#9ca3af', cursor: 'pointer' }}
                                 />
-                                <ChevronDown className="an-select-chevron" size={16} />
+                                <ChevronRight className="an-select-chevron" size={16} />
                             </div>
                         </div>
 
@@ -340,6 +498,14 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
                     <button className="an-btn save" onClick={handleSave}>บันทึก</button>
                 </div>
             </div>
+
+            {/* Time Picker Modal Overlay */}
+            <TimeWheelPickerModal
+                isOpen={isTimePickerOpen}
+                initialValue={time}
+                onClose={() => setIsTimePickerOpen(false)}
+                onConfirm={(newTime) => setTime(newTime)}
+            />
         </div>
     );
 };

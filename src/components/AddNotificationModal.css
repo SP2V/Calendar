@@ -388,3 +388,140 @@
     background-color: #2563eb;
     border-color: #2563eb;
 }
+
+/* Time Picker Wheel Styles */
+.time-picker-card {
+    background: white;
+    width: 320px;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.time-picker-header {
+    display: flex;
+    justify-content: space-around;
+    padding-bottom: 8px;
+}
+
+.time-picker-label {
+    font-family: 'Kanit', sans-serif;
+    font-weight: 500;
+    color: #1f2937;
+    width: 60px;
+    text-align: center;
+}
+
+.time-picker-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 160px;
+    position: relative;
+    gap: 16px;
+}
+
+.time-selection-bar {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 40px;
+    left: 10px;
+    right: 10px;
+    background-color: #eff6ff;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.time-column {
+    height: 100%;
+    width: 60px;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    /* Masking for wheel effect */
+    mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent);
+}
+
+.time-scroll-container {
+    height: 100%;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+    padding-top: 60px;
+    /* (ContainerHeight / 2) - (ItemHeight / 2) */
+    padding-bottom: 60px;
+    scroll-snap-type: y mandatory;
+}
+
+.time-scroll-container::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
+}
+
+.time-item {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Kanit', sans-serif;
+    font-size: 1.25rem;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.2s;
+    scroll-snap-align: center;
+}
+
+.time-item.selected {
+    color: #2563eb;
+    font-weight: 600;
+    font-size: 1.5rem;
+    transform: scale(1.1);
+}
+
+.time-separator {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    padding-bottom: 4px;
+    z-index: 1;
+}
+
+.time-confirm-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 8px;
+}
+
+.time-confirm-btn:hover {
+    background-color: #1d4ed8;
+}

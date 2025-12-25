@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Globe, MoreVertical, Plus, ChevronLeft, ChevronRight, Trash, SquarePen } from 'lucide-react';
+import { Calendar, Clock, Globe, MoreVertical, Plus, ChevronLeft, ChevronRight, Trash, SquarePen, RotateCcw } from 'lucide-react';
 import { AlarmClock } from 'lucide-react';
 import AddNotificationModal from './AddNotificationModal';
 import DeleteNotificationModal from './DeleteNotificationModal';
@@ -74,13 +74,9 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                 {displayData.length > 0 ? (
                     displayData.map((item) => (
                         <div key={item.id} className="cn-card">
-                            <div className="cn-content">
+                            <div className="cn-card-header">
                                 <h3 className="cn-card-title">{item.title}</h3>
                                 <div className="cn-meta-row">
-                                    <div className="cn-meta-item">
-                                        <Calendar className="cn-icon" />
-                                        <span>{formatDateThai(item.date)}</span>
-                                    </div>
                                     <div className="cn-meta-item">
                                         <Clock className="cn-icon" />
                                         <span>{item.time} น.</span>
@@ -89,9 +85,19 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                                         <Globe className="cn-icon" />
                                         <span>{item.timezone}</span>
                                     </div>
+                                    <div className="cn-meta-item">
+                                        <RotateCcw className="cn-icon" />
+                                        <span>ไม่ซ้ำ</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="cn-actions">
+                            <div className="cn-header-actions">
+                                {/* Toggle Switch */}
+                                <label className="cn-switch">
+                                    <input type="checkbox" defaultChecked={true} />
+                                    <span className="cn-slider round"></span>
+                                </label>
+
                                 <div style={{ position: 'relative' }}>
                                     <button
                                         className="cn-menu-btn"
@@ -183,7 +189,7 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
 
             <div className="cn-footer">
                 <div className="cn-footer-text">
-                    แสดง {displayData.length } รายการจากทั้งหมด {notifications.length} รายการ
+                    แสดง {displayData.length} รายการจากทั้งหมด {notifications.length} รายการ
                 </div>
                 {totalPages > 1 && (
                     <div className="cn-pagination">

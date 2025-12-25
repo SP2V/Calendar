@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Calendar, Clock, ChevronDown, Search } from 'lucide-react';
+import { X, Calendar, Clock, ChevronDown, Search, ChevronRight, RotateCcw, Check as IconCheck, ChevronLeft as IconChevronLeft } from 'lucide-react';
 import { AlarmClock } from 'lucide-react';
 import { thaiTimezones } from '../constants/timezones';
 import './AddNotificationModal.css';
 
-const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '', initialData = null }) => {
+const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) => {
     const [title, setTitle] = useState('');
-    const [date, setDate] = useState(initialDate);
     const [time, setTime] = useState('');
     const [timezone, setTimezone] = useState('Asia/Bangkok');
 
@@ -15,24 +14,42 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '', initi
     const [filterText, setFilterText] = useState("");
     const dropdownRef = useRef(null);
 
+    const [view, setView] = useState('MAIN'); // 'MAIN' | 'DAYS'
+    const [selectedDays, setSelectedDays] = useState([]); // Array of integers 0-6 (Sun-Sat)
+
+    const daysOfWeek = [
+        { id: 0, label: 'ทุกวันอาทิตย์' },
+        { id: 1, label: 'ทุกวันจันทร์' },
+        { id: 2, label: 'ทุกวันอังคาร' },
+        { id: 3, label: 'ทุกวันพุธ' },
+        { id: 4, label: 'ทุกวันพฤหัสบดี' },
+        { id: 5, label: 'ทุกวันศุกร์' },
+        { id: 6, label: 'ทุกวันเสาร์' },
+    ];
+
     // Initial value effect or when opening
     useEffect(() => {
         if (isOpen) {
+            setView('MAIN'); // Reset view
             if (initialData) {
                 // Edit Mode
                 setTitle(initialData.title || '');
-                setDate(initialData.date || '');
                 setTime(initialData.time || '');
                 setTimezone(initialData.timezoneRef || initialData.timezone || 'Asia/Bangkok');
+                if (initialData.repeatDays) {
+                    setSelectedDays(initialData.repeatDays);
+                } else {
+                    setSelectedDays([]);
+                }
             } else {
                 // Add Mode
                 setTitle('');
-                setDate(initialDate || '');
                 setTime('');
                 setTimezone('Asia/Bangkok');
+                setSelectedDays([]);
             }
         }
-    }, [isOpen, initialDate, initialData]);
+    }, [isOpen, initialData]);
 
     // Prevent background scroll when modal is open
     useEffect(() => {
@@ -65,13 +82,13 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '', initi
     if (!isOpen) return null;
 
     const handleSave = () => {
-        if (!title || !date || !time) return;
+        if (!title || !time) return;
         const selectedTz = thaiTimezones.find(tz => tz.value === timezone);
 
         const saveData = {
             title,
-            date,
             time,
+            repeatDays: selectedDays,
             timezoneRef: timezone,
             timezone: selectedTz ? selectedTz.label : timezone
         };
@@ -87,9 +104,10 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '', initi
 
     const handleClose = () => {
         setTitle('');
-        setDate('');
         setTime('');
         setTimezone('Asia/Bangkok');
+        setSelectedDays([]);
+        setView('MAIN');
         onClose();
     };
 
@@ -103,12 +121,62 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '', initi
         setIsDropdownOpen(false);
     };
 
+    const toggleDaySelection = (dayId) => {
+        setSelectedDays(prev => {
+            if (prev.includes(dayId)) {
+                return prev.filter(id => id !== dayId);
+            } else {
+                return [...prev, dayId].sort();
+            }
+        });
+    }
+
     // Filter timezones
     const filteredTimezones = thaiTimezones.filter(tz =>
         tz.label.toLowerCase().includes(filterText.toLowerCase())
     );
 
     const selectedTimezoneLabel = thaiTimezones.find(tz => tz.value === timezone)?.label || timezone;
+
+    // Helper to format repeat text
+    const getRepeatText = () => {
+        if (selectedDays.length === 0) return "ไม่ซ้ำ";
+        if (selectedDays.length === 7) return "ทุกวัน";
+        // Map ids back to short names if needed, or just list count
+        // For now, let's keep it simple or join labels
+        return selectedDays.map(id => daysOfWeek.find(d => d.id === id).label.replace('ทุกวัน', '')).join(', ');
+    };
+
+    // Sub-view: Select Days
+    if (view === 'DAYS') {
+        return (
+            <div className="an-modal-overlay">
+                <div className="an-modal-container slide-in">
+                    <div className="an-modal-header">
+                        <div className="an-header-nav">
+                            <button className="an-nav-btn" onClick={() => setView('MAIN')} style={{ marginRight: 'auto' }}>
+                                <IconChevronLeft size={24} />
+                            </button>
+                            <span className="an-header-title">เลือกวัน</span>
+                            <button className="an-nav-action" onClick={() => setView('MAIN')}>บันทึก</button>
+                        </div>
+                    </div>
+                    <div className="an-modal-body no-padding">
+                        <div className="an-day-list">
+                            {daysOfWeek.map(day => (
+                                <div key={day.id} className="an-day-item" onClick={() => toggleDaySelection(day.id)}>
+                                    <span>{day.label}</span>
+                                    <div className={`an-checkbox ${selectedDays.includes(day.id) ? 'checked' : ''}`}>
+                                        {selectedDays.includes(day.id) && <IconCheck size={14} color="white" />}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="an-modal-overlay" onClick={handleClose}>
@@ -135,39 +203,6 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '', initi
                         />
                     </div>
 
-                    {/* Date */}
-                    <div className="an-input-group">
-                        <label className="an-label">วันที่</label>
-                        <div className="an-input-wrapper">
-                            <Calendar className="an-input-icon-left" size={20} strokeWidth={2} />
-                            <input
-                                type="text"
-                                className="an-input with-icon"
-                                value={date ? date.split('-').reverse().join('/') : ''}
-                                placeholder="dd/mm/yyyy"
-                                readOnly
-                                style={{ color: date ? '#1f2937' : '#9ca3af' }}
-                            />
-                            <input
-                                type="date"
-                                className="an-input"
-                                value={date}
-                                onChange={e => setDate(e.target.value)}
-                                style={{
-                                    position: 'absolute',
-                                    left: 0,
-                                    top: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    opacity: 0,
-                                    cursor: 'pointer',
-                                    zIndex: 10
-                                }}
-                            />
-                            <ChevronDown className="an-select-chevron" size={16} />
-                        </div>
-                    </div>
-
                     {/* Time */}
                     <div className="an-input-group">
                         <label className="an-label">เวลา</label>
@@ -181,6 +216,22 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialDate = '', initi
                                 style={{ color: time ? '#1f2937' : '#9ca3af' }}
                             />
                             <ChevronDown className="an-select-chevron" size={16} />
+                        </div>
+                    </div>
+
+                    {/* Repeat Days (Instead of Date) */}
+                    <div className="an-input-group">
+                        <label className="an-label">ทำซ้ำ</label>
+                        <div className="an-input-wrapper" onClick={() => setView('DAYS')} style={{ cursor: 'pointer' }}>
+                            <RotateCcw className="an-input-icon-left" size={20} strokeWidth={2} />
+                            <input
+                                type="text"
+                                className="an-input with-icon"
+                                value={getRepeatText()}
+                                readOnly
+                                style={{ color: '#1f2937', cursor: 'pointer' }}
+                            />
+                            <ChevronRight className="an-select-chevron" size={16} />
                         </div>
                     </div>
 

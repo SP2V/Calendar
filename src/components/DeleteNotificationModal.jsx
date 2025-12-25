@@ -41,7 +41,41 @@ const DeleteNotificationModal = ({ isOpen, onClose, onConfirm, notification }) =
                 <div className="dn-info-box">
                     <div className="dn-info-title">{notification.title}</div>
                     <div className="dn-info-date">
-                        {formatFullDate(notification.date, notification.time)}
+                        {(() => {
+                            const daysOfWeek = [
+                                { id: 0, label: 'ทุกวันอาทิตย์' },
+                                { id: 1, label: 'ทุกวันจันทร์' },
+                                { id: 2, label: 'ทุกวันอังคาร' },
+                                { id: 3, label: 'ทุกวันพุธ' },
+                                { id: 4, label: 'ทุกวันพฤหัสบดี' },
+                                { id: 5, label: 'ทุกวันศุกร์' },
+                                { id: 6, label: 'ทุกวันเสาร์' },
+                            ];
+
+                            let dateText = "";
+                            if (notification.repeatDays && notification.repeatDays.length > 0) {
+                                if (notification.repeatDays.length === 7) {
+                                    dateText = "ทุกวัน";
+                                } else {
+                                    const isWeekend = notification.repeatDays.length === 2 && notification.repeatDays.includes(0) && notification.repeatDays.includes(6);
+                                    const isWeekday = notification.repeatDays.length === 5 && [1, 2, 3, 4, 5].every(d => notification.repeatDays.includes(d));
+
+                                    if (isWeekend) dateText = "ทุกวันสุดสัปดาห์";
+                                    else if (isWeekday) dateText = "ทุกวันธรรมดา";
+                                    else {
+                                        dateText = notification.repeatDays
+                                            .map(id => daysOfWeek.find(d => d.id === parseInt(id))?.label.replace('ทุกวัน', ''))
+                                            .filter(Boolean)
+                                            .join(', ');
+                                    }
+                                }
+                            } else if (notification.date) {
+                                const date = new Date(notification.date);
+                                dateText = date.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+                            }
+
+                            return `${notification.time} น. | ${dateText}`;
+                        })()}
                     </div>
                 </div>
 

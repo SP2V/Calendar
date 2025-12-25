@@ -162,7 +162,7 @@ const User = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setTick(t => t + 1);
-    }, 30000); // Update UI every 30 seconds
+    }, 1000); // Update UI every 1 second for real-time badges
     return () => clearInterval(timer);
   }, []);
 
@@ -283,8 +283,14 @@ const User = () => {
       const dateEng = notifDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       const timeEng = notifDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
+      // Generate a unique ID for this instance if it's repeating OR if time changed
+      // Format: {id}_{YYYY-MM-DD}_{HH:mm}
+      const instanceId = (n.repeatDays && n.repeatDays.length > 0)
+        ? `${n.id}_${targetDateStr}_${n.time}`
+        : `${n.id}_${n.time}`;
+
       return {
-        id: n.id,
+        id: instanceId,
         type: 'custom',
         title: n.title,
         desc: 'ถึงเวลาแล้ว',
@@ -292,7 +298,7 @@ const User = () => {
         dayOfMonth: notifDate.getDate(),
         footerTime: `${dateEng}, ${timeEng} (${n.timezoneRef || n.timezone})`,
         startTime: notifDate.toISOString(),
-        read: readNotificationIds.includes(n.id),
+        read: readNotificationIds.includes(instanceId),
         date: targetDateStr,
         time: n.time,
         timezoneRef: n.timezoneRef || n.timezone

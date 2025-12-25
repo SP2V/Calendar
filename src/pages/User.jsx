@@ -224,45 +224,61 @@ const User = () => {
 
     // --- Custom Notifications Logic ---
     const activeCustomNotifications = customNotifications.filter(n => {
-      if (!n.date || !n.time) return false;
+      // Must have time. Date is optional if repeating.
+      if (!n.time) return false;
 
       const tz = n.timezoneRef || 'Asia/Bangkok';
       const now = new Date();
 
-      // Compare Now (in target TZ) vs Target Date/Time
+      // Get Current Info in Target TZ
       const nowDateInTz = now.toLocaleDateString('en-CA', { timeZone: tz }); // YYYY-MM-DD
       const nowTimeInTz = now.toLocaleTimeString('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit' }); // HH:mm
+      const dayOfWeek = new Date(now.toLocaleString('en-US', { timeZone: tz })).getDay(); // 0-6 Sun-Sat
 
-      // Is Past or Present?
-      if (nowDateInTz > n.date) return true;
-      if (nowDateInTz === n.date && nowTimeInTz >= n.time) return true;
+      // 1. Repeating Alarm
+      if (n.repeatDays && n.repeatDays.length > 0) {
+        // Show in list if: It matches TODAY's day AND Time has passed (so it's a recent notification)
+        // We only show "Today's" history for repeating alarms to avoid clogging.
+        if (n.repeatDays.includes(dayOfWeek) && nowTimeInTz >= n.time) {
+          return true;
+        }
+        return false;
+      }
+
+      // 2. One-time Alarm
+      if (n.date) {
+        if (nowDateInTz > n.date) return true; // Past date
+        if (nowDateInTz === n.date && nowTimeInTz >= n.time) return true; // Today, past time
+      }
 
       return false;
     }).map(n => {
-      // Construct a display date object (This is a bit tricky since JS Date is basically Local/UTC)
-      // For display in the list, we might just show the raw strings if we can't easily convert to a valid Date object for the "Table View"?
-      // But for the Notification Dropdown, we construct an object.
+      const tz = n.timezoneRef || 'Asia/Bangkok';
+      const now = new Date();
 
-      // Let's try to construct a Date object that *represents* the time, even if the timezone info inside the object is wrong (Local).
-      // This is for sorting and display formatting helpers that might expect a Date.
-      const [y, m, d] = n.date.split('-').map(Number);
+      // Construct a Date object for display/sorting
+      // If repeating and happened today, trust Today's date.
+      // If one-time, use n.date.
+      let targetDateStr = n.date;
+
+      // If repeating, we calculate 'today's' date string for the target TZ to represent this instance
+      if (n.repeatDays && n.repeatDays.length > 0) {
+        targetDateStr = now.toLocaleDateString('en-CA', { timeZone: tz });
+      }
+
+      // Fallback for missing dateStr?
+      if (!targetDateStr) targetDateStr = new Date().toISOString().split('T')[0];
+
+      const [y, m, d] = targetDateStr.split('-').map(Number);
       const [h, min] = n.time.split(':').map(Number);
 
-      // NOTE: This Date object is constructed in LOCAL time. 
-      // So n.date="2024..." n.time="14:00" -> Date 14:00 Local.
-      // If sorting against Bookings (which are usually Local or specific offsets), this might be slightly inaccurate if TZs differ heavily.
-      // But it suffices for UI sorting "ballpark".
       const notifDate = new Date(y, m - 1, d, h, min);
 
-      const tz = n.timezoneRef || 'Asia/Bangkok';
-
-      // Thai Date (formatted for the notification's timezone)
-      // FIX: Use the face value of notifDate directly (which matches n.time). 
-      // Do NOT pass convert timezone, otherwise it shifts 15:52 -> 17:52 if BKK->Tokyo.
+      // Thai Date
       const dateThai = notifDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
       const timeThai = notifDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
-      // Eng Date (formatted for the notification's timezone)
+      // Eng Date
       const dateEng = notifDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       const timeEng = notifDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
@@ -273,11 +289,10 @@ const User = () => {
         desc: 'ถึงเวลาแล้ว',
         fullThaiInfo: `${dateThai} เวลา ${timeThai}`,
         dayOfMonth: notifDate.getDate(),
-        footerTime: `${dateEng}, ${timeEng} (${n.timezoneRef || n.timezone})`, // Show declared TZ
+        footerTime: `${dateEng}, ${timeEng} (${n.timezoneRef || n.timezone})`,
         startTime: notifDate.toISOString(),
         read: readNotificationIds.includes(n.id),
-        // Data for Sorting
-        date: n.date,
+        date: targetDateStr,
         time: n.time,
         timezoneRef: n.timezoneRef || n.timezone
       };
@@ -350,7 +365,7 @@ const User = () => {
       if (!currentNotifs || currentNotifs.length === 0) return;
 
       currentNotifs.forEach(n => {
-        if (!n.date || !n.time) return;
+        if (!n.time) return;
 
         // Timezone Check
         const tz = n.timezoneRef || 'Asia/Bangkok';
@@ -358,21 +373,44 @@ const User = () => {
         // Current Time in Target Timezone
         const nowDateInTz = now.toLocaleDateString('en-CA', { timeZone: tz }); // YYYY-MM-DD
         const nowTimeInTz = now.toLocaleTimeString('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit' }); // HH:mm
+        const dayOfWeek = new Date(now.toLocaleString('en-US', { timeZone: tz })).getDay(); // 0-6
 
-        // Target Time
-        const targetDate = n.date;
-        const targetTime = n.time;
+        let shouldTrigger = false;
 
         // Logic: Exact Minute Match
-        const isExactMatch = (nowDateInTz === targetDate && nowTimeInTz === targetTime);
 
-        if (isExactMatch && !shownNotificationIds.current.has(n.id)) {
+        // Robust Time Comparison
+        const [targetH, targetM] = n.time.split(':').map(Number);
+        const [currentH, currentM] = nowTimeInTz.split(':').map(Number);
+
+        // Check Match
+        const isTimeMatch = (targetH === currentH && targetM === currentM);
+
+        // 1. Repeating Alarm
+        if (n.repeatDays && n.repeatDays.length > 0) {
+          if (n.repeatDays.map(Number).includes(dayOfWeek) && isTimeMatch) {
+            shouldTrigger = true;
+          }
+        }
+        // 2. One-time Alarm
+        else if (n.date) {
+          if (nowDateInTz === n.date && isTimeMatch) {
+            shouldTrigger = true;
+          }
+        }
+
+        const triggerKey = `${n.id}_${nowDateInTz}_${n.time}`;
+
+        if (shouldTrigger && !shownNotificationIds.current.has(triggerKey)) {
           setNotificationPopup({
             isOpen: true,
             title: n.title,
             time: n.time
           });
-          shownNotificationIds.current.add(n.id);
+          shownNotificationIds.current.add(triggerKey);
+
+          // Optional: Clean up old keys if Set gets too big? 
+          // For now, it's fine for a session.
         }
       });
     }, 1000); // Check every 1 second

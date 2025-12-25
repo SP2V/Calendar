@@ -227,6 +227,7 @@ const User = () => {
     const activeCustomNotifications = customNotifications.filter(n => {
       // Must have time. Date is optional if repeating.
       if (!n.time) return false;
+      if (n.isEnabled === false) return false;
 
       const tz = n.timezoneRef || 'Asia/Bangkok';
       const now = new Date();
@@ -1041,14 +1042,21 @@ const User = () => {
   const handleSaveCustomNotification = async (data) => {
     if (!currentUser) return;
     try {
+      const isSilent = data.silent;
+      // create a copy to avoid mutating state directly if coming from state, and remove 'silent' flag from DB payload
+      const payload = { ...data };
+      delete payload.silent;
+
       if (data.id) {
-        await updateCustomNotification(data.id, data);
-        // Show Success Toast
-        setSuccessToast({ isOpen: true, title: 'แก้ไขการแจ้งเตือนสำเร็จ', subTitle: 'บันทึกการแก้ไขเรียบร้อยแล้ว' });
-        setTimeout(() => setSuccessToast(prev => ({ ...prev, isOpen: false })), 3000);
+        await updateCustomNotification(data.id, payload);
+        // Show Success Toast ONLY if not silent
+        if (!isSilent) {
+          setSuccessToast({ isOpen: true, title: 'แก้ไขการแจ้งเตือนสำเร็จ', subTitle: 'บันทึกการแก้ไขเรียบร้อยแล้ว' });
+          setTimeout(() => setSuccessToast(prev => ({ ...prev, isOpen: false })), 3000);
+        }
       } else {
-        await addCustomNotification(currentUser.uid, data);
-        // Show Success Toast
+        await addCustomNotification(currentUser.uid, payload);
+        // Add always shows toast (usually explicit user action)
         setSuccessToast({ isOpen: true, title: 'สร้างการแจ้งเตือนสำเร็จ', subTitle: 'เพิ่มรายการแจ้งเตือนเรียบร้อยแล้ว' });
         setTimeout(() => setSuccessToast(prev => ({ ...prev, isOpen: false })), 3000);
       }

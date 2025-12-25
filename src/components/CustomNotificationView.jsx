@@ -144,7 +144,7 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                                             type="checkbox"
                                             checked={item.isEnabled !== false}
                                             onChange={(e) => {
-                                                handleSaveNotification({ ...item, isEnabled: e.target.checked });
+                                                handleSaveNotification({ ...item, isEnabled: e.target.checked, silent: true });
                                             }}
                                         />
                                         <span className="cn-slider round"></span>

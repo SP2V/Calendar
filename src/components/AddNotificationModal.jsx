@@ -147,6 +147,15 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
     const getRepeatText = () => {
         if (selectedDays.length === 0) return "ไม่ซ้ำ";
         if (selectedDays.length === 7) return "ทุกวัน";
+
+        // Check for Weekend (Sat + Sun only)
+        const isWeekend = selectedDays.length === 2 && selectedDays.includes(0) && selectedDays.includes(6);
+        if (isWeekend) return "ทุกวันสุดสัปดาห์";
+
+        // Check for Weekday (Mon-Fri only)
+        const isWeekday = selectedDays.length === 5 && [1, 2, 3, 4, 5].every(d => selectedDays.includes(d));
+        if (isWeekday) return "ทุกวันธรรมดา";
+
         // Map ids back to short names if needed, or just list count
         // For now, let's keep it simple or join labels
         return selectedDays.map(id => daysOfWeek.find(d => d.id === id).label.replace('ทุกวัน', '')).join(', ');

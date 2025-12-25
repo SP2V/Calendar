@@ -86,8 +86,53 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                                         <span>{item.timezone}</span>
                                     </div>
                                     <div className="cn-meta-item">
-                                        <RotateCcw className="cn-icon" />
-                                        <span>{item.repeat}</span>
+                                        {(() => {
+                                            const daysOfWeek = [
+                                                { id: 0, label: 'ทุกวันอาทิตย์' },
+                                                { id: 1, label: 'ทุกวันจันทร์' },
+                                                { id: 2, label: 'ทุกวันอังคาร' },
+                                                { id: 3, label: 'ทุกวันพุธ' },
+                                                { id: 4, label: 'ทุกวันพฤหัสบดี' },
+                                                { id: 5, label: 'ทุกวันศุกร์' },
+                                                { id: 6, label: 'ทุกวันเสาร์' },
+                                            ];
+
+                                            let icon = <RotateCcw className="cn-icon" />;
+                                            let text = "ไม่ซ้ำ";
+
+                                            if (item.repeatDays && item.repeatDays.length > 0) {
+                                                if (item.repeatDays.length === 7) {
+                                                    text = "ทุกวัน";
+                                                } else {
+                                                    // Check for Weekend
+                                                    const isWeekend = item.repeatDays.length === 2 && item.repeatDays.includes(0) && item.repeatDays.includes(6);
+
+                                                    // Check for Weekday
+                                                    const isWeekday = item.repeatDays.length === 5 && [1, 2, 3, 4, 5].every(d => item.repeatDays.includes(d));
+
+                                                    if (isWeekend) {
+                                                        text = "ทุกวันสุดสัปดาห์";
+                                                    } else if (isWeekday) {
+                                                        text = "ทุกวันธรรมดา";
+                                                    } else {
+                                                        text = item.repeatDays
+                                                            .map(id => daysOfWeek.find(d => d.id === id)?.label.replace('ทุกวัน', ''))
+                                                            .filter(Boolean)
+                                                            .join(', ');
+                                                    }
+                                                }
+                                            } else if (item.date) {
+                                                icon = <Calendar className="cn-icon" />;
+                                                text = formatDateThai(item.date);
+                                            }
+
+                                            return (
+                                                <>
+                                                    {icon}
+                                                    <span className="truncate-text" title={text}>{text}</span>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             </div>

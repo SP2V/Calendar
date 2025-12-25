@@ -24,17 +24,30 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
         };
     }, [activeMenuId]);
 
+    const [activeTab, setActiveTab] = useState('one-time'); // 'one-time' or 'repeating'
+
+    // Filter notifications based on active tab
+    const filteredNotifications = notifications.filter(item => {
+        const isRepeating = item.repeatDays && item.repeatDays.length > 0;
+        return activeTab === 'repeating' ? isRepeating : !isRepeating;
+    });
+
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
+    const itemsPerPage = 3;
+
+    // Reset page when tab changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab]);
 
     // Calculate pagination properties
-    const totalPages = Math.ceil(notifications.length / itemsPerPage);
+    const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
-    // Use passed notifications
-    const displayData = notifications.slice(indexOfFirstItem, indexOfLastItem);
+    // Use filtered notifications
+    const displayData = filteredNotifications.slice(indexOfFirstItem, indexOfLastItem);
 
     const handleSaveNotification = (data) => {
         if (onSaveNotification) {
@@ -68,6 +81,25 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                 <button className="cn-add-btn" onClick={() => setIsModalOpen(true)}>
                     <Plus size={24} strokeWidth={2.5} />
                 </button>
+            </div>
+
+            {/* TAB SWITCHER */}
+            <div className="cn-tab-container">
+                <div className="cn-tab-switcher">
+                    <div className={`cn-tab-glider ${activeTab}`}></div>
+                    <button
+                        onClick={() => setActiveTab('one-time')}
+                        className={`cn-tab-btn ${activeTab === 'one-time' ? 'active' : ''}`}
+                    >
+                        ครั้งเดียว
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('repeating')}
+                        className={`cn-tab-btn ${activeTab === 'repeating' ? 'active' : ''}`}
+                    >
+                        ซ้ำตามวัน
+                    </button>
+                </div>
             </div>
 
             <div className="cn-list">
@@ -116,7 +148,7 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                                                         text = "ทุกวันธรรมดา";
                                                     } else {
                                                         text = item.repeatDays
-                                                            .map(id => daysOfWeek.find(d => d.id === id)?.label.replace('ทุกวัน', ''))
+                                                            .map(id => daysOfWeek.find(d => d.id === parseInt(id))?.label.replace('ทุกวัน', ''))
                                                             .filter(Boolean)
                                                             .join(', ');
                                                     }
@@ -235,14 +267,14 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                     ))
                 ) : (
                     <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
-                        ยังไม่มีรายการเตือน
+                        {activeTab === 'one-time' ? 'ยังไม่มีรายการแจ้งเตือนครั้งเดียว' : 'ยังไม่มีรายการแจ้งเตือนแบบซ้ำ'}
                     </div>
                 )}
             </div>
 
             <div className="cn-footer">
                 <div className="cn-footer-text">
-                    แสดง {displayData.length} รายการจากทั้งหมด {notifications.length} รายการ
+                    แสดง {displayData.length} รายการจากทั้งหมด {filteredNotifications.length} รายการ
                 </div>
                 {totalPages > 1 && (
                     <div className="cn-pagination">

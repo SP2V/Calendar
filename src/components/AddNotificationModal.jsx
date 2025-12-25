@@ -161,10 +161,134 @@ const TimeWheelPickerModal = ({ isOpen, onClose, onConfirm, initialValue }) => {
     );
 };
 
+// --- Custom Date Picker Component ---
+const CustomDatePickerModal = ({ isOpen, onClose, onConfirm, initialDate }) => {
+    if (!isOpen) return null;
+
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDateResult, setSelectedDateResult] = useState(null);
+
+    const thaiMonthNames = [
+        "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+        "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+
+    useEffect(() => {
+        if (isOpen) {
+            if (initialDate) {
+                const date = new Date(initialDate);
+                setCurrentDate(date);
+                setSelectedDateResult(date);
+            } else {
+                const now = new Date();
+                setCurrentDate(now);
+                setSelectedDateResult(now);
+            }
+        }
+    }, [isOpen, initialDate]);
+
+    const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+    const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+    const handlePrevMonth = () => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    };
+
+    const handleNextMonth = () => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    };
+
+    const handleDateClick = (day) => {
+        const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+
+        // Check if past date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (newDate < today) return;
+
+        setSelectedDateResult(newDate);
+
+        // Auto confirm and close
+        const year = newDate.getFullYear();
+        const month = String(newDate.getMonth() + 1).padStart(2, '0');
+        const d = String(newDate.getDate()).padStart(2, '0');
+        onConfirm(`${year}-${month}-${d}`);
+        onClose();
+    };
+
+    const renderDays = () => {
+        const daysInMonth = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth());
+        const firstDay = getFirstDayOfMonth(currentDate.getFullYear(), currentDate.getMonth());
+        const days = [];
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Empty slots for previous month
+        for (let i = 0; i < firstDay; i++) {
+            days.push(<div key={`empty-${i}`} className="date-day-item empty"></div>);
+        }
+
+        // Days of current month
+        for (let i = 1; i <= daysInMonth; i++) {
+            const thisDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), i);
+            const isSelected = selectedDateResult &&
+                selectedDateResult.getDate() === i &&
+                selectedDateResult.getMonth() === currentDate.getMonth() &&
+                selectedDateResult.getFullYear() === currentDate.getFullYear();
+
+            const isDisabled = thisDate < today;
+
+            days.push(
+                <div
+                    key={i}
+                    className={`date-day-item ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                    onClick={() => !isDisabled && handleDateClick(i)}
+                >
+                    {i}
+                </div>
+            );
+        }
+
+        return days;
+    };
+
+    return (
+        <div className="an-modal-overlay" style={{ zIndex: 1002 }} onClick={onClose}>
+            <div className="date-picker-card" onClick={e => e.stopPropagation()}>
+                <div className="date-picker-header">
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                        <span className="date-picker-title">เลือกวันที่</span>
+                    </div>
+                    <div className="date-picker-nav">
+                        <button className="date-nav-btn" onClick={handlePrevMonth}><IconChevronLeft size={20} /></button>
+                        <span className="date-current-month">
+                            {thaiMonthNames[currentDate.getMonth()]} {currentDate.getFullYear() + 543}
+                        </span>
+                        <button className="date-nav-btn" onClick={handleNextMonth}><ChevronRight size={20} /></button>
+                    </div>
+                </div>
+
+                <div className="date-picker-body">
+                    <div className="date-week-header">
+                        <span>อา</span><span>จ</span><span>อ</span><span>พ</span>
+                        <span>พฤ</span><span>ศ</span><span>ส</span>
+                    </div>
+                    <div className="date-grid">
+                        {renderDays()}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) => {
     const [title, setTitle] = useState('');
     const [time, setTime] = useState('');
-    const [isTimePickerOpen, setIsTimePickerOpen] = useState(false); // New State
+    const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false); // New State
     const [date, setDate] = useState('');
     const [timezone, setTimezone] = useState('Asia/Bangkok');
 
@@ -396,7 +520,7 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
                         {selectedDays.length === 0 && (
                             <div className="an-input-group" style={{ flex: 1 }}>
                                 <label className="an-label">วันที่</label>
-                                <div className="an-input-wrapper">
+                                <div className="an-input-wrapper" onClick={() => setIsDatePickerOpen(true)} style={{ cursor: 'pointer' }}>
                                     <Calendar className="an-input-icon-left" size={20} strokeWidth={2} />
                                     <input
                                         type="text"
@@ -404,23 +528,7 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
                                         value={date ? date.split('-').reverse().join('/') : ''}
                                         placeholder="dd/mm/yyyy"
                                         readOnly
-                                        style={{ color: date ? '#1f2937' : '#9ca3af' }}
-                                    />
-                                    <input
-                                        type="date"
-                                        className="an-input"
-                                        value={date}
-                                        onChange={e => setDate(e.target.value)}
-                                        style={{
-                                            position: 'absolute',
-                                            left: 0,
-                                            top: 0,
-                                            width: '100%',
-                                            height: '100%',
-                                            opacity: 0,
-                                            cursor: 'pointer',
-                                            zIndex: 10
-                                        }}
+                                        style={{ color: date ? '#1f2937' : '#9ca3af', cursor: 'pointer' }}
                                     />
                                     <ChevronDown className="an-select-chevron" size={16} />
                                 </div>
@@ -505,6 +613,14 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
                 initialValue={time}
                 onClose={() => setIsTimePickerOpen(false)}
                 onConfirm={(newTime) => setTime(newTime)}
+            />
+
+            {/* Custom Date Picker Modal Overlay */}
+            <CustomDatePickerModal
+                isOpen={isDatePickerOpen}
+                initialDate={date}
+                onClose={() => setIsDatePickerOpen(false)}
+                onConfirm={(newDate) => setDate(newDate)}
             />
         </div>
     );

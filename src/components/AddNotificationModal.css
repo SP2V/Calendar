@@ -525,3 +525,124 @@
 .time-confirm-btn:hover {
     background-color: #1d4ed8;
 }
+
+/* Custom Date Picker Styles */
+.date-picker-card {
+    background: white;
+    width: 360px;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.date-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.date-picker-title {
+    font-family: 'Kanit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.date-picker-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.date-current-month {
+    font-family: 'Kanit', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #374151;
+    min-width: 120px;
+    text-align: center;
+}
+
+.date-nav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.date-nav-btn:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+.date-week-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.date-week-header span {
+    font-family: 'Kanit', sans-serif;
+    font-size: 0.9rem;
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.date-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    row-gap: 8px;
+}
+
+.date-day-item {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Kanit', sans-serif;
+    font-size: 1rem;
+    color: #374151;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.date-day-item:hover:not(.empty):not(.selected) {
+    background-color: #f3f4f6;
+}
+
+.date-day-item.selected {
+    background-color: #2563eb;
+    color: white;
+    font-weight: 500;
+}
+
+.date-day-item.disabled {
+    color: #e5e7eb;
+    cursor: not-allowed;
+    background: transparent;
+}
+
+.date-day-item.disabled:hover {
+    background: transparent;
+}
+
+.date-picker-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid #f3f4f6;
+}

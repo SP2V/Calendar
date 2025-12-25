@@ -113,6 +113,7 @@ const User = () => {
       const unsub = subscribeCustomNotifications(currentUser.uid, (data) => {
         console.log("User.jsx: Received custom notifications update:", data);
         setCustomNotifications(data);
+        latestNotificationsRef.current = data;
       });
       return () => unsub();
     } else {
@@ -366,6 +367,7 @@ const User = () => {
 
       currentNotifs.forEach(n => {
         if (!n.time) return;
+        if (n.isEnabled === false) return;
 
         // Timezone Check
         const tz = n.timezoneRef || 'Asia/Bangkok';

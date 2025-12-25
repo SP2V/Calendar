@@ -137,11 +137,19 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                                 </div>
                             </div>
                             <div className="cn-header-actions">
-                                {/* Toggle Switch */}
-                                <label className="cn-switch">
-                                    <input type="checkbox" defaultChecked={true} />
-                                    <span className="cn-slider round"></span>
-                                </label>
+                                {/* Toggle Switch - Only for Repeating Alarms */}
+                                {item.repeatDays && item.repeatDays.length > 0 && (
+                                    <label className="cn-switch">
+                                        <input
+                                            type="checkbox"
+                                            checked={item.isEnabled !== false}
+                                            onChange={(e) => {
+                                                handleSaveNotification({ ...item, isEnabled: e.target.checked });
+                                            }}
+                                        />
+                                        <span className="cn-slider round"></span>
+                                    </label>
+                                )}
 
                                 <div style={{ position: 'relative' }}>
                                     <button

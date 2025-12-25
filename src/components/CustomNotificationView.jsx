@@ -87,7 +87,7 @@ const CustomNotificationView = ({ notifications = [], onSaveNotification, onDele
                                     </div>
                                     <div className="cn-meta-item">
                                         <RotateCcw className="cn-icon" />
-                                        <span>ไม่ซ้ำ</span>
+                                        <span>{item.repeat}</span>
                                     </div>
                                 </div>
                             </div>

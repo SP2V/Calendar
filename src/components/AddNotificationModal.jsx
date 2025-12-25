@@ -7,6 +7,7 @@ import './AddNotificationModal.css';
 const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) => {
     const [title, setTitle] = useState('');
     const [time, setTime] = useState('');
+    const [date, setDate] = useState('');
     const [timezone, setTimezone] = useState('Asia/Bangkok');
 
     // Dropdown state
@@ -35,6 +36,7 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
                 // Edit Mode
                 setTitle(initialData.title || '');
                 setTime(initialData.time || '');
+                setDate(initialData.date || new Date().toLocaleDateString('en-CA'));
                 setTimezone(initialData.timezoneRef || initialData.timezone || 'Asia/Bangkok');
                 if (initialData.repeatDays) {
                     setSelectedDays(initialData.repeatDays);
@@ -45,6 +47,7 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
                 // Add Mode
                 setTitle('');
                 setTime('');
+                setDate(new Date().toLocaleDateString('en-CA'));
                 setTimezone('Asia/Bangkok');
                 setSelectedDays([]);
             }
@@ -82,12 +85,13 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
     if (!isOpen) return null;
 
     const handleSave = () => {
-        if (!title || !time) return;
+        if (!title || !time || (selectedDays.length === 0 && !date)) return;
         const selectedTz = thaiTimezones.find(tz => tz.value === timezone);
 
         const saveData = {
             title,
             time,
+            date: selectedDays.length === 0 ? date : null,
             repeatDays: selectedDays,
             timezoneRef: timezone,
             timezone: selectedTz ? selectedTz.label : timezone
@@ -105,6 +109,7 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
     const handleClose = () => {
         setTitle('');
         setTime('');
+        setDate('');
         setTimezone('Asia/Bangkok');
         setSelectedDays([]);
         setView('MAIN');
@@ -203,23 +208,60 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
                         />
                     </div>
 
-                    {/* Time */}
-                    <div className="an-input-group">
-                        <label className="an-label">เวลา</label>
-                        <div className="an-input-wrapper">
-                            <Clock className="an-input-icon-left" size={20} strokeWidth={2} />
-                            <input
-                                type="time"
-                                className="an-input with-icon"
-                                value={time}
-                                onChange={e => setTime(e.target.value)}
-                                style={{ color: time ? '#1f2937' : '#9ca3af' }}
-                            />
-                            <ChevronDown className="an-select-chevron" size={16} />
+                    {/* Time & Date Row */}
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <div className="an-input-group" style={{ flex: 1 }}>
+                            <label className="an-label">เวลา</label>
+                            <div className="an-input-wrapper">
+                                <Clock className="an-input-icon-left" size={20} strokeWidth={2} />
+                                <input
+                                    type="time"
+                                    className="an-input with-icon"
+                                    value={time}
+                                    onChange={e => setTime(e.target.value)}
+                                    style={{ color: time ? '#1f2937' : '#9ca3af' }}
+                                />
+                                <ChevronDown className="an-select-chevron" size={16} />
+                            </div>
                         </div>
+
+                        {/* Date (Only if No Repeat) */}
+                        {selectedDays.length === 0 && (
+                            <div className="an-input-group" style={{ flex: 1 }}>
+                                <label className="an-label">วันที่</label>
+                                <div className="an-input-wrapper">
+                                    <Calendar className="an-input-icon-left" size={20} strokeWidth={2} />
+                                    <input
+                                        type="text"
+                                        className="an-input with-icon"
+                                        value={date ? date.split('-').reverse().join('/') : ''}
+                                        placeholder="dd/mm/yyyy"
+                                        readOnly
+                                        style={{ color: date ? '#1f2937' : '#9ca3af' }}
+                                    />
+                                    <input
+                                        type="date"
+                                        className="an-input"
+                                        value={date}
+                                        onChange={e => setDate(e.target.value)}
+                                        style={{
+                                            position: 'absolute',
+                                            left: 0,
+                                            top: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            opacity: 0,
+                                            cursor: 'pointer',
+                                            zIndex: 10
+                                        }}
+                                    />
+                                    <ChevronDown className="an-select-chevron" size={16} />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Repeat Days (Instead of Date) */}
+                    {/* Repeat Days */}
                     <div className="an-input-group">
                         <label className="an-label">ทำซ้ำ</label>
                         <div className="an-input-wrapper" onClick={() => setView('DAYS')} style={{ cursor: 'pointer' }}>

@@ -475,7 +475,7 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
     }
 
     return (
-        <div className="an-modal-overlay" onClick={handleClose}>
+        <div className="an-modal-overlay">
             <div className="an-modal-container" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="an-modal-header">
@@ -500,55 +500,58 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
                     </div>
 
                     {/* Time & Date Row */}
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div className="an-input-group" style={{ flex: 1 }}>
+                        <label className="an-label">เวลา</label>
+                        <div className="an-input-wrapper" onClick={() => setIsTimePickerOpen(true)} style={{ cursor: 'pointer' }}>
+                            <Clock className="an-input-icon-left" size={20} strokeWidth={2} />
+                            <input
+                                type="text"
+                                className="an-input with-icon"
+                                value={time || '--:--'}
+                                readOnly
+                                style={{ color: time ? '#1f2937' : '#9ca3af', cursor: 'pointer' }}
+                            />
+                            <ChevronRight className="an-select-chevron" size={16} />
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        {/* Repeat Days */}
                         <div className="an-input-group" style={{ flex: 1 }}>
-                            <label className="an-label">เวลา</label>
-                            <div className="an-input-wrapper" onClick={() => setIsTimePickerOpen(true)} style={{ cursor: 'pointer' }}>
-                                <Clock className="an-input-icon-left" size={20} strokeWidth={2} />
+                            <label className="an-label">ทำซ้ำ</label>
+                            <div className="an-input-wrapper" onClick={() => setView('DAYS')} style={{ cursor: 'pointer' }}>
+                                <RotateCcw className="an-input-icon-left" size={20} strokeWidth={2} />
                                 <input
                                     type="text"
                                     className="an-input with-icon"
-                                    value={time || '--:--'}
+                                    value={getRepeatText()}
                                     readOnly
-                                    style={{ color: time ? '#1f2937' : '#9ca3af', cursor: 'pointer' }}
+                                    style={{ color: '#1f2937', cursor: 'pointer' }}
                                 />
                                 <ChevronRight className="an-select-chevron" size={16} />
                             </div>
                         </div>
-
-                        {/* Date (Only if No Repeat) */}
-                        {selectedDays.length === 0 && (
-                            <div className="an-input-group" style={{ flex: 1 }}>
-                                <label className="an-label">วันที่</label>
-                                <div className="an-input-wrapper" onClick={() => setIsDatePickerOpen(true)} style={{ cursor: 'pointer' }}>
-                                    <Calendar className="an-input-icon-left" size={20} strokeWidth={2} />
-                                    <input
-                                        type="text"
-                                        className="an-input with-icon"
-                                        value={date ? date.split('-').reverse().join('/') : ''}
-                                        placeholder="dd/mm/yyyy"
-                                        readOnly
-                                        style={{ color: date ? '#1f2937' : '#9ca3af', cursor: 'pointer' }}
-                                    />
-                                    <ChevronDown className="an-select-chevron" size={16} />
-                                </div>
+                        {/* Date */}
+                        <div className="an-input-group" style={{ flex: 1, opacity: selectedDays.length > 0 ? 0.5 : 1 }}>
+                            <label className="an-label">วันที่</label>
+                            <div
+                                className="an-input-wrapper"
+                                onClick={() => {
+                                    if (selectedDays.length === 0) setIsDatePickerOpen(true);
+                                }}
+                                style={{ cursor: selectedDays.length > 0 ? 'not-allowed' : 'pointer', backgroundColor: selectedDays.length > 0 ? '#f3f4f6' : 'white' }}
+                            >
+                                <Calendar className="an-input-icon-left" size={20} strokeWidth={2} />
+                                <input
+                                    type="text"
+                                    className="an-input with-icon"
+                                    value={date ? date.split('-').reverse().join('/') : ''}
+                                    placeholder="dd/mm/yyyy"
+                                    readOnly
+                                    style={{ color: date ? '#1f2937' : '#9ca3af', cursor: selectedDays.length > 0 ? 'not-allowed' : 'pointer', backgroundColor: 'transparent' }}
+                                />
+                                <ChevronDown className="an-select-chevron" size={16} />
                             </div>
-                        )}
-                    </div>
-
-                    {/* Repeat Days */}
-                    <div className="an-input-group">
-                        <label className="an-label">ทำซ้ำ</label>
-                        <div className="an-input-wrapper" onClick={() => setView('DAYS')} style={{ cursor: 'pointer' }}>
-                            <RotateCcw className="an-input-icon-left" size={20} strokeWidth={2} />
-                            <input
-                                type="text"
-                                className="an-input with-icon"
-                                value={getRepeatText()}
-                                readOnly
-                                style={{ color: '#1f2937', cursor: 'pointer' }}
-                            />
-                            <ChevronRight className="an-select-chevron" size={16} />
                         </div>
                     </div>
 

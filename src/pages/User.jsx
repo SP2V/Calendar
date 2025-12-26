@@ -184,6 +184,7 @@ const User = () => {
 
   // 1. Request Notification Permission and FCM Token on Mount
   useEffect(() => {
+    const YOUR_PUBLIC_VAPID_KEY_HERE = 'BEHYS-JenESNxWjzJ8OeKTY8_u3MEYo1KjS02m2gIdTiQILiSZi5KaTN5xRYXyHit6-3hc--Aey8QLxgDqxEOnk';
     const setupFCM = async () => {
       // Native Permission Check
       if ("Notification" in window && messaging) {
@@ -193,7 +194,7 @@ const User = () => {
           if (permission === 'granted') {
             // Get Token
             const currentToken = await getToken(messaging, {
-              vapidKey: 'YOUR_PUBLIC_VAPID_KEY_HERE'
+              vapidKey: YOUR_PUBLIC_VAPID_KEY_HERE
             });
             if (currentToken) {
               console.log('FCM Token:', currentToken);
@@ -427,7 +428,14 @@ const User = () => {
 
 
   // Alert Trigger Logic
-  const shownNotificationIds = useRef(new Set()); // Track shown toasts to prevent duplicates
+  // Initialize from localStorage to prevent re-trigger on refresh
+  // Alert Trigger Logic
+  // Initialize from localStorage to prevent re-trigger on refresh
+  const shownNotificationIds = useRef(null);
+  if (!shownNotificationIds.current) {
+    const saved = localStorage.getItem('shownNotificationIds');
+    shownNotificationIds.current = saved ? new Set(JSON.parse(saved)) : new Set();
+  }
   const latestNotificationsRef = useRef(customNotifications); // Ref to access latest state in interval
 
   // Keep ref updated
@@ -501,6 +509,8 @@ const User = () => {
             });
           }
           shownNotificationIds.current.add(triggerKey);
+          // Save to localStorage
+          localStorage.setItem('shownNotificationIds', JSON.stringify([...shownNotificationIds.current]));
 
           // Optional: Clean up old keys if Set gets too big? 
           // For now, it's fine for a session.

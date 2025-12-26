@@ -46,9 +46,13 @@ export default async function handler(request, response) {
 
         for (const doc of snapshot.docs) {
             const note = doc.data();
-            const uid = note.uid;
+            // FIX: The field in DB is 'userId', not 'uid'
+            const uid = note.userId || note.uid;
 
-            if (!uid) continue;
+            if (!uid) {
+                console.log(`Notification ${doc.id} has no userId.`);
+                continue;
+            }
 
             // Get User's FCM Token
             const userDoc = await db.collection('users').doc(uid).get();

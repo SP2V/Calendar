@@ -191,7 +191,7 @@ function doGet(e) {
 
 ## การตั้งค่าระบบแจ้งเตือน (Background Notifications)
 
-ระบบแจ้งเตือนเมื่อปิดหน้าเว็บ ทำงานผ่าน **Firebase Cloud Messaging (FCM)** และ **Vercel Cron**
+ระบบแจ้งเตือนเมื่อปิดหน้าเว็บ ทำงานผ่าน **Firebase Cloud Messaging (FCM)**
 
 ### 1. ตั้งค่า Firebase Cloud Messaging (FCM)
 1.  ไปที่ Firebase Console -> Project Settings -> **Cloud Messaging**
@@ -201,6 +201,27 @@ function doGet(e) {
 5.  เปิดไฟล์ `src/pages/User.jsx`
 6.  ค้นหา `YOUR_PUBLIC_VAPID_KEY_HERE` และแทนที่ด้วยค่า Key Pair ที่ได้มา
 
-### 2. หมายเหตุ
-ในปัจจุบันระบบแจ้งเตือนจะทำงานเมื่อเปิดหน้าเว็บค้างไว้เท่านั้น (In-App & Desktop Notification)
-หากต้องการให้แจ้งเตือนเมื่อปิดเว็บ (Background) จำเป็นต้องมี Backend Server (เช่น Node.js หรือ Cloud Functions) คอยตรวจสอบเวลาและยิง Notification ผ่าน FCM ครับ
+### 2. ตั้งค่า Cloud Functions (Backend)
+เพื่อให้ระบบแจ้งเตือนทำงานได้แม้ปิดหน้าเว็บ (Background Notification) ระบบจะใช้ Firebase Cloud Functions (Scheduled) ในการตรวจสอบเวลา
+
+1.  **Requirement**:
+    -   ต้องใช้ Firebase Project แพ็กเกจ **Blaze (Pay as you go)** ขึ้นไป (เนื่องจากใช้ Scheduled Functions)
+    -   ติดตั้ง **Firebase CLI**: `npm install -g firebase-tools`
+
+2.  **Deploy Functions**:
+    เปิด Terminal แล้วรันคำสั่ง:
+    ```bash
+    firebase login
+    firebase deploy --only functions
+    ```
+
+3.  **การทำงาน**:
+    -   Functions จะทำงานทุกๆ 1 นาที (`every 1 minutes`)
+    -   ตรวจสอบ Database `customNotifications`
+    -   หากพบรายการที่ถึงเวลาแจ้งเตือน จะส่ง Notification ไปยังเครื่อง User ผ่าน FCM
+
+### 3. หมายเหตุ
+-   ต้องเปิดสิทธิ์ Notification ใน Browser
+-   ในมือถือ (Android) การแจ้งเตือนจะเด้งแม้ปิด Chrome
+-   ใน PC/Mac หากปิด Chrome อาจต้องให้แน่ใจว่า Background Process ของ Chrome ยังทำงานอยู่
+

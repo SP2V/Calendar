@@ -28,7 +28,7 @@ exports.checkScheduledNotifications = functions.pubsub.schedule("every 1 minutes
     const promises = [];
     for (const doc of snapshot.docs) {
         const note = doc.data();
-        const uid = note.uid; // Make sure your note document stores the 'uid' of the owner!
+        const uid = note.userId; // Fixed: Use 'userId' as saved in customNotificationService.js
         // Get User's FCM Token
         const userDoc = await db.collection('users').doc(uid).get();
         if (!userDoc.exists || !userDoc.data().fcmToken) continue;

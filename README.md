@@ -31,6 +31,16 @@ npm run preview
 npm run lint
 ```
 
+### รัน Server สำหรับแจ้งเตือน (Backend)
+เพื่อให้ได้รับแจ้งเตือนแม้ไม่ได้เปิดหน้าเว็บ (Desktop Notification) **จำเป็นต้องเปิด Server นี้ทิ้งไว้**
+
+```bash
+node server.js
+```
+*(Server จะทำงานทุกๆ 1 นาที เพื่อตรวจสอบเวลาแจ้งเตือน)*
+
+---
+
 ## ข้อมูลเพิ่มเติม
 
 Currently, two official plugins are available:
@@ -191,39 +201,35 @@ function doGet(e) {
 
 ## การตั้งค่าระบบแจ้งเตือน (Background Notifications)
 
-ระบบแจ้งเตือนเมื่อปิดหน้าเว็บ ทำงานผ่าน **Firebase Cloud Messaging (FCM)**
+## การเตรียมไฟล์สำคัญ / Prerequisites
 
-### 1. ตั้งค่า Firebase Cloud Messaging (FCM)
-1.  ไปที่ Firebase Console -> Project Settings -> **Cloud Messaging**
-2.  เลื่อนลงมาที่ส่วน **Web configuration**
-3.  กด **Generate key pair** (ถ้ายังไม่มี)
-4.  Copy ค่า **Key Pair** (สตริงยาวๆ)
-5.  เปิดไฟล์ `src/pages/User.jsx`
-6.  ค้นหา `YOUR_PUBLIC_VAPID_KEY_HERE` และแทนที่ด้วยค่า Key Pair ที่ได้มา
+ก่อนรันโปรเจกต์ ต้องตรวจสอบว่ามีไฟล์เหล่านี้ครบถ้วน:
 
-### 2. ตั้งค่า Cloud Functions (Backend)
-เพื่อให้ระบบแจ้งเตือนทำงานได้แม้ปิดหน้าเว็บ (Background Notification) ระบบจะใช้ Firebase Cloud Functions (Scheduled) ในการตรวจสอบเวลา
+### 1. Firebase Service Account Key
+เพื่อให้ `server.js` ทำงานได้ ต้องมีไฟล์ **`serviceAccountKey.json`** วางอยู่ที่โฟลเดอร์หลัก (`/Calendar`)
+- ดาวน์โหลดได้จาก [Firebase Console](https://console.firebase.google.com/) > Project Settings > Service accounts > Generate new private key
 
-1.  **Requirement**:
-    -   ต้องใช้ Firebase Project แพ็กเกจ **Blaze (Pay as you go)** ขึ้นไป (เนื่องจากใช้ Scheduled Functions)
-    -   ติดตั้ง **Firebase CLI**: `npm install -g firebase-tools`
+### 2. ไฟล์ .env (ถ้ามี)
+ตรวจสอบการตั้งค่า Environment Variables หากจำเป็น
 
-2.  **Deploy Functions**:
-    เปิด Terminal แล้วรันคำสั่ง:
-    ```bash
-    firebase login
-    firebase deploy --only functions
-    ```
+---
 
-3.  **การทำงาน**:
-    -   Functions จะทำงานทุกๆ 1 นาที (`every 1 minutes`)
-    -   ตรวจสอบ Database `customNotifications`
-    -   หากพบรายการที่ถึงเวลาแจ้งเตือน จะส่ง Notification ไปยังเครื่อง User ผ่าน FCM
+## ข้อมูลเพิ่มเติม
 
-### 3. หมายเหตุ
--   ต้องเปิดสิทธิ์ Notification ใน Browser
--   ในมือถือ (Android) การแจ้งเตือนจะเด้งแม้ปิด Chrome
--   ใน PC/Mac หากปิด Chrome อาจต้องให้แน่ใจว่า Background Process ของ Chrome ยังทำงานอยู่
+### การทำงานของการแจ้งเตือน (Notifications)
+- **ขณะเปิดหน้าเว็บ**: `User.jsx` จะคอยเช็คเวลาและแจ้งเตือน
+- **ขณะปิดหน้าเว็บ**: `server.js` จะคอยเช็คเวลาจาก Database และส่ง Notification ผ่าน Firebase Cloud Messaging (FCM) ไปยัง Service Worker (`firebase-messaging-sw.js`)
 
-"# CalendarNoti" 
-"# CalendarNoti" 
+### การเปลี่ยนบัญชี Google Calendar
+ดูรายละเอียดในโค้ด `src/services/calendarService.js` และ Google Apps Script ที่เกี่ยวข้อง (URL มาจาก GAS Web App)
+
+### Firebase Config
+ตั้งค่าที่ `src/services/firebase.js`
+
+```javascript
+const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  // ...
+};
+```

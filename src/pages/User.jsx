@@ -90,6 +90,15 @@ const User = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Restore Session (Required for Background Notifications)
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("Auth State Changed:", user ? user.email : "Logged Out");
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
   // View/Delete State
   const [viewingBooking, setViewingBooking] = useState(null); // For Viewing Details
   const [cancellingBooking, setCancellingBooking] = useState(null); // For Cancel Modal
@@ -170,68 +179,69 @@ const User = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Request Notification Permission on Mount
-  // Request Notification Permission and FCM Token on Mount
+  // State to hold the token so we can save it once user is logged in
+  const [fcmToken, setFcmToken] = useState(null);
+
+  // 1. Request Notification Permission and FCM Token on Mount
   useEffect(() => {
     const setupFCM = async () => {
-      // 1. Native Permission Check
-      if ("Notification" in window) {
-
-        // 2. FCM Token (Authentication for Push)
-        if (messaging) {
-          try {
-            // Request permission is implicit in getToken
+      // Native Permission Check
+      if ("Notification" in window && messaging) {
+        try {
+          // Request simple permission first
+          const permission = await Notification.requestPermission();
+          if (permission === 'granted') {
+            // Get Token
             const currentToken = await getToken(messaging, {
-              // 🔴 IMPORTANT: Replace with your VAPID Key from Firebase Console -> Cloud Messaging -> Web Push Certificate
               vapidKey: 'YOUR_PUBLIC_VAPID_KEY_HERE'
             });
-
             if (currentToken) {
               console.log('FCM Token:', currentToken);
-
-              // Save Token to Firestore if user is logged in
-              if (auth.currentUser) {
-                try {
-                  const userRef = doc(db, 'users', auth.currentUser.uid);
-                  // Update or Set merge
-                  await setDoc(userRef, { fcmToken: currentToken }, { merge: true });
-                  console.log('FCM Token saved to Firestore');
-                } catch (e) {
-                  console.error('Error saving FCM Token:', e);
-                }
-              }
-            } else {
-              console.log('No registration token available. Request permission to generate one.');
+              setFcmToken(currentToken); // Store in state common
             }
-          } catch (err) {
-            console.log('An error occurred while retrieving token. ', err);
           }
-
-          // 3. Handle Foreground Messages
-          onMessage(messaging, (payload) => {
-            console.log('Message received. ', payload);
-
-            // Show In-App Toast
-            setNotificationPopup({
-              isOpen: true,
-              title: payload.notification.title || 'Notification',
-              time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
-            });
-
-            // Show Native Notification (if allowed)
-            if (Notification.permission === 'granted') {
-              new Notification(payload.notification.title, {
-                body: payload.notification.body,
-                icon: '/logo192.png'
-              });
-            }
-          });
+        } catch (err) {
+          console.log('An error occurred while retrieving token. ', err);
         }
+
+        // Handle Foreground Messages
+        onMessage(messaging, (payload) => {
+          console.log('Message received. ', payload);
+          setNotificationPopup({
+            isOpen: true,
+            title: payload.notification.title || 'Notification',
+            time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+          });
+
+          if (Notification.permission === 'granted') {
+            new Notification(payload.notification.title, {
+              body: payload.notification.body,
+              icon: '/logo192.png'
+            });
+          }
+        });
       }
     };
 
     setupFCM();
   }, []);
+
+  // 2. Save Token to Firestore ONLY when we have BOTH user and token
+  useEffect(() => {
+    const saveTokenToDb = async () => {
+      if (currentUser && fcmToken) {
+        try {
+          // Save to 'users' collection used by Vercel Cron
+          const userRef = doc(db, 'users', currentUser.uid);
+          await setDoc(userRef, { fcmToken: fcmToken }, { merge: true });
+          console.log('✅ FCM Token saved to Firestore for user:', currentUser.uid);
+        } catch (e) {
+          console.error('❌ Error saving FCM Token:', e);
+        }
+      }
+    };
+    saveTokenToDb();
+  }, [currentUser, fcmToken]);
 
   useEffect(() => {
     // Generate notifications from bookings

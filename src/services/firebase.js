@@ -41,8 +41,11 @@ try {
 
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
+// Initialize Messaging
+import { getMessaging } from "firebase/messaging";
+const messaging = app ? getMessaging(app) : null;
 
-export { app, db, auth, googleProvider };
+export { app, db, auth, googleProvider, messaging };
 
 // ================= SCHEDULES =================
 

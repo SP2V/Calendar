@@ -20,9 +20,13 @@ import {
   addBooking,
   subscribeBookings,
   deleteBooking,
-  auth, // Import auth
+  auth,
+  messaging
 } from '../services/firebase';
-import { onAuthStateChanged } from 'firebase/auth'; // Import auth listener
+import { getToken, onMessage } from 'firebase/messaging';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../services/firebase'; // Ensure db is imported
 import { useNavigate } from 'react-router-dom';
 import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarService';
 import { subscribeCustomNotifications, addCustomNotification, deleteCustomNotification, updateCustomNotification } from '../services/customNotificationService';
@@ -164,6 +168,69 @@ const User = () => {
       setTick(t => t + 1);
     }, 1000); // Update UI every 1 second for real-time badges
     return () => clearInterval(timer);
+  }, []);
+
+  // Request Notification Permission on Mount
+  // Request Notification Permission and FCM Token on Mount
+  useEffect(() => {
+    const setupFCM = async () => {
+      // 1. Native Permission Check
+      if ("Notification" in window) {
+
+        // 2. FCM Token (Authentication for Push)
+        if (messaging) {
+          try {
+            // Request permission is implicit in getToken
+            const currentToken = await getToken(messaging, {
+              // 🔴 IMPORTANT: Replace with your VAPID Key from Firebase Console -> Cloud Messaging -> Web Push Certificate
+              vapidKey: 'YOUR_PUBLIC_VAPID_KEY_HERE'
+            });
+
+            if (currentToken) {
+              console.log('FCM Token:', currentToken);
+
+              // Save Token to Firestore if user is logged in
+              if (auth.currentUser) {
+                try {
+                  const userRef = doc(db, 'users', auth.currentUser.uid);
+                  // Update or Set merge
+                  await setDoc(userRef, { fcmToken: currentToken }, { merge: true });
+                  console.log('FCM Token saved to Firestore');
+                } catch (e) {
+                  console.error('Error saving FCM Token:', e);
+                }
+              }
+            } else {
+              console.log('No registration token available. Request permission to generate one.');
+            }
+          } catch (err) {
+            console.log('An error occurred while retrieving token. ', err);
+          }
+
+          // 3. Handle Foreground Messages
+          onMessage(messaging, (payload) => {
+            console.log('Message received. ', payload);
+
+            // Show In-App Toast
+            setNotificationPopup({
+              isOpen: true,
+              title: payload.notification.title || 'Notification',
+              time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+            });
+
+            // Show Native Notification (if allowed)
+            if (Notification.permission === 'granted') {
+              new Notification(payload.notification.title, {
+                body: payload.notification.body,
+                icon: '/logo192.png'
+              });
+            }
+          });
+        }
+      }
+    };
+
+    setupFCM();
   }, []);
 
   useEffect(() => {
@@ -416,6 +483,13 @@ const User = () => {
             title: n.title,
             time: n.time
           });
+
+          if ("Notification" in window && Notification.permission === 'granted') {
+            new Notification(n.title, {
+              body: `ถึงเวลา ${n.time} แล้ว`,
+              icon: '/logo192.png' // Optional
+            });
+          }
           shownNotificationIds.current.add(triggerKey);
 
           // Optional: Clean up old keys if Set gets too big? 

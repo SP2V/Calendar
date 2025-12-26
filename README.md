@@ -201,21 +201,6 @@ function doGet(e) {
 5.  เปิดไฟล์ `src/pages/User.jsx`
 6.  ค้นหา `YOUR_PUBLIC_VAPID_KEY_HERE` และแทนที่ด้วยค่า Key Pair ที่ได้มา
 
-### 2. ตั้งค่า Vercel (สำหรับ Backend ฟรี)
-เพื่อให้ระบบทำงานอัตโนมัติทุกนาที (Cron Job) จำเป็นต้อง Deploy ขึ้น Vercel และตั้งค่าดังนี้:
-
-#### 2.1 รับ Service Account Key
-1.  ไปที่ Firebase Console -> Project Settings -> **Service accounts**
-2.  กด **Generate new private key** -> ไฟล์ `.json` จะถูกดาวน์โหลด
-3.  เปิดไฟล์นั้นและ Copy ข้อความทั้งหมดไว้
-
-#### 2.2 ตั้งค่า Environment Variables ใน Vercel
-1.  ไปที่ Vercel Dashboard -> เลือกโปรเจกต์นี้
-2.  ไปที่ **Settings** -> **Environment Variables**
-3.  เพิ่มตัวแปรชื่อ: `FIREBASE_SERVICE_ACCOUNT_KEY`
-4.  ค่า Value: (วาง JSON ที่ Copy มาทั้งหมด)
-5.  กด **Save**
-
-#### 2.3 Redeploy
-1.  ทำการ Deploy โปรเจกต์ใหม่ (Push code หรือ Redeploy ใน Vercel) เพื่อให้ค่า Config เริ่มทำงาน
-2.  ตรวจสอบการทำงานได้ที่ `https://<your-app>.vercel.app/api/cron` (ถ้าขึ้น JSON แสดงว่าทำงานปกติ)
+### 2. หมายเหตุ
+ในปัจจุบันระบบแจ้งเตือนจะทำงานเมื่อเปิดหน้าเว็บค้างไว้เท่านั้น (In-App & Desktop Notification)
+หากต้องการให้แจ้งเตือนเมื่อปิดเว็บ (Background) จำเป็นต้องมี Backend Server (เช่น Node.js หรือ Cloud Functions) คอยตรวจสอบเวลาและยิง Notification ผ่าน FCM ครับ

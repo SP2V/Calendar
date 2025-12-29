@@ -138,7 +138,7 @@ body {
 .flex-row-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .col-2 {
@@ -196,14 +196,17 @@ body {
 }
 
 .col-1 {
-  flex: 1;
+  /* flex: 1; */
+  width: 100%;
+  max-width: 443px;
   min-width: 150px;
 }
 
-/* .col-2 .user-custom-input {
+.col-2 .user-custom-input {
   width: 100%;
+  max-width: 368px;
   max-height: 38px;
-} */
+}
 
 .duration-group {
   display: flex;
@@ -239,7 +242,7 @@ select:focus,
 
 textarea.user-custom-input {
   resize: none;
-  height: 100px;
+  height: 106px;
   line-height: 1.5;
 }
 
@@ -485,19 +488,21 @@ textarea.user-custom-input {
 .bottom-layout {
   display: flex;
   flex-wrap: wrap;
-  gap: 2rem;
+  gap: 1.5rem;
   align-items: flex-start;
+  /* justify-content: center; */
   margin-top: 1rem;
 }
 
 .format-section {
   flex: 1;
   width: 100%;
+  max-width: 370px;
   min-width: 300px;
 }
 
 .input-group {
-  margin-bottom: 0;
+  margin-bottom: 1rem;
 }
 
 /* Toggle Buttons (Modern Choice) */
@@ -592,7 +597,7 @@ textarea.user-custom-input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 280px;
+  max-width: 186px;
   /* Limit width to prevent overflow */
 }
 
@@ -1545,12 +1550,6 @@ textarea.user-custom-input {
 
   .dropdown-item {
     padding: 0.5rem !important;
-  }
-
-  /* 2. Form Layout - Force full width */
-  .flex-row-wrap {
-    flex-direction: column;
-    gap: 0.75rem;
   }
 
   .col-1,

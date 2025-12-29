@@ -32,6 +32,8 @@ import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarSe
 import { subscribeCustomNotifications, addCustomNotification, deleteCustomNotification, updateCustomNotification, subscribeNotificationHistory } from '../services/customNotificationService';
 import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut, SettingsIcon, Bell, Calendar as CalendarLucide, Clock as ClockLucide, AlarmClock } from 'lucide-react';
 import { TbTimezone } from "react-icons/tb";
+import { MdOutlineCalendarMonth } from "react-icons/md";
+import { FaLink } from "react-icons/fa6";
 
 // --- ICONS (SVG) ---
 const CalendarIcon = ({ style }) => (
@@ -1700,14 +1702,14 @@ const User = () => {
                 <h3 className="summary-title"><FileTextIcon /> สรุปการจอง</h3>
                 <div className="summary-grid">
                   <div className="summary-item">
-                    <p className="summary-label">กิจกรรม</p>
+                    <div className="summary-label"><CalendarIcon style={{ width: '14px' }} /> กิจกรรม</div>
                     <p className="summary-value">{formData.type || '-'}</p>
                   </div>
                   <div className="summary-item">
-                    <div className="summary-label"><CalendarIcon style={{ width: '14px' }} /> วันที่</div>
+                    <div className="summary-label"><MdOutlineCalendarMonth style={{ width: '14px' }} /> วันที่</div>
                     <p className="summary-value">{formData.days.length > 0 ? formatDisplayDate(formData.days[0]) : '-'}</p>
                   </div>
-                  <div className="summary-item span-2">
+                  <div className="summary-item">
                     <div className="summary-label"><FileTextIcon style={{ width: '14px' }} /> หัวข้อ</div>
                     <p className="summary-value">{formData.subject || '-'}</p>
                   </div>
@@ -1732,9 +1734,19 @@ const User = () => {
                       }
                     </p>
                   </div>
-                  <div className="summary-item span-2">
+                  <div className="summary-item">
                     <div className="summary-label">{formData.meetingFormat === 'Online' ? <MonitorIcon style={{ width: '14px' }} /> : <MapPinIcon style={{ width: '14px' }} />} รูปแบบ</div>
                     <p className="summary-value">{formData.meetingFormat}</p>
+                  </div>
+                  <div className="summary-item">
+                    <label className="summary-label">
+                      {formData.meetingFormat === 'Online' ? <FaLink style={{ width: '14px' }} /> : <MapPinIcon style={{ width: '14px' }} />}<span>{formData.meetingFormat === 'Online' ? 'ลิงก์ประชุมออนไลน์' : 'สถานที่นัดหมาย'}</span>
+                    </label>
+                    <p className="summary-value">{formData.location || '-'}</p>
+                  </div>
+                  <div className="summary-item">
+                    <div className="summary-label"><FileTextIcon style={{ width: '14px' }} /> รายละเอียดเพิ่มเติม</div>
+                    <p className="summary-value">{formData.description || '-'}</p>
                   </div>
                 </div>
               </div>

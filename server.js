@@ -122,19 +122,15 @@ async function checkAndSendNotifications() {
                     // Send Push Notification
                     const message = {
                         token: token,
-                        notification: {
-                            title: note.title || 'Notification',
-                            body: `ถึงเวลา ${note.time} แล้ว`
-                        },
+                        // Data-only message to force Service Worker handling
                         data: {
                             notificationId: doc.id,
                             type: 'custom_alarm',
-                            time: note.time
-                        },
-                        webpush: {
-                            fcm_options: {
-                                link: '/' // Open the app when clicked
-                            }
+                            time: note.time,
+                            title: note.title || 'Notification',
+                            body: `ถึงเวลา ${note.time} แล้ว`,
+                            icon: '/logo192.png',
+                            link: '/'
                         }
                     };
 

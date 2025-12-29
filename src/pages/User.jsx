@@ -221,15 +221,19 @@ const User = () => {
         // Handle Foreground Messages
         onMessage(messaging, (payload) => {
           console.log('Message received. ', payload);
+          // With Data-Only payload, title/body are in payload.data
+          const title = payload.notification?.title || payload.data?.title || 'Notification';
+          const body = payload.notification?.body || payload.data?.body || '';
+
           setNotificationPopup({
             isOpen: true,
-            title: payload.notification.title || 'Notification',
+            title: title,
             time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
           });
 
           if (Notification.permission === 'granted') {
-            new Notification(payload.notification.title, {
-              body: payload.notification.body,
+            new Notification(title, {
+              body: body,
               icon: '/logo192.png'
             });
           }

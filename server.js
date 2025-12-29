@@ -140,6 +140,37 @@ async function checkAndSendNotifications() {
 
                     const response = await messaging.send(message);
                     console.log(`   ✅ Sent notification to user ${uid}: ${response}`);
+
+                    // --- SAVE TO HISTORY ---
+                    try {
+                        const historyRef = db.collection('users').doc(uid).collection('notificationHistory');
+                        const now = new Date();
+
+                        // Thai Date Strings
+                        const dateThai = now.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok' });
+                        const timeThai = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
+
+                        // Eng Date Strings
+                        const dateEng = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok' });
+                        const timeEng = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
+
+                        await historyRef.add({
+                            title: note.title || 'Notification',
+                            desc: 'ถึงเวลาแล้ว',
+                            fullThaiInfo: `${dateThai} เวลา ${timeThai}`,
+                            footerTime: `${dateEng}, ${timeEng} (GMT+07:00)`,
+                            time: note.time,
+                            // Use YYYY-MM-DD in Bangkok time for consistency
+                            date: now.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' }),
+                            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                            type: 'custom',
+                            read: false,
+                            originalId: doc.id
+                        });
+                        console.log(`   📝 Saved to notificationHistory for user ${uid}`);
+                    } catch (histErr) {
+                        console.error(`   ❌ Failed to save history for user ${uid}:`, histErr);
+                    }
                 } catch (err) {
                     console.error(`   ❌ Failed to send to user ${uid}:`, err.message);
                 }

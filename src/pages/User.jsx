@@ -29,7 +29,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase'; // Ensure db is imported
 import { useNavigate } from 'react-router-dom';
 import { createCalendarEvent, deleteCalendarEvent } from '../services/calendarService';
-import { subscribeCustomNotifications, addCustomNotification, deleteCustomNotification, updateCustomNotification } from '../services/customNotificationService';
+import { subscribeCustomNotifications, addCustomNotification, deleteCustomNotification, updateCustomNotification, subscribeNotificationHistory } from '../services/customNotificationService';
 import { Trash2, Eye, Search, LayoutGrid, List, ChevronLeft, ChevronRight, Plus, ChevronDown, User as UserIcon, History, LogOut, SettingsIcon, Bell, Calendar as CalendarLucide, Clock as ClockLucide, AlarmClock } from 'lucide-react';
 import { TbTimezone } from "react-icons/tb";
 
@@ -170,6 +170,19 @@ const User = () => {
     }
   }, [currentUser]);
 
+  const [notificationHistory, setNotificationHistory] = useState([]);
+
+  useEffect(() => {
+    if (currentUser?.uid) {
+      const unsub = subscribeNotificationHistory(currentUser.uid, (data) => {
+        setNotificationHistory(data);
+      });
+      return () => unsub();
+    } else {
+      setNotificationHistory([]);
+    }
+  }, [currentUser]);
+
   // Real-time ticker to update notifications every 30 seconds
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -246,8 +259,8 @@ const User = () => {
 
   useEffect(() => {
     // Generate notifications from bookings
-    // Generate notifications from bookings & timezone changes & custom notifications
-    if ((!bookings || bookings.length === 0) && timezoneNotifications.length === 0 && customNotifications.length === 0) {
+    // Generate notifications from bookings & timezone changes & triggered custom notifications
+    if ((!bookings || bookings.length === 0) && timezoneNotifications.length === 0 && notificationHistory.length === 0) {
       setNotifications([]);
       return;
     }
@@ -384,16 +397,18 @@ const User = () => {
       };
     });
 
-    // Alert Trigger for Custom Notifications
-    // We want to trigger a toast ONLY if it became due "just now" (e.g. within last 1 minute)
-
     const combinedNotifications = [
       ...bookingNotifications,
       ...timezoneNotifications.map(tz => ({
         ...tz,
         read: readNotificationIds.includes(tz.id)
       })),
-      ...activeCustomNotifications
+      ...notificationHistory.map(n => ({
+        ...n,
+        // Ensure consistent ID for reading status
+        id: n.id, // Firestore ID
+        read: readNotificationIds.includes(n.id) || n.read // Server read status or local override
+      }))
     ].sort((a, b) => {
       // Calculate "Notification Time" (When did it pop up?)
       // For Bookings: Start Time - 30 Minutes
@@ -401,6 +416,11 @@ const User = () => {
 
       const getNotifTime = (item) => {
         if (item.type === 'custom') {
+          // For history items, we have a timestamp
+          if (item.timestamp && item.timestamp.toDate) return item.timestamp.toDate().getTime();
+          if (item.timestamp) return new Date(item.timestamp).getTime();
+
+          // Fallback if timestamp missing
           const tzItem = thaiTimezones.find(z => z.value === (item.timezoneRef || 'Asia/Bangkok'));
           const offsetMatch = tzItem ? tzItem.label.match(/\(GMT([+-]\d{2}:\d{2})\)/) : null;
           const offset = offsetMatch ? offsetMatch[1] : '+07:00';
@@ -423,7 +443,7 @@ const User = () => {
     });
 
     setNotifications(combinedNotifications);
-  }, [bookings, timezoneNotifications, customNotifications, readNotificationIds, currentUser, selectedTimezone, tick]);
+  }, [bookings, timezoneNotifications, notificationHistory, readNotificationIds, currentUser, selectedTimezone, tick]);
 
 
 

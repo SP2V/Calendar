@@ -64,3 +64,25 @@ export const updateCustomNotification = async (notificationId, updatedData) => {
     const docRef = doc(db, COLLECTION_NAME, notificationId);
     await import('firebase/firestore').then(({ updateDoc }) => updateDoc(docRef, data));
 };
+
+// Subscribe to notification history (Server-side generated)
+export const subscribeNotificationHistory = (userId, onUpdate) => {
+    if (!db || !userId) return () => { };
+
+    const q = query(
+        collection(db, `users/${userId}/notificationHistory`),
+        orderBy('timestamp', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const history = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        onUpdate(history);
+    }, (error) => {
+        console.error("Error subscribing to notification history:", error);
+    });
+
+    return unsubscribe;
+};

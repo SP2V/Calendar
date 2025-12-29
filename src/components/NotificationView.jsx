@@ -4,11 +4,29 @@ import './NotificationView.css';
 
 const NotificationView = ({ notifications, onMarkAllRead }) => {
     const [activeTab, setActiveTab] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     const filteredNotifications = notifications.filter(n => {
         if (activeTab === 'All') return true;
         return n.type === activeTab.toLowerCase();
     });
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentNotifications = filteredNotifications.slice(startIndex, startIndex + itemsPerPage);
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        setCurrentPage(1); // Reset to first page on tab change
+    };
+
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
 
     return (
         <div className="notification-view-container">
@@ -22,7 +40,7 @@ const NotificationView = ({ notifications, onMarkAllRead }) => {
                     <button
                         key={tab}
                         className={`nv-tab-btn ${activeTab === tab ? 'active' : ''}`}
-                        onClick={() => setActiveTab(tab)}
+                        onClick={() => handleTabChange(tab)}
                     >
                         {tab === 'All' ? 'ทั้งหมด' : tab === 'Booking' ? 'การจอง' : 'เขตเวลา'}
                     </button>
@@ -30,12 +48,12 @@ const NotificationView = ({ notifications, onMarkAllRead }) => {
             </div>
 
             <div className="nv-body">
-                {filteredNotifications.length === 0 ? (
+                {currentNotifications.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
                         ไม่มีการแจ้งเตือนในขณะนี้
                     </div>
                 ) : (
-                    filteredNotifications.map(item => (
+                    currentNotifications.map(item => (
                         <div key={item.id} className={`nv-list-item ${!item.read ? 'unread' : ''}`}>
                             <div className="nv-icon-box" style={{
                                 background: item.type === 'timezone' ? '#fef2f2' : '#f0f9ff',
@@ -66,10 +84,37 @@ const NotificationView = ({ notifications, onMarkAllRead }) => {
             </div>
 
             <div className="nv-footer">
-                <span className="nv-footer-count">แสดง {filteredNotifications.length} รายการจากทั้งหมด {notifications.length} รายการ</span>
-                {/* <button className="nv-mark-all-btn" onClick={onMarkAllRead}>
-                    ทำเครื่องหมายอ่านทั้งหมด
-                </button> */}
+                <span className="nv-footer-count">แสดง {currentNotifications.length} รายการจากทั้งหมด {filteredNotifications.length} รายการ</span>
+
+                {totalPages > 1 && (
+                    <div className="nv-pagination">
+                        <button
+                            className="nv-page-btn"
+                            disabled={currentPage === 1}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                        >
+                            &lt;
+                        </button>
+
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                                key={page}
+                                className={`nv-page-btn ${currentPage === page ? 'active' : ''}`}
+                                onClick={() => handlePageChange(page)}
+                            >
+                                {page}
+                            </button>
+                        ))}
+
+                        <button
+                            className="nv-page-btn"
+                            disabled={currentPage === totalPages}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                        >
+                            &gt;
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

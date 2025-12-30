@@ -238,3 +238,49 @@
     border-color: #e5e7eb;
     color: #9ca3af;
 }
+
+@media (max-width: 768px) {
+    .nv-tabs {
+        /* flex-direction: column; */
+
+    }
+
+    .nv-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-left: 0;
+    }
+
+    .nv-header-row .nv-item-title {
+        margin-bottom: 0;
+    }
+
+    .nv-header-row .nv-timestamp {
+        margin-left: 0;
+        font-size: 0.9rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 150px;
+        display: block;
+    }
+
+    .nv-tab-btn {
+        font-size: 0.75rem;
+        padding: 8px 24px;
+        min-width: 60px;
+    }
+
+    .nv-footer {
+        flex-direction: column;
+    }
+
+    .nv-pagination {
+        font-size: 0.75rem;
+        justify-content: center;
+        max-width: 300px;
+    }
+
+    .nv-footer-count {
+        margin-bottom: 1rem;
+    }
+}

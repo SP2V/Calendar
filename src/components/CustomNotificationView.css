@@ -350,3 +350,21 @@ input:checked+.cn-slider:before {
     /* Adjust based on button width */
     width: 97px;
 }
+
+@media (max-width: 768px) {
+    .cn-tab-container {
+        flex-direction: column;
+    }
+    
+    .cn-tab-btn {
+        min-width: 60px;
+    }
+
+    .cn-footer {
+        flex-direction: column;
+    }
+
+    .cn-footer-text {
+        margin-bottom: 1rem;
+    }
+}

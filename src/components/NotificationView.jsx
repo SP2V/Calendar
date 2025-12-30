@@ -98,10 +98,10 @@ const NotificationView = ({ notifications, onMarkAllRead }) => {
 
                         {(() => {
                             let pages = [];
-                            if (totalPages <= 7) {
+                            if (totalPages <= 5) {
                                 pages = Array.from({ length: totalPages }, (_, i) => i + 1);
                             } else {
-                                if (currentPage <= 4) {
+                                if (currentPage <= 3) {
                                     pages = [1, 2, 3, 4, 5, '...', totalPages];
                                 } else if (currentPage >= totalPages - 3) {
                                     pages = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];

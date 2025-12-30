@@ -256,7 +256,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         max-width: 150px;
-        display: block;
+        display: none;
     }
 
     .nv-tab-btn {

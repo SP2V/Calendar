@@ -299,6 +299,7 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
 
     const [view, setView] = useState('MAIN'); // 'MAIN' | 'DAYS'
     const [selectedDays, setSelectedDays] = useState([]); // Array of integers 0-6 (Sun-Sat)
+    const [prevSelectedDays, setPrevSelectedDays] = useState([]); // Backup for cancel action
 
     const daysOfWeek = [
         { id: 0, label: 'ทุกวันอาทิตย์' },
@@ -450,7 +451,10 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
                 <div className="an-modal-container slide-in">
                     <div className="an-modal-header">
                         <div className="an-header-nav">
-                            <button className="an-nav-btn" onClick={() => setView('MAIN')} style={{ marginRight: 'auto' }}>
+                            <button className="an-nav-btn" onClick={() => {
+                                setSelectedDays(prevSelectedDays);
+                                setView('MAIN');
+                            }} style={{ marginRight: 'auto' }}>
                                 <IconChevronLeft size={24} />
                             </button>
                             <span className="an-header-title">เลือกวัน</span>
@@ -519,7 +523,10 @@ const AddNotificationModal = ({ isOpen, onClose, onSave, initialData = null }) =
                         {/* Repeat Days */}
                         <div className="an-input-group" style={{ flex: 1 }}>
                             <label className="an-label">ทำซ้ำ</label>
-                            <div className="an-input-wrapper" onClick={() => setView('DAYS')} style={{ cursor: 'pointer' }}>
+                            <div className="an-input-wrapper" onClick={() => {
+                                setPrevSelectedDays(selectedDays);
+                                setView('DAYS');
+                            }} style={{ cursor: 'pointer' }}>
                                 <RotateCcw className="an-input-icon-left" size={20} strokeWidth={2} />
                                 <input
                                     type="text"

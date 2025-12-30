@@ -212,6 +212,17 @@ function doGet(e) {
 ### 2. ไฟล์ .env (ถ้ามี)
 ตรวจสอบการตั้งค่า Environment Variables หากจำเป็น
 
+### 3. ไฟล์ .firebaserc
+เปลี่ยนค่า 
+```
+{
+  "projects": {
+    "default": "YOUR_projectId"
+  }
+}
+
+```
+
 ---
 
 ## ข้อมูลเพิ่มเติม

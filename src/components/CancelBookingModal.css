@@ -74,6 +74,8 @@
     color: #374151;
     line-height: 1.5;
     margin: 0;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .cancel-modal-actions {

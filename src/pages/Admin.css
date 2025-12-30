@@ -297,7 +297,7 @@
   /* เสริมความชัวร์ ให้มันดีดตัวลงไปติดขอบล่างสุดเสมอ */
 
   display: flex;
-  justify-content: space-between;
+  justify-content: center !important;
   align-items: center;
   padding-top: 1rem;
   border-top: 1px solid #e5e7eb;

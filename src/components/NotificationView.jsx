@@ -96,15 +96,32 @@ const NotificationView = ({ notifications, onMarkAllRead }) => {
                             &lt;
                         </button>
 
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                            <button
-                                key={page}
-                                className={`nv-page-btn ${currentPage === page ? 'active' : ''}`}
-                                onClick={() => handlePageChange(page)}
-                            >
-                                {page}
-                            </button>
-                        ))}
+                        {(() => {
+                            let pages = [];
+                            if (totalPages <= 7) {
+                                pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+                            } else {
+                                if (currentPage <= 4) {
+                                    pages = [1, 2, 3, 4, 5, '...', totalPages];
+                                } else if (currentPage >= totalPages - 3) {
+                                    pages = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+                                } else {
+                                    pages = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+                                }
+                            }
+
+                            return pages.map((page, index) => (
+                                <button
+                                    key={index}
+                                    className={`nv-page-btn ${currentPage === page ? 'active' : ''}`}
+                                    onClick={() => typeof page === 'number' && handlePageChange(page)}
+                                    disabled={page === '...'}
+                                    style={page === '...' ? { cursor: 'default', backgroundColor: 'transparent', border: 'none', color: '#6b7280' } : {}}
+                                >
+                                    {page}
+                                </button>
+                            ));
+                        })()}
 
                         <button
                             className="nv-page-btn"

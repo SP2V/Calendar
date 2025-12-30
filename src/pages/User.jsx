@@ -1364,18 +1364,6 @@ const User = () => {
                   <div className="dropdown-header-info" style={{ flexDirection: 'column', alignItems: 'flex-start', background: 'white', padding: '10px 16px 0 16px' }}>
                     <h3 style={{ margin: '0', fontSize: '1.1rem' }}>การแจ้งเตือน</h3>
                     <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '0' }}>อัปเดตเกี่ยวกับการจองและเขตเวลาของคุณ</p>
-                    {/* <div className="filter-tabs" style={{ marginBottom: '10px', width: '100%', padding: 0 }}>
-                      {['All', 'Booking', 'Timezone'].map(tab => (
-                        <button
-                          key={tab}
-                          className={`tab-btn ${activeNotificationTab === tab ? 'active' : ''}`}
-                          style={{ flex: 1, padding: '6px' }}
-                          onClick={() => setActiveNotificationTab(tab)}
-                        >
-                          {tab}
-                        </button>
-                      ))}
-                    </div> */}
                   </div>
 
                   <div className="dropdown-divider"></div>
@@ -1769,7 +1757,7 @@ const User = () => {
                   className={`tab-btn ${activeTab === 'upcoming' ? 'active' : ''}`}
                   onClick={() => { setActiveTab('upcoming'); setCurrentPage(1); }}
                 >
-                  กำลังดำเนินการ
+                  กำลังจะมาถึง
                 </button>
                 <div className="tab-divider"></div>
                 <button
@@ -2045,15 +2033,32 @@ const User = () => {
                             >
                               <ChevronLeft size={16} />
                             </button>
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                              <button
-                                key={page}
-                                className={`page-btn ${currentPage === page ? 'active' : ''}`}
-                                onClick={() => setCurrentPage(page)}
-                              >
-                                {page}
-                              </button>
-                            ))}
+                            {(() => {
+                              let pages = [];
+                              if (totalPages <= 7) {
+                                pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+                              } else {
+                                if (currentPage <= 4) {
+                                  pages = [1, 2, 3, 4, 5, '...', totalPages];
+                                } else if (currentPage >= totalPages - 3) {
+                                  pages = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+                                } else {
+                                  pages = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+                                }
+                              }
+
+                              return pages.map((page, index) => (
+                                <button
+                                  key={index}
+                                  className={`page-btn ${currentPage === page ? 'active' : ''} ${page === '...' ? 'dots' : ''}`}
+                                  onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                                  disabled={page === '...'}
+                                  style={page === '...' ? { cursor: 'default', backgroundColor: 'transparent', border: 'none', color: '#6b7280' } : {}}
+                                >
+                                  {page}
+                                </button>
+                              ));
+                            })()}
                             <button
                               className="page-btn"
                               disabled={currentPage === totalPages}
@@ -2097,6 +2102,7 @@ const User = () => {
             onClose={() => setViewingBooking(null)}
             readOnly={true}
             data={viewingBooking}
+            isHistory={activeTab === 'completed'}
           />
         )
       }

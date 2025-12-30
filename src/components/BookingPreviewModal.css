@@ -134,13 +134,13 @@
     text-align: right;
     color: #1e293b;
     /* Slate 800 */
-    font-weight: 600;
+    font-weight: 400;
     flex: 1;
     word-break: break-word;
 }
 
 .link-text {
-    color: #4b5563;
+    color: #2563eb;
     text-decoration: none;
     word-break: break-all;
     /* For long URLs */
